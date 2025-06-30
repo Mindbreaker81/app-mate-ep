@@ -1,6 +1,6 @@
 # Pitágoritas
 
-© 2024 Edmundo Rosales Mayor. Todos los derechos reservados.
+© 2025 Edmundo Rosales Mayor. Todos los derechos reservados.
 
 # 🧮 Pitágoritas - ¡Sumas puntos, restas dudas y multiplicas diversión!
 
@@ -8,16 +8,18 @@ Una aplicación web interactiva y divertida para que los niños de 4º de Primar
 
 ## ✨ Características
 
-- **Ejercicios aleatorios**: Sumas, restas, multiplicaciones y divisiones exactas
-- **Sistema de niveles**: Progresión de dificultad desbloqueable
+- **Ejercicios aleatorios**: Sumas, restas, multiplicaciones, divisiones exactas y fracciones propias positivas
+- **Sistema de niveles**: 10 niveles, todos incluyen todas las operaciones, dificultad escalable con tablas para enteros y fracciones
 - **Logros y medallas**: Sistema de gamificación para motivar el aprendizaje
 - **Rachas de respuestas**: Seguimiento de respuestas correctas consecutivas
-- **Explicaciones paso a paso**: Cuando el niño falla, se muestra la solución detallada
+- **Explicaciones paso a paso**: Cuando el niño falla, se muestra la solución detallada, incluyendo fracciones
+- **Validación robusta**: Fracciones deben ser equivalentes y simplificadas
 - **Sistema de puntuación**: Contador visible de respuestas correctas
 - **Puntuación máxima**: Se guarda automáticamente en el navegador
-- **Animaciones**: Confeti cuando la respuesta es correcta
+- **Animaciones**: Confeti cuando la respuesta es correcta y feedback visual reforzado
 - **Diseño responsivo**: Funciona perfectamente en móviles y tablets
 - **Interfaz atractiva**: Colores y diseño pensado para niños
+- **Sección de ayuda**: Accesible y clara desde el header
 
 ## 🚀 Tecnologías
 
@@ -94,10 +96,7 @@ npm run test:watch
 
 ### Sistema de Niveles
 
-- **Nivel 1**: Sumas y restas simples (1-20)
-- **Nivel 2**: Sumas, restas y multiplicaciones (1-50) - Se desbloquea con 10 puntos
-- **Nivel 3**: Todas las operaciones (1-100) - Se desbloquea con 25 puntos
-- **Nivel 4**: Operaciones complejas (1-200) - Se desbloquea con 50 puntos
+- **10 niveles**: Todos los niveles incluyen sumas, restas, multiplicaciones, divisiones exactas y fracciones propias positivas. La dificultad escala progresivamente tanto para enteros como para fracciones, aumentando el rango de números y la complejidad de las fracciones.
 
 ### Sistema de Logros
 
@@ -113,10 +112,11 @@ npm run test:watch
 
 ### Tipos de ejercicios
 
-- **Sumas**: Números del 1 al 100 (según nivel)
-- **Restas**: Números del 50 al 100 (resultado positivo)
+- **Sumas**: Números enteros y fracciones propias positivas (según nivel)
+- **Restas**: Números enteros y fracciones propias positivas (resultado positivo, según nivel)
 - **Multiplicaciones**: Tablas del 1 al 12
 - **Divisiones**: Divisiones exactas sin decimales
+- **Fracciones**: Sumas y restas de fracciones propias positivas, con validación de equivalencia y simplificación
 
 ### Sistema de puntuación
 
@@ -132,6 +132,7 @@ Cada ejercicio incluye una explicación paso a paso cuando el niño falla:
 - Descomposición de números
 - Proceso de cálculo
 - Verificación del resultado
+- Explicación detallada para fracciones
 
 ## 🌐 Despliegue en Vercel
 
