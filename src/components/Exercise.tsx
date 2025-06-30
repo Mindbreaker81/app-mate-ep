@@ -1,12 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { formatTime } from '../utils/timeConfig';
 import { getPracticeModeConfig } from '../utils/practiceConfig';
 import confetti from 'canvas-confetti';
-
-const correctSound = new Audio('/sounds/correct.mp3');
-const wrongSound = new Audio('/sounds/wrong.mp3');
-let backgroundMusic: HTMLAudioElement | null = null;
 
 // Hook para animar estrellas
 function useStarAnimation(trigger: boolean) {
