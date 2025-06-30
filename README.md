@@ -1,3 +1,7 @@
+# Pitágoritas
+
+© 2024 Edmundo Rosales Mayor. Todos los derechos reservados.
+
 # 🧮 Pitágoritas - ¡Sumas puntos, restas dudas y multiplicas diversión!
 
 Una aplicación web interactiva y divertida para que los niños de 4º de Primaria practiquen matemáticas de forma lúdica. Desarrollada con React, TypeScript, Vite y Tailwind CSS.

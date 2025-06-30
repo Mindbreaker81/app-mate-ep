@@ -1,3 +1,4 @@
+// © 2024 Edmundo Rosales Mayor. Todos los derechos reservados.
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
