@@ -1,139 +1,158 @@
-import { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { formatTime } from '../utils/timeConfig';
+import { getPracticeModeConfig } from '../utils/practiceConfig';
 import confetti from 'canvas-confetti';
 
 export function Exercise() {
-  const { state, dispatch } = useGame();
-  const [inputValue, setInputValue] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim() || !state.currentProblem) return;
-
-    const userAnswer = parseInt(inputValue);
-    const isCorrect = userAnswer === state.currentProblem.answer;
-
-    dispatch({
-      type: 'SUBMIT_ANSWER',
-      payload: { answer: inputValue, isCorrect }
-    });
-
-    if (isCorrect) {
-      // Lanzar confeti
+  const { state, checkAnswer, nextProblem, setAnswer } = useGame();
+  
+  const { currentProblem, userAnswer, isCorrect, timeRemaining, isTimerActive, practiceMode, timeMode } = state;
+  
+  const practiceConfig = getPracticeModeConfig(practiceMode);
+  
+  useEffect(() => {
+    if (isCorrect === true) {
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       });
     }
+  }, [isCorrect]);
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userAnswer.trim()) {
+      checkAnswer();
+    }
   };
-
-  const handleNextProblem = () => {
-    dispatch({ type: 'NEXT_PROBLEM' });
-    setInputValue('');
+  
+  const handleNext = () => {
+    nextProblem();
   };
-
-  const handleShowSolution = () => {
-    dispatch({ type: 'SHOW_SOLUTION' });
+  
+  const getOperationSymbol = (operation: string) => {
+    switch (operation) {
+      case 'addition': return '+';
+      case 'subtraction': return '-';
+      case 'multiplication': return '×';
+      case 'division': return '÷';
+      default: return '+';
+    }
   };
-
-  const handleReset = () => {
-    dispatch({ type: 'RESET_GAME' });
-    setInputValue('');
+  
+  const getTimerColor = () => {
+    if (timeMode === 'no-limit') return 'text-gray-500';
+    if (timeRemaining > 30) return 'text-green-600';
+    if (timeRemaining > 10) return 'text-yellow-600';
+    return 'text-red-600';
   };
-
-  if (!state.currentProblem) {
+  
+  if (!currentProblem) {
     return (
-      <div className="text-center">
-        <p className="text-lg">Cargando ejercicio...</p>
+      <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Cargando ejercicio...</p>
       </div>
     );
   }
-
+  
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto">
-      {/* Pregunta */}
-      <div className="text-center mb-6">
-        <h2 className="text-4xl font-bold text-gray-800 mb-4">
-          {state.currentProblem.question}
-        </h2>
+    <div className="bg-white rounded-lg shadow-lg p-8">
+      {/* Información del modo activo */}
+      <div className="mb-6 flex flex-wrap gap-2 justify-center">
+        <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+          <span>{practiceConfig.icon}</span>
+          <span>{practiceConfig.label}</span>
+        </div>
+        {timeMode !== 'no-limit' && (
+          <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+            <span>⏰</span>
+            <span>Modo Tiempo</span>
+          </div>
+        )}
+      </div>
+      
+      {/* Timer */}
+      {timeMode !== 'no-limit' && (
+        <div className="text-center mb-6">
+          <div className={`text-3xl font-bold ${getTimerColor()} ${isTimerActive ? 'animate-pulse' : ''}`}>
+            {formatTime(timeRemaining)}
+          </div>
+          <div className="text-sm text-gray-500 mt-1">
+            Tiempo restante
+          </div>
+        </div>
+      )}
+      
+      {/* Problema */}
+      <div className="text-center mb-8">
+        <div className="text-6xl font-bold text-gray-800 mb-4">
+          {currentProblem.num1} {getOperationSymbol(currentProblem.operation)} {currentProblem.num2} = ?
+        </div>
         
-        {/* Input para respuesta */}
-        {state.isCorrect === null && (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="number"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Escribe tu respuesta"
-              className="w-full px-4 py-3 text-2xl text-center border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none"
-              autoFocus
-            />
+        <form onSubmit={handleSubmit} className="max-w-xs mx-auto">
+          <input
+            type="number"
+            value={userAnswer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="Tu respuesta"
+            className="w-full px-4 py-3 text-2xl text-center border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+            autoFocus
+            disabled={isCorrect !== null}
+          />
+          
+          {isCorrect === null && (
             <button
               type="submit"
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              className="w-full mt-4 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
             >
               Comprobar
             </button>
-          </form>
-        )}
-
-        {/* Resultado */}
-        {state.isCorrect !== null && (
-          <div className="space-y-4">
-            {state.isCorrect ? (
-              <div className="text-green-600">
-                <p className="text-2xl font-bold mb-2">¡Correcto! 🎉</p>
-                <p className="text-lg">Tu respuesta: {state.userAnswer}</p>
-              </div>
-            ) : (
-              <div className="text-red-600">
-                <p className="text-2xl font-bold mb-2">Incorrecto 😔</p>
-                <p className="text-lg">Tu respuesta: {state.userAnswer}</p>
-                <p className="text-lg">Respuesta correcta: {state.currentProblem.answer}</p>
-              </div>
-            )}
-
-            {/* Botones de acción */}
-            <div className="space-y-2">
-              {!state.isCorrect && !state.showSolution && (
-                <button
-                  onClick={handleShowSolution}
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                >
-                  Ver Explicación
-                </button>
-              )}
-              
-              <button
-                onClick={handleNextProblem}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-              >
-                Siguiente Ejercicio
-              </button>
-              
-              <button
-                onClick={handleReset}
-                className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-              >
-                Reiniciar Juego
-              </button>
+          )}
+        </form>
+      </div>
+      
+      {/* Resultado */}
+      {isCorrect !== null && (
+        <div className="text-center mb-6">
+          {isCorrect ? (
+            <div className="text-green-600">
+              <div className="text-4xl mb-2">🎉 ¡Correcto!</div>
+              <p className="text-lg">¡Excelente trabajo!</p>
             </div>
-          </div>
-        )}
-
-        {/* Explicación */}
-        {state.showSolution && !state.isCorrect && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-lg font-bold text-blue-800 mb-3">Explicación paso a paso:</h3>
-            <ol className="space-y-2 text-left">
-              {state.currentProblem.steps.map((step, index) => (
-                <li key={index} className="text-blue-700">
-                  {step}
-                </li>
-              ))}
-            </ol>
-          </div>
+          ) : (
+            <div className="text-red-600">
+              <div className="text-4xl mb-2">❌ Incorrecto</div>
+              <p className="text-lg">La respuesta correcta es: <span className="font-bold">{currentProblem.answer}</span></p>
+            </div>
+          )}
+          
+          {/* Explicación */}
+          {!isCorrect && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg text-left">
+              <h4 className="font-semibold text-gray-800 mb-2">📝 Explicación:</h4>
+              <div className="text-gray-700 whitespace-pre-line">
+                {currentProblem.explanation}
+              </div>
+            </div>
+          )}
+          
+          <button
+            onClick={handleNext}
+            className="mt-4 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Siguiente Ejercicio
+          </button>
+        </div>
+      )}
+      
+      {/* Información adicional */}
+      <div className="text-center text-sm text-gray-500">
+        <p>Nivel {state.level} • {practiceConfig.description}</p>
+        {timeMode !== 'no-limit' && (
+          <p>Modo contra reloj: {formatTime(timeRemaining)}</p>
         )}
       </div>
     </div>

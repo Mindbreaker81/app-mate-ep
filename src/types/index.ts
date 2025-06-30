@@ -1,25 +1,125 @@
 export type Operation = 'add' | 'sub' | 'mul' | 'div';
 
+export type Difficulty = 'easy' | 'medium' | 'hard';
+
 export interface Problem {
-  question: string;
+  num1: number;
+  num2: number;
+  operation: 'addition' | 'subtraction' | 'multiplication' | 'division';
   answer: number;
-  steps: string[];
-  operation: Operation;
+  explanation: string;
+}
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  unlocked: boolean;
+  unlockedAt?: Date;
+}
+
+export interface Level {
+  id: number;
+  name: string;
+  minScore: number;
+  operations: string[];
+  maxNumber: number;
+  unlocked: boolean;
 }
 
 export interface GameState {
   currentProblem: Problem | null;
+  userAnswer: string;
+  isCorrect: boolean | null;
   score: number;
   maxScore: number;
-  isCorrect: boolean | null;
-  showSolution: boolean;
-  userAnswer: string;
+  level: number;
+  achievements: Achievement[];
+  streak: number;
+  bestStreak: number;
+  totalExercises: number;
+  correctExercises: number;
+  stats: DetailedStats;
+  practiceMode: PracticeMode;
+  timeMode: TimeMode;
+  timeRemaining: number;
+  isTimerActive: boolean;
+}
+
+export interface DetailedStats {
+  weeklyProgress: WeeklyProgress[];
+  averageTime: number;
+  operationStats: OperationStats;
+  difficultyStats: DifficultyStats;
+  sessionHistory: SessionRecord[];
+}
+
+export interface WeeklyProgress {
+  week: string;
+  correctAnswers: number;
+  totalAnswers: number;
+  averageTime: number;
+}
+
+export interface OperationStats {
+  addition: OperationDetail;
+  subtraction: OperationDetail;
+  multiplication: OperationDetail;
+  division: OperationDetail;
+}
+
+export interface OperationDetail {
+  total: number;
+  correct: number;
+  averageTime: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+}
+
+export interface DifficultyStats {
+  easy: { total: number; correct: number; };
+  medium: { total: number; correct: number; };
+  hard: { total: number; correct: number; };
+}
+
+export interface SessionRecord {
+  date: Date;
+  score: number;
+  totalExercises: number;
+  correctExercises: number;
+  averageTime: number;
+  operations: string[];
+}
+
+export type PracticeMode = 'all' | 'addition' | 'subtraction' | 'multiplication' | 'division';
+
+export interface PracticeModeConfig {
+  mode: PracticeMode;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+export type TimeMode = 'no-limit' | '30s' | '1min' | '2min';
+
+export interface TimeModeConfig {
+  mode: TimeMode;
+  label: string;
+  seconds: number;
+  description: string;
 }
 
 export type GameAction =
-  | { type: 'GENERATE_PROBLEM'; payload: Problem }
-  | { type: 'SUBMIT_ANSWER'; payload: { answer: string; isCorrect: boolean } }
-  | { type: 'SHOW_SOLUTION' }
+  | { type: 'SET_PROBLEM'; payload: Problem }
+  | { type: 'SET_ANSWER'; payload: string }
+  | { type: 'CHECK_ANSWER' }
   | { type: 'NEXT_PROBLEM' }
-  | { type: 'LOAD_MAX_SCORE'; payload: number }
-  | { type: 'RESET_GAME' }; 
+  | { type: 'RESET_GAME' }
+  | { type: 'UNLOCK_ACHIEVEMENT'; payload: Achievement }
+  | { type: 'UPDATE_STREAK'; payload: number }
+  | { type: 'UPDATE_STATS'; payload: Partial<DetailedStats> }
+  | { type: 'SET_PRACTICE_MODE'; payload: PracticeMode }
+  | { type: 'SET_TIME_MODE'; payload: TimeMode }
+  | { type: 'UPDATE_TIMER'; payload: number }
+  | { type: 'START_TIMER' }
+  | { type: 'STOP_TIMER' }; 

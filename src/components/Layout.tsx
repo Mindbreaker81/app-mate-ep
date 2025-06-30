@@ -9,12 +9,21 @@ export function Layout({ children }: LayoutProps) {
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-4">
-            🧮 Mate EP
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            ¡Practica matemáticas de 4º de Primaria de forma divertida! 
-            Sumas, restas, multiplicaciones y divisiones te esperan.
+          <div className="flex justify-center items-center mb-4">
+            <img 
+              src="/logo.png" 
+              alt="Pitágoritas Logo" 
+              className="h-16 w-16 mr-4 rounded-lg shadow-lg"
+            />
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-800">
+              Pitágoritas
+            </h1>
+          </div>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-2">
+            ¡Sumas puntos, restas dudas y multiplicas diversión!
+          </p>
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            Practica matemáticas de 4º de Primaria de forma divertida
           </p>
         </header>
         

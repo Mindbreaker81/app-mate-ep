@@ -1,10 +1,13 @@
-# 🧮 Mate EP - Aplicación de Matemáticas para 4º de Primaria
+# 🧮 Pitágoritas - ¡Sumas puntos, restas dudas y multiplicas diversión!
 
 Una aplicación web interactiva y divertida para que los niños de 4º de Primaria practiquen matemáticas de forma lúdica. Desarrollada con React, TypeScript, Vite y Tailwind CSS.
 
 ## ✨ Características
 
 - **Ejercicios aleatorios**: Sumas, restas, multiplicaciones y divisiones exactas
+- **Sistema de niveles**: Progresión de dificultad desbloqueable
+- **Logros y medallas**: Sistema de gamificación para motivar el aprendizaje
+- **Rachas de respuestas**: Seguimiento de respuestas correctas consecutivas
 - **Explicaciones paso a paso**: Cuando el niño falla, se muestra la solución detallada
 - **Sistema de puntuación**: Contador visible de respuestas correctas
 - **Puntuación máxima**: Se guarda automáticamente en el navegador
@@ -33,7 +36,7 @@ Una aplicación web interactiva y divertida para que los niños de 4º de Primar
 1. **Clonar el repositorio**
    ```bash
    git clone <url-del-repositorio>
-   cd app-mate-ep
+   cd pitagoritas
    ```
 
 2. **Instalar dependencias**
@@ -85,9 +88,28 @@ npm run test:watch
 
 ## 🎯 Funcionalidades educativas
 
+### Sistema de Niveles
+
+- **Nivel 1**: Sumas y restas simples (1-20)
+- **Nivel 2**: Sumas, restas y multiplicaciones (1-50) - Se desbloquea con 10 puntos
+- **Nivel 3**: Todas las operaciones (1-100) - Se desbloquea con 25 puntos
+- **Nivel 4**: Operaciones complejas (1-200) - Se desbloquea con 50 puntos
+
+### Sistema de Logros
+
+- 🎯 ¡Primer Acierto! - Primer ejercicio correcto
+- ➕ Sumador Experto - 10 sumas correctas
+- ➖ Rey de las Restas - 10 restas correctas
+- ✖️ Maestro de las Multiplicaciones - 10 multiplicaciones correctas
+- ➗ Campeón de las Divisiones - 10 divisiones correctas
+- 🔥 ¡En Racha! - 5 correctas seguidas
+- ⚡ ¡Imparable! - 10 correctas seguidas
+- 🏆 Campeón de Matemáticas - 50 ejercicios correctos
+- 💎 ¡Puntuación Perfecta! - 20 ejercicios sin fallar
+
 ### Tipos de ejercicios
 
-- **Sumas**: Números del 1 al 100
+- **Sumas**: Números del 1 al 100 (según nivel)
 - **Restas**: Números del 50 al 100 (resultado positivo)
 - **Multiplicaciones**: Tablas del 1 al 12
 - **Divisiones**: Divisiones exactas sin decimales
@@ -96,7 +118,9 @@ npm run test:watch
 
 - **Puntuación actual**: Se incrementa con cada respuesta correcta
 - **Puntuación máxima**: Se guarda automáticamente y persiste entre sesiones
-- **Barra de progreso**: Visualización del progreso actual vs máximo
+- **Racha actual**: Respuestas correctas consecutivas
+- **Mejor racha**: Racha más alta alcanzada
+- **Estadísticas**: Total de ejercicios y porcentaje de acierto
 
 ### Explicaciones educativas
 
@@ -155,19 +179,21 @@ Si necesitas configurar variables de entorno en Vercel:
 ## 📁 Estructura del proyecto
 
 ```
-app-mate-ep/
+pitagoritas/
 ├── src/
 │   ├── components/          # Componentes React
 │   │   ├── Exercise.tsx     # Componente principal del ejercicio
 │   │   ├── Home.tsx         # Página principal
 │   │   ├── Layout.tsx       # Layout de la aplicación
-│   │   └── ScoreBoard.tsx   # Tablero de puntuación
+│   │   ├── ScoreBoard.tsx   # Tablero de puntuación
+│   │   └── Achievements.tsx # Sistema de logros
 │   ├── context/             # Contexto de React
 │   │   └── GameContext.tsx  # Estado global del juego
 │   ├── types/               # Definiciones de TypeScript
 │   │   └── index.ts         # Tipos de la aplicación
 │   ├── utils/               # Utilidades
 │   │   ├── problemGenerator.ts  # Generador de problemas
+│   │   ├── gameConfig.ts    # Configuración de niveles y logros
 │   │   └── __tests__/       # Pruebas unitarias
 │   ├── test/                # Configuración de pruebas
 │   │   └── setup.ts         # Setup de Vitest
@@ -229,4 +255,4 @@ Desarrollado para ayudar a niños de 4º de Primaria a practicar matemáticas de
 
 ---
 
-**¡Diviértete aprendiendo matemáticas! 🎓** 
+**¡Sumas puntos, restas dudas y multiplicas diversión! 🧮🎓** 
