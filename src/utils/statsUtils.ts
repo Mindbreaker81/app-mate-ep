@@ -1,4 +1,4 @@
-import { DetailedStats, WeeklyProgress, OperationStats, SessionRecord } from '../types';
+import type { DetailedStats, WeeklyProgress, OperationStats, SessionRecord } from '../types';
 
 export function initializeStats(): DetailedStats {
   return {

@@ -1,4 +1,4 @@
-import type { Achievement, Level, Operation } from '../types';
+import type { Achievement, Level } from '../types';
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
@@ -6,81 +6,63 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: '¡Primer Acierto!',
     description: 'Resuelve tu primer ejercicio correctamente',
     icon: '🎯',
-    unlocked: false,
-    progress: 0,
-    target: 1
+    unlocked: false
   },
   {
-    id: 'sum_master',
+    id: 'addition_expert',
     name: 'Sumador Experto',
     description: 'Resuelve 10 sumas correctamente',
     icon: '➕',
-    unlocked: false,
-    progress: 0,
-    target: 10
+    unlocked: false
   },
   {
-    id: 'sub_master',
+    id: 'subtraction_expert',
     name: 'Rey de las Restas',
     description: 'Resuelve 10 restas correctamente',
     icon: '➖',
-    unlocked: false,
-    progress: 0,
-    target: 10
+    unlocked: false
   },
   {
-    id: 'mul_master',
+    id: 'multiplication_expert',
     name: 'Maestro de las Multiplicaciones',
     description: 'Resuelve 10 multiplicaciones correctamente',
     icon: '✖️',
-    unlocked: false,
-    progress: 0,
-    target: 10
+    unlocked: false
   },
   {
-    id: 'div_master',
+    id: 'division_expert',
     name: 'Campeón de las Divisiones',
     description: 'Resuelve 10 divisiones correctamente',
     icon: '➗',
-    unlocked: false,
-    progress: 0,
-    target: 10
+    unlocked: false
   },
   {
     id: 'streak_5',
     name: '¡En Racha!',
     description: 'Resuelve 5 ejercicios seguidos correctamente',
     icon: '🔥',
-    unlocked: false,
-    progress: 0,
-    target: 5
+    unlocked: false
   },
   {
     id: 'streak_10',
     name: '¡Imparable!',
     description: 'Resuelve 10 ejercicios seguidos correctamente',
     icon: '⚡',
-    unlocked: false,
-    progress: 0,
-    target: 10
+    unlocked: false
   },
   {
-    id: 'math_champion',
+    id: 'score_50',
     name: 'Campeón de Matemáticas',
     description: 'Resuelve 50 ejercicios correctamente',
     icon: '🏆',
-    unlocked: false,
-    progress: 0,
-    target: 50
+    unlocked: false
   },
   {
-    id: 'perfect_score',
+    id: 'perfect_20',
     name: '¡Puntuación Perfecta!',
     description: 'Resuelve 20 ejercicios sin fallar ninguno',
     icon: '💎',
-    unlocked: false,
-    progress: 0,
-    target: 20
+    unlocked: false
   }
 ];
 
@@ -88,38 +70,34 @@ export const LEVELS: Level[] = [
   {
     id: 1,
     name: 'Nivel 1: Principiante',
-    description: 'Sumas y restas simples',
-    unlocked: true,
-    operations: ['add', 'sub'],
+    minScore: 0,
+    operations: ['addition', 'subtraction'],
     maxNumber: 20,
-    requiredScore: 0
+    unlocked: true
   },
   {
     id: 2,
     name: 'Nivel 2: Intermedio',
-    description: 'Sumas, restas y multiplicaciones',
-    unlocked: false,
-    operations: ['add', 'sub', 'mul'],
+    minScore: 10,
+    operations: ['addition', 'subtraction', 'multiplication'],
     maxNumber: 50,
-    requiredScore: 10
+    unlocked: false
   },
   {
     id: 3,
     name: 'Nivel 3: Avanzado',
-    description: 'Todas las operaciones',
-    unlocked: false,
-    operations: ['add', 'sub', 'mul', 'div'],
+    minScore: 25,
+    operations: ['addition', 'subtraction', 'multiplication', 'division'],
     maxNumber: 100,
-    requiredScore: 25
+    unlocked: false
   },
   {
     id: 4,
     name: 'Nivel 4: Experto',
-    description: 'Operaciones complejas',
-    unlocked: false,
-    operations: ['add', 'sub', 'mul', 'div'],
+    minScore: 50,
+    operations: ['addition', 'subtraction', 'multiplication', 'division'],
     maxNumber: 200,
-    requiredScore: 50
+    unlocked: false
   }
 ];
 

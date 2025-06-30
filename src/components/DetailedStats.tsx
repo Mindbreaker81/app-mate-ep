@@ -1,4 +1,3 @@
-import React from 'react';
 import { useGame } from '../context/GameContext';
 import { getAccuracyPercentage, getWeakestOperation, getWeeklyProgressData } from '../utils/statsUtils';
 
@@ -142,7 +141,7 @@ export function DetailedStats() {
           <h3 className="text-xl font-semibold text-gray-700">📅 Progreso Semanal</h3>
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {weeklyData.slice(-4).map((week, index) => (
+              {weeklyData.slice(-4).map((week) => (
                 <div key={week.week} className="text-center">
                   <div className="text-sm text-gray-600 mb-1">
                     Semana {week.week.split('-W')[1]}

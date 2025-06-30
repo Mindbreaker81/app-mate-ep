@@ -1,4 +1,3 @@
-import React from 'react';
 import { useGame } from '../context/GameContext';
 import { TIME_MODES, formatTime } from '../utils/timeConfig';
 

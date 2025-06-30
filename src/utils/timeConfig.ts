@@ -1,4 +1,4 @@
-import { TimeModeConfig } from '../types';
+import type { TimeModeConfig } from '../types';
 
 export const TIME_MODES: TimeModeConfig[] = [
   {

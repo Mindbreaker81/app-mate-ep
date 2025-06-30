@@ -1,4 +1,4 @@
-import { PracticeModeConfig } from '../types';
+import type { PracticeModeConfig } from '../types';
 
 export const PRACTICE_MODES: PracticeModeConfig[] = [
   {
