@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react';
 import type { GameState, GameAction } from '../types';
 import { generateProblem, getDifficulty } from '../utils/problemGenerator';
 import { LEVELS, ACHIEVEMENTS } from '../utils/gameConfig';
