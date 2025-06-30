@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
-import type { GameState, GameAction } from '../types';
+import type { GameState, GameAction, Fraction, PracticeMode, TimeMode } from '../types';
 import { generateProblem, getDifficulty } from '../utils/problemGenerator';
 import { LEVELS, ACHIEVEMENTS } from '../utils/gameConfig';
 import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats } from '../utils/statsUtils';
@@ -24,6 +24,33 @@ const initialState: GameState = {
   isTimerActive: false
 };
 
+function simplifyFraction(frac: Fraction): Fraction {
+  let numerator = Math.abs(frac.numerator);
+  let denominator = Math.abs(frac.denominator);
+  if (denominator === 0) return { numerator: 0, denominator: 1 };
+  function gcd(a: number, b: number): number {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    if (b === 0) return a;
+    return gcd(b, a % b);
+  }
+  const divisor = gcd(numerator, denominator);
+  return {
+    numerator: numerator / divisor,
+    denominator: denominator / divisor,
+  };
+}
+
+function fractionEquals(a: Fraction, b: Fraction): boolean {
+  const sa = simplifyFraction(a);
+  const sb = simplifyFraction(b);
+  return sa.numerator === sb.numerator && sa.denominator === sb.denominator;
+}
+
+function isFractionProblem(problem: any): problem is { answer: Fraction } {
+  return problem && typeof problem.answer === 'object' && problem.answer !== null && 'numerator' in problem.answer && 'denominator' in problem.answer;
+}
+
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'SET_PROBLEM':
@@ -43,7 +70,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'CHECK_ANSWER': {
       if (!state.currentProblem) return state;
       
-      const isCorrect = parseInt(state.userAnswer) === state.currentProblem.answer;
+      let isCorrect = false;
+      if (isFractionProblem(state.currentProblem) && typeof state.userAnswer === 'object') {
+        isCorrect = fractionEquals(state.currentProblem.answer, state.userAnswer);
+      } else {
+        isCorrect = typeof state.userAnswer === 'string' && parseFloat(state.userAnswer) === state.currentProblem.answer;
+      }
       const newScore = isCorrect ? state.score + 1 : state.score;
       const newMaxScore = Math.max(newScore, state.maxScore);
       const newStreak = isCorrect ? state.streak + 1 : 0;
@@ -215,9 +247,9 @@ interface GameContextType {
   checkAnswer: () => void;
   nextProblem: () => void;
   resetGame: () => void;
-  setAnswer: (answer: string) => void;
-  setPracticeMode: (mode: string) => void;
-  setTimeMode: (mode: string) => void;
+  setAnswer: (answer: string | Fraction) => void;
+  setPracticeMode: (mode: PracticeMode) => void;
+  setTimeMode: (mode: TimeMode) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -276,16 +308,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RESET_GAME' });
   };
   
-  const setAnswer = (answer: string) => {
+  const setAnswer = (answer: string | Fraction) => {
     dispatch({ type: 'SET_ANSWER', payload: answer });
   };
   
-  const setPracticeMode = (mode: string) => {
-    dispatch({ type: 'SET_PRACTICE_MODE', payload: mode as any });
+  const setPracticeMode = (mode: PracticeMode) => {
+    dispatch({ type: 'SET_PRACTICE_MODE', payload: mode });
   };
   
-  const setTimeMode = (mode: string) => {
-    dispatch({ type: 'SET_TIME_MODE', payload: mode as any });
+  const setTimeMode = (mode: TimeMode) => {
+    dispatch({ type: 'SET_TIME_MODE', payload: mode });
   };
   
   const value: GameContextType = {

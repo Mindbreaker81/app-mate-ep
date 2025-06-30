@@ -1,14 +1,35 @@
-export type Operation = 'add' | 'sub' | 'mul' | 'div';
+export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'fraction-addition' | 'fraction-subtraction';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
-export interface Problem {
-  num1: number;
-  num2: number;
-  operation: 'addition' | 'subtraction' | 'multiplication' | 'division';
-  answer: number;
+export type Fraction = {
+  numerator: number;
+  denominator: number;
+};
+
+export type FractionProblem = {
+  num1: Fraction;
+  num2: Fraction;
+  operation: 'fraction-addition' | 'fraction-subtraction';
+  answer: Fraction;
   explanation: string;
-}
+};
+
+export type Problem =
+  | {
+      num1: number;
+      num2: number;
+      operation: 'addition' | 'subtraction' | 'multiplication' | 'division';
+      answer: number;
+      explanation: string;
+    }
+  | {
+      num1: Fraction;
+      num2: Fraction;
+      operation: 'fraction-addition' | 'fraction-subtraction';
+      answer: Fraction;
+      explanation: string;
+    };
 
 export interface Achievement {
   id: string;
@@ -30,7 +51,7 @@ export interface Level {
 
 export interface GameState {
   currentProblem: Problem | null;
-  userAnswer: string;
+  userAnswer: string | Fraction;
   isCorrect: boolean | null;
   score: number;
   maxScore: number;
@@ -91,7 +112,7 @@ export interface SessionRecord {
   operations: string[];
 }
 
-export type PracticeMode = 'all' | 'addition' | 'subtraction' | 'multiplication' | 'division';
+export type PracticeMode = 'all' | 'addition' | 'subtraction' | 'multiplication' | 'division' | 'fractions';
 
 export interface PracticeModeConfig {
   mode: PracticeMode;
@@ -111,13 +132,13 @@ export interface TimeModeConfig {
 
 export type GameAction =
   | { type: 'SET_PROBLEM'; payload: Problem }
-  | { type: 'SET_ANSWER'; payload: string }
+  | { type: 'SET_ANSWER'; payload: string | Fraction }
   | { type: 'CHECK_ANSWER' }
   | { type: 'NEXT_PROBLEM' }
   | { type: 'RESET_GAME' }
-  | { type: 'UNLOCK_ACHIEVEMENT'; payload: Achievement }
+  | { type: 'UNLOCK_ACHIEVEMENT'; payload: any }
   | { type: 'UPDATE_STREAK'; payload: number }
-  | { type: 'UPDATE_STATS'; payload: Partial<DetailedStats> }
+  | { type: 'UPDATE_STATS'; payload: any }
   | { type: 'SET_PRACTICE_MODE'; payload: PracticeMode }
   | { type: 'SET_TIME_MODE'; payload: TimeMode }
   | { type: 'UPDATE_TIMER'; payload: number }

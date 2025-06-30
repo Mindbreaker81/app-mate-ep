@@ -35,30 +35,25 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
       num2 = Math.floor(Math.random() * maxNumber) + 1;
       answer = num1 + num2;
       explanation = generateAdditionExplanation(num1, num2);
-      break;
-      
+      return { num1, num2, operation: 'addition', answer, explanation } as Problem;
     case 'subtraction':
       num1 = Math.floor(Math.random() * maxNumber) + 1;
-      num2 = Math.floor(Math.random() * (num1 - 1)) + 1; // Asegurar resultado positivo (num1 > num2)
+      num2 = Math.floor(Math.random() * (num1 - 1)) + 1;
       answer = num1 - num2;
       explanation = generateSubtractionExplanation(num1, num2);
-      break;
-      
+      return { num1, num2, operation: 'subtraction', answer, explanation } as Problem;
     case 'multiplication':
       num1 = Math.floor(Math.random() * maxNumberMult) + 1;
       num2 = Math.floor(Math.random() * maxNumberMult) + 1;
       answer = num1 * num2;
       explanation = generateMultiplicationExplanation(num1, num2);
-      break;
-      
+      return { num1, num2, operation: 'multiplication', answer, explanation } as Problem;
     case 'division':
-      // Generar división exacta
-      num2 = Math.floor(Math.random() * maxNumberDiv) + 1; // Divisor del 1 al 12
-      answer = Math.floor(Math.random() * maxNumberDiv) + 1; // Cociente del 1 al 12
-      num1 = num2 * answer; // Dividendo = divisor × cociente
+      num2 = Math.floor(Math.random() * maxNumberDiv) + 1;
+      answer = Math.floor(Math.random() * maxNumberDiv) + 1;
+      num1 = num2 * answer;
       explanation = generateDivisionExplanation(num1, num2);
-      break;
-      
+      return { num1, num2, operation: 'division', answer, explanation } as Problem;
     case 'fraction-addition':
       frac1 = randomProperFraction(maxDenominator);
       frac2 = randomProperFraction(maxDenominator);
@@ -70,11 +65,10 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
         operation: 'fraction-addition',
         answer: fracAnswer,
         explanation
-      };
+      } as Problem;
     case 'fraction-subtraction':
       frac1 = randomProperFraction(maxDenominator);
       frac2 = randomProperFraction(maxDenominator);
-      // Asegurar que el resultado sea positivo y propio
       if (frac1.numerator * frac2.denominator < frac2.numerator * frac1.denominator) {
         [frac1, frac2] = [frac2, frac1];
       }
@@ -86,13 +80,10 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
         operation: 'fraction-subtraction',
         answer: fracAnswer,
         explanation
-      };
+      } as Problem;
       
     default:
-      num1 = Math.floor(Math.random() * maxNumber) + 1;
-      num2 = Math.floor(Math.random() * maxNumber) + 1;
-      answer = num1 + num2;
-      explanation = generateAdditionExplanation(num1, num2);
+      throw new Error('Operación no soportada en generateProblem');
   }
   
   return {
@@ -101,7 +92,7 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
     operation: operation as 'addition' | 'subtraction' | 'multiplication' | 'division' | 'fraction-addition' | 'fraction-subtraction',
     answer,
     explanation
-  };
+  } as Problem;
 }
 
 function generateAdditionExplanation(num1: number, num2: number): string {

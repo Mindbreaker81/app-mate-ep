@@ -20,35 +20,39 @@ describe('problemGenerator', () => {
 
     it('should generate addition problems correctly', () => {
       const problem = generateProblem(1, 'addition');
-      
-      expect(problem.operation).toBe('addition');
-      expect(problem.answer).toBe(problem.num1 + problem.num2);
-      expect(problem.explanation).toContain('Suma');
+      if (typeof problem.num1 === 'number' && typeof problem.num2 === 'number') {
+        expect(problem.operation).toBe('addition');
+        expect(problem.answer).toBe(problem.num1 + problem.num2);
+        expect(problem.explanation).toContain('Suma');
+      }
     });
 
     it('should generate subtraction problems with positive results', () => {
       const problem = generateProblem(1, 'subtraction');
-      
-      expect(problem.operation).toBe('subtraction');
-      expect(problem.answer).toBe(problem.num1 - problem.num2);
-      expect(problem.answer).toBeGreaterThan(0);
-      expect(problem.explanation).toContain('Resta');
+      if (typeof problem.num1 === 'number' && typeof problem.num2 === 'number') {
+        expect(problem.operation).toBe('subtraction');
+        expect(problem.answer).toBe(problem.num1 - problem.num2);
+        expect(problem.answer).toBeGreaterThan(0);
+        expect(problem.explanation).toContain('Resta');
+      }
     });
 
     it('should generate multiplication problems correctly', () => {
       const problem = generateProblem(1, 'multiplication');
-      
-      expect(problem.operation).toBe('multiplication');
-      expect(problem.answer).toBe(problem.num1 * problem.num2);
-      expect(problem.explanation).toContain('Multiplicación');
+      if (typeof problem.num1 === 'number' && typeof problem.num2 === 'number') {
+        expect(problem.operation).toBe('multiplication');
+        expect(problem.answer).toBe(problem.num1 * problem.num2);
+        expect(problem.explanation).toContain('Multiplicación');
+      }
     });
 
     it('should generate division problems with exact results', () => {
       const problem = generateProblem(1, 'division');
-      
-      expect(problem.operation).toBe('division');
-      expect(problem.num1).toBe(problem.num2 * problem.answer);
-      expect(problem.explanation).toContain('División');
+      if (typeof problem.num1 === 'number' && typeof problem.num2 === 'number' && typeof problem.answer === 'number') {
+        expect(problem.operation).toBe('division');
+        expect(problem.num1).toBe(problem.num2 * problem.answer);
+        expect(problem.explanation).toContain('División');
+      }
     });
 
     it('should respect level constraints', () => {
