@@ -31,7 +31,7 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
       
     case 'subtraction':
       num1 = Math.floor(Math.random() * maxNumber) + 1;
-      num2 = Math.floor(Math.random() * num1) + 1; // Asegurar resultado positivo
+      num2 = Math.floor(Math.random() * (num1 - 1)) + 1; // Asegurar resultado positivo (num1 > num2)
       answer = num1 - num2;
       explanation = generateSubtractionExplanation(num1, num2);
       break;
