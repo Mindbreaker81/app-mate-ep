@@ -45,6 +45,9 @@ export const Help: React.FC<HelpProps> = ({ onClose }) => (
       <li>
         <b>Guardar progreso:</b> Todo tu avance y logros se guardan automáticamente en tu dispositivo.
       </li>
+      <li>
+        <b>Niveles:</b> Ahora hay 10 niveles de dificultad. En todos los niveles puedes practicar sumas, restas, multiplicaciones, divisiones y fracciones. Lo que cambia al avanzar de nivel es el rango de números, el tamaño de los denominadores en fracciones y la complejidad de los ejercicios. Los niveles se desbloquean automáticamente al mejorar tu puntuación y progreso.
+      </li>
     </ul>
     <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded text-blue-800">
       <b>Consejo:</b> ¡Practica todos los días para mejorar tus habilidades y desbloquear todos los logros!

@@ -1,9 +1,12 @@
-import type { Problem, PracticeMode } from '../types';
+import type { Problem, PracticeMode, Fraction } from '../types';
 import { LEVELS } from './gameConfig';
 
 export function generateProblem(level: number, practiceMode: PracticeMode = 'all'): Problem {
   const levelConfig = LEVELS.find(l => l.id === level) || LEVELS[0];
   const maxNumber = levelConfig.maxNumber;
+  const maxNumberMult = levelConfig.maxNumberMult;
+  const maxNumberDiv = levelConfig.maxNumberDiv;
+  const maxDenominator = levelConfig.maxDenominator;
   
   // Determinar qué operaciones usar basado en el modo de práctica
   let availableOperations = levelConfig.operations;
@@ -12,14 +15,19 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
       'addition': ['addition'],
       'subtraction': ['subtraction'],
       'multiplication': ['multiplication'],
-      'division': ['division']
+      'division': ['division'],
+      'fractions': ['fraction-addition', 'fraction-subtraction']
     };
     availableOperations = operationMap[practiceMode] || availableOperations;
+  } else {
+    // En modo mixto, incluir fracciones
+    availableOperations = [...availableOperations, 'fraction-addition', 'fraction-subtraction'];
   }
   
   const operation = availableOperations[Math.floor(Math.random() * availableOperations.length)];
   
   let num1: number, num2: number, answer: number, explanation: string;
+  let frac1: Fraction, frac2: Fraction, fracAnswer: Fraction;
   
   switch (operation) {
     case 'addition':
@@ -37,19 +45,48 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
       break;
       
     case 'multiplication':
-      num1 = Math.floor(Math.random() * 12) + 1; // Tablas del 1 al 12
-      num2 = Math.floor(Math.random() * 12) + 1;
+      num1 = Math.floor(Math.random() * maxNumberMult) + 1;
+      num2 = Math.floor(Math.random() * maxNumberMult) + 1;
       answer = num1 * num2;
       explanation = generateMultiplicationExplanation(num1, num2);
       break;
       
     case 'division':
       // Generar división exacta
-      num2 = Math.floor(Math.random() * 12) + 1; // Divisor del 1 al 12
-      answer = Math.floor(Math.random() * 12) + 1; // Cociente del 1 al 12
+      num2 = Math.floor(Math.random() * maxNumberDiv) + 1; // Divisor del 1 al 12
+      answer = Math.floor(Math.random() * maxNumberDiv) + 1; // Cociente del 1 al 12
       num1 = num2 * answer; // Dividendo = divisor × cociente
       explanation = generateDivisionExplanation(num1, num2);
       break;
+      
+    case 'fraction-addition':
+      frac1 = randomProperFraction(maxDenominator);
+      frac2 = randomProperFraction(maxDenominator);
+      fracAnswer = addFractions(frac1, frac2);
+      explanation = generateFractionAdditionExplanation(frac1, frac2, fracAnswer);
+      return {
+        num1: frac1,
+        num2: frac2,
+        operation: 'fraction-addition',
+        answer: fracAnswer,
+        explanation
+      };
+    case 'fraction-subtraction':
+      frac1 = randomProperFraction(maxDenominator);
+      frac2 = randomProperFraction(maxDenominator);
+      // Asegurar que el resultado sea positivo y propio
+      if (frac1.numerator * frac2.denominator < frac2.numerator * frac1.denominator) {
+        [frac1, frac2] = [frac2, frac1];
+      }
+      fracAnswer = subtractFractions(frac1, frac2);
+      explanation = generateFractionSubtractionExplanation(frac1, frac2, fracAnswer);
+      return {
+        num1: frac1,
+        num2: frac2,
+        operation: 'fraction-subtraction',
+        answer: fracAnswer,
+        explanation
+      };
       
     default:
       num1 = Math.floor(Math.random() * maxNumber) + 1;
@@ -61,7 +98,7 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
   return {
     num1,
     num2,
-    operation: operation as 'addition' | 'subtraction' | 'multiplication' | 'division',
+    operation: operation as 'addition' | 'subtraction' | 'multiplication' | 'division' | 'fraction-addition' | 'fraction-subtraction',
     answer,
     explanation
   };
@@ -152,6 +189,55 @@ function generateDivisionExplanation(num1: number, num2: number): string {
   }
   
   return `División: ${num1} ÷ ${num2} = ${quotient}`;
+}
+
+function randomProperFraction(maxDenominator: number = 12): Fraction {
+  const denominator = Math.floor(Math.random() * (maxDenominator - 2)) + 3; // 3 a maxDenominator
+  const numerator = Math.floor(Math.random() * (denominator - 1)) + 1; // 1 a denominator-1
+  return { numerator, denominator };
+}
+
+function simplifyFraction(frac: Fraction): Fraction {
+  function gcd(a: number, b: number): number {
+    return b === 0 ? a : gcd(b, a % b);
+  }
+  const divisor = gcd(frac.numerator, frac.denominator);
+  return {
+    numerator: frac.numerator / divisor,
+    denominator: frac.denominator / divisor,
+  };
+}
+
+function addFractions(a: Fraction, b: Fraction): Fraction {
+  const numerator = a.numerator * b.denominator + b.numerator * a.denominator;
+  const denominator = a.denominator * b.denominator;
+  return simplifyFraction({ numerator, denominator });
+}
+
+function subtractFractions(a: Fraction, b: Fraction): Fraction {
+  const numerator = a.numerator * b.denominator - b.numerator * a.denominator;
+  const denominator = a.denominator * b.denominator;
+  return simplifyFraction({ numerator, denominator });
+}
+
+function generateFractionAdditionExplanation(a: Fraction, b: Fraction, answer: Fraction): string {
+  return (
+    `Paso 1: Busca un denominador común: ${a.denominator} × ${b.denominator} = ${a.denominator * b.denominator}\n` +
+    `Paso 2: Ajusta los numeradores: (${a.numerator} × ${b.denominator}) + (${b.numerator} × ${a.denominator}) = ` +
+    `${a.numerator * b.denominator} + ${b.numerator * a.denominator} = ${a.numerator * b.denominator + b.numerator * a.denominator}\n` +
+    `Paso 3: Escribe la fracción: (${a.numerator * b.denominator + b.numerator * a.denominator}) / (${a.denominator * b.denominator})\n` +
+    `Paso 4: Simplifica la fracción: ${answer.numerator} / ${answer.denominator}`
+  );
+}
+
+function generateFractionSubtractionExplanation(a: Fraction, b: Fraction, answer: Fraction): string {
+  return (
+    `Paso 1: Busca un denominador común: ${a.denominator} × ${b.denominator} = ${a.denominator * b.denominator}\n` +
+    `Paso 2: Ajusta los numeradores: (${a.numerator} × ${b.denominator}) - (${b.numerator} × ${a.denominator}) = ` +
+    `${a.numerator * b.denominator} - ${b.numerator * a.denominator} = ${a.numerator * b.denominator - b.numerator * a.denominator}\n` +
+    `Paso 3: Escribe la fracción: (${a.numerator * b.denominator - b.numerator * a.denominator}) / (${a.denominator * b.denominator})\n` +
+    `Paso 4: Simplifica la fracción: ${answer.numerator} / ${answer.denominator}`
+  );
 }
 
 // Función para calcular el tiempo de respuesta

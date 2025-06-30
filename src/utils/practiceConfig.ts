@@ -30,6 +30,12 @@ export const PRACTICE_MODES: PracticeModeConfig[] = [
     label: 'Solo Divisiones',
     icon: '➗',
     description: 'Practica divisiones exactas'
+  },
+  {
+    mode: 'fractions',
+    label: 'Fracciones (sumas y restas)',
+    icon: '½',
+    description: 'Practica sumas y restas de fracciones'
   }
 ];
 
