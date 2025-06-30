@@ -31,7 +31,7 @@ export function Layout({ children }: LayoutProps) {
         </main>
         <footer className="text-center mt-12 text-gray-500 text-sm">
           <p>¡Diviértete aprendiendo matemáticas! 🎓</p>
-          <p className="mt-2">© 2024 Edmundo Rosales Mayor. Todos los derechos reservados.</p>
+          <p className="mt-2">© 2025 Edmundo Rosales Mayor. Todos los derechos reservados.</p>
         </footer>
       </div>
     </div>
