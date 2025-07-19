@@ -31,33 +31,13 @@ function isFractionProblem(problem: Problem): problem is {
   );
 }
 
-// Utilidad para lanzar confeti y limpiar el canvas tras la animación
+// Utilidad para lanzar confeti
 function fireConfetti() {
-  // Crear un canvas temporal sobre el contenedor principal
-  const container = document.querySelector('.relative');
-  if (!container) return;
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.style.position = 'absolute';
-  tempCanvas.style.top = '0';
-  tempCanvas.style.left = '0';
-  tempCanvas.style.width = '100%';
-  tempCanvas.style.height = '100%';
-  tempCanvas.style.pointerEvents = 'none';
-  tempCanvas.style.zIndex = '1000';
-  container.appendChild(tempCanvas);
-
-  // Usar la instancia de confetti sobre el canvas temporal
-  const myConfetti = confetti.create(tempCanvas, { resize: true, useWorker: true });
-  myConfetti({
+  confetti({
     particleCount: 80,
     spread: 70,
     origin: { y: 0.6 }
   });
-
-  // Eliminar el canvas tras 1.2 segundos
-  setTimeout(() => {
-    tempCanvas.remove();
-  }, 1200);
 }
 
 export function Exercise() {
