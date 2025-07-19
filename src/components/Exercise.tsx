@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { formatTime } from '../utils/timeConfig';
 import { getPracticeModeConfig } from '../utils/practiceConfig';
-import confetti from 'canvas-confetti';
+import { CSSConfetti } from './CSSConfetti';
+import { Confetti } from './Confetti';
 import type { Problem, Fraction } from '../types';
 
 // Hook para animar estrellas
@@ -31,13 +32,19 @@ function isFractionProblem(problem: Problem): problem is {
   );
 }
 
-// Utilidad para lanzar confeti
-function fireConfetti() {
-  confetti({
-    particleCount: 80,
-    spread: 70,
-    origin: { y: 0.6 }
-  });
+// Hook para manejar el confeti
+function useConfetti(trigger: boolean) {
+  const [showConfetti, setShowConfetti] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (trigger) {
+      setShowConfetti(true);
+      const timeout = setTimeout(() => setShowConfetti(false), 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [trigger]);
+  
+  return showConfetti;
 }
 
 export function Exercise() {
@@ -45,15 +52,10 @@ export function Exercise() {
   const { currentProblem, userAnswer, isCorrect, timeRemaining, isTimerActive, practiceMode, timeMode } = state;
   const practiceConfig = getPracticeModeConfig(practiceMode);
   const showStars = useStarAnimation(isCorrect === true);
+  const showConfetti = useConfetti(isCorrect === true);
 
   // Estado local para respuesta de fracción
   const [fracAnswer, setFracAnswer] = React.useState({ numerator: '', denominator: '' });
-
-  useEffect(() => {
-    if (isCorrect === true) {
-      fireConfetti();
-    }
-  }, [isCorrect]);
 
   useEffect(() => {
     setFracAnswer({ numerator: '', denominator: '' });
@@ -237,6 +239,35 @@ export function Exercise() {
           {timeMode !== 'no-limit' && (
             <p>Modo contra reloj: {formatTime(timeRemaining)}</p>
           )}
+          
+          {/* Opciones de confeti */}
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={localStorage.getItem('confetti-enabled') !== 'false'}
+                onChange={(e) => {
+                  localStorage.setItem('confetti-enabled', e.target.checked.toString());
+                }}
+                className="w-4 h-4 text-blue-600"
+              />
+              <span className="text-xs">Mostrar confeti</span>
+            </label>
+            
+            {localStorage.getItem('confetti-enabled') !== 'false' && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={localStorage.getItem('confetti-type') === 'canvas'}
+                  onChange={(e) => {
+                    localStorage.setItem('confetti-type', e.target.checked ? 'canvas' : 'css');
+                  }}
+                  className="w-4 h-4 text-blue-600"
+                />
+                <span className="text-xs">Confeti avanzado</span>
+              </label>
+            )}
+          </div>
         </div>
       </div>
       {showStars && (
@@ -247,6 +278,13 @@ export function Exercise() {
             <span className="text-yellow-200 text-3xl ml-2">★</span>
           </div>
         </div>
+      )}
+      
+      {/* Componente de confeti según preferencia del usuario */}
+      {localStorage.getItem('confetti-type') === 'canvas' ? (
+        <Confetti trigger={showConfetti} />
+      ) : (
+        <CSSConfetti trigger={showConfetti} />
       )}
     </div>
   );

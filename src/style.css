@@ -13,3 +13,17 @@
 
 .animate-fade-in { animation: fade-in 0.5s; }
 @keyframes fade-in { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: none; } }
+
+.animate-confetti-fall {
+  animation: confetti-fall 2s ease-in forwards;
+}
+@keyframes confetti-fall {
+  0% { 
+    opacity: 1; 
+    transform: translateY(-100px) rotate(0deg); 
+  }
+  100% { 
+    opacity: 0; 
+    transform: translateY(100px) rotate(360deg); 
+  }
+}
