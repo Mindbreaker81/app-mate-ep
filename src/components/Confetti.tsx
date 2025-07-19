@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 
 interface ConfettiProps {
@@ -6,19 +6,11 @@ interface ConfettiProps {
 }
 
 export function Confetti({ trigger }: ConfettiProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const confettiInstance = useRef<any>(null);
 
   useEffect(() => {
-    if (trigger && canvasRef.current) {
-      // Crear una instancia de confeti específica para este canvas
-      confettiInstance.current = confetti.create(canvasRef.current, {
-        resize: true,
-        useWorker: true
-      });
-
-      // Lanzar confeti en una zona específica
-      confettiInstance.current({
+    if (trigger) {
+      // Lanzar confeti usando la API global
+      confetti({
         particleCount: 30, // Reducido aún más
         spread: 25, // Más concentrado
         origin: { y: 0.95, x: 0.5 }, // Posición muy baja
@@ -32,16 +24,11 @@ export function Confetti({ trigger }: ConfettiProps) {
 
       // Limpiar después de 1.5 segundos
       const timeout = setTimeout(() => {
-        if (confettiInstance.current) {
-          confettiInstance.current.reset();
-        }
+        // No necesitamos resetear ya que confetti se limpia automáticamente
       }, 1500);
 
       return () => {
         clearTimeout(timeout);
-        if (confettiInstance.current) {
-          confettiInstance.current.reset();
-        }
       };
     }
   }, [trigger]);
@@ -53,17 +40,5 @@ export function Confetti({ trigger }: ConfettiProps) {
     return null;
   }
 
-  return (
-    <div className="fixed bottom-0 left-0 right-0 h-32 pointer-events-none z-30">
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full"
-        style={{
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'none'
-        }}
-      />
-    </div>
-  );
+  return null;
 }
