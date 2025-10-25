@@ -1,5 +1,6 @@
 import type { Problem, PracticeMode, Fraction, MixedProblem } from '../types';
 import { LEVELS } from './gameConfig';
+import { recordMixedAnomaly } from '../services/instrumentationService';
 
 type LevelConfig = (typeof LEVELS)[number];
 
@@ -323,8 +324,62 @@ Paso 2: Suma el resultado: ${quotient} + ${c} = ${answer}.`,
     },
   ];
 
-  const builder = templates[randomInt(0, templates.length - 1)];
-  return builder();
+  const templateIndex = randomInt(0, templates.length - 1);
+  const builder = templates[templateIndex];
+
+  try {
+    const problem = builder();
+
+    if (!Number.isInteger(problem.answer)) {
+      recordMixedAnomaly('non-integer-answer', {
+        level,
+        expression: problem.expression,
+        answer: problem.answer,
+        templateIndex,
+      });
+      problem.answer = Math.round(problem.answer);
+    }
+
+    if (!problem.tokens || problem.tokens.length < 3) {
+      recordMixedAnomaly('token-issue', {
+        expression: problem.expression,
+        tokens: problem.tokens,
+        level,
+        templateIndex,
+      });
+    }
+
+    const jsExpression = problem.expression.replace(/×/g, '*').replace(/÷/g, '/');
+    try {
+      const computed = Function(`return ${jsExpression}`)();
+      if (computed !== problem.answer) {
+        recordMixedAnomaly('expression-mismatch', {
+          expression: problem.expression,
+          computed,
+          expected: problem.answer,
+          level,
+          templateIndex,
+        });
+        problem.answer = typeof computed === 'number' ? Math.round(computed) : problem.answer;
+      }
+    } catch (expressionError) {
+      recordMixedAnomaly('expression-mismatch', {
+        expression: problem.expression,
+        error: expressionError instanceof Error ? expressionError.message : expressionError,
+        level,
+        templateIndex,
+      });
+    }
+
+    return problem;
+  } catch (error) {
+    recordMixedAnomaly('builder-error', {
+      level,
+      templateIndex,
+      error: error instanceof Error ? error.message : error,
+    });
+    throw error;
+  }
 }
 
 function generateFractionAdditionExplanation(a: Fraction, b: Fraction, answer: Fraction): string {

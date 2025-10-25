@@ -1,7 +1,9 @@
 import { supabase } from '../lib/supabaseClient';
-import type { DetailedStats } from '../types';
+import type { DetailedStats, OperationKey } from '../types';
+import { OPERATION_KEYS } from '../types';
 import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats, normalizeStats } from '../utils/statsUtils';
 import { getDifficulty } from '../utils/problemGenerator';
+import { recordSyncAnomaly } from './instrumentationService';
 
 type DbAttemptRow = {
   operation: string;
@@ -19,7 +21,10 @@ export async function fetchUserStats(userId: string): Promise<DetailedStats | nu
     .order('created_at', { ascending: true });
 
   if (error) {
-    console.warn('No se pudieron obtener estadísticas de Supabase:', error.message);
+    recordSyncAnomaly('supabase-fetch-error', {
+      message: error.message,
+      code: error.code,
+    });
     return null;
   }
 
@@ -32,6 +37,14 @@ export async function fetchUserStats(userId: string): Promise<DetailedStats | nu
   let attemptsCount = 0;
 
   (data as DbAttemptRow[]).forEach((attempt) => {
+    if (!OPERATION_KEYS.includes(attempt.operation as OperationKey)) {
+      recordSyncAnomaly('unknown-operation', {
+        operation: attempt.operation,
+        createdAt: attempt.created_at,
+      });
+      return;
+    }
+
     const difficulty = getDifficulty(attempt.level, attempt.operation);
     updateWeeklyProgress(stats, attempt.is_correct, attempt.time_spent);
     updateOperationStats(stats, attempt.operation, attempt.is_correct, attempt.time_spent, difficulty);

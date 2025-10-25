@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import type { AttemptPayload, LegacySnapshot, PendingAttempt } from '../types';
+import { recordSyncAnomaly } from './instrumentationService';
 
 const QUEUE_KEY_PREFIX = 'pitagoritas:attemptQueue:';
 const MIGRATION_KEY_PREFIX = 'pitagoritas:migrated:';
@@ -75,6 +76,12 @@ export async function flushQueue(userId: string): Promise<void> {
     try {
       await sendAttempt(userId, pending);
     } catch (error) {
+      recordSyncAnomaly('attempt-upload-failed', {
+        operation: pending.operation,
+        level: pending.level,
+        retryCount: pending.retryCount + 1,
+        message: error instanceof Error ? error.message : String(error),
+      });
       const retryCount = pending.retryCount + 1;
       remaining.push({ ...pending, retryCount });
       if (index + 1 < queue.length) {

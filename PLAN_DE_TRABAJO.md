@@ -162,7 +162,7 @@ create policy "attempts insert own" on public.attempts
 - `operationStats` y la UI de estadísticas incluyen categorías separadas para fracciones y mixtas.
 - Modo de práctica `mixed` disponible junto con la opción `all` actualizada.
 - Pruebas unitarias verifican generación y estadísticas asociadas a operaciones mixtas.
-- Pendiente: instrumentar logs controlados adicionales para diagnosticar anomalías específicas de mixtas en producción.
+- Instrumentación con logs controlados para detectar anomalías de operaciones mixtas y sincronización.
 
 ## Linting
 
@@ -219,7 +219,7 @@ create policy "attempts insert own" on public.attempts
 - [x] UI en `Exercise.tsx`
 - [x] Ampliar estadísticas para `mixed` y fracciones (categorías separadas)
 - [x] Pruebas unitarias/integración para `mixed`
-- [ ] Instrumentación adicional (logs/métricas) para operaciones `mixed`
+- [x] Instrumentación adicional (logs/métricas) para operaciones `mixed`
 
 5) Pulido y despliegue
 - [ ] QA manual (móviles y desktop)
