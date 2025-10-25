@@ -19,7 +19,7 @@ Actualizaremos la app para niños que practican matemáticas (Vite + React + TS 
 
 ## Objetivos y Alcance
 
-- Autenticación simple para niños: username único + PIN (4–6 dígitos) y avatar.
+- Autenticación simple para niños: username único + PIN (6 dígitos) y avatar con emojis predefinidos.
 - Guardar cada intento en BD con metadatos (tiempo, operación, nivel, respuesta, acierto).
 - Cargar progreso por usuario y mostrar estadísticas agregadas.
 - Añadir operación "mixta" con explicación paso a paso.
@@ -28,7 +28,7 @@ Actualizaremos la app para niños que practican matemáticas (Vite + React + TS 
 ## Diseño funcional
 
 - Acceso infantil:
-  - Registro: elegir `username` disponible, avatar (emoji/imagen simple) y PIN numérico.
+  - Registro: elegir `username` disponible, avatar (emojis predefinidos) y PIN numérico de 6 dígitos.
   - Login: `username` + PIN (teclado numérico). Sin email visible para el niño.
 - Flujo alternativo (opcional): cuenta padre con múltiples perfiles de niño (cada uno con PIN). No incluido en alcance base.
 - Experiencia: si no hay sesión → pantalla de acceso; tras login → experiencia actual de juego.
@@ -153,7 +153,7 @@ create policy "attempts insert own" on public.attempts
 
 ### Estadísticas y modos
 
-- Incluir `mixed` en `operationStats` y `DetailedStats`.
+- Incluir `mixed` y fracciones en `operationStats` y `DetailedStats` como categorías separadas.
 - Añadir modo de práctica `mixed` en `practiceConfig` (opcional o incluir en `all`).
 
 ## Linting
@@ -205,7 +205,7 @@ create policy "attempts insert own" on public.attempts
 - [ ] Tipos (`Operation`, `Problem` variante `mixed`)
 - [ ] Generación y explicación en `problemGenerator`
 - [ ] UI en `Exercise.tsx`
-- [ ] Ampliar estadísticas para `mixed` (y opcionalmente fracciones)
+- [ ] Ampliar estadísticas para `mixed` y fracciones (categorías separadas)
 
 5) Pulido y despliegue
 - [ ] QA manual (móviles y desktop)
@@ -222,9 +222,9 @@ create policy "attempts insert own" on public.attempts
 
 ## Consideraciones de seguridad y UX
 
-- PIN mínimo 6 dígitos recomendado; mostrar teclado numérico en móviles.
+- PIN fijo de 6 dígitos; mostrar teclado numérico en móviles.
 - Cooldown tras varios intentos fallidos de PIN.
-- Avatares predefinidos (emojis o imágenes locales) para evitar subida de contenido.
+- Avatares con emojis predefinidos para evitar subida de contenido.
 
 ## Tareas futuras (opcional)
 
