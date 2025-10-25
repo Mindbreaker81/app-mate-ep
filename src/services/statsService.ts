@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import type { DetailedStats } from '../types';
-import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats } from '../utils/statsUtils';
+import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats, normalizeStats } from '../utils/statsUtils';
 import { getDifficulty } from '../utils/problemGenerator';
 
 type DbAttemptRow = {
@@ -42,5 +42,5 @@ export async function fetchUserStats(userId: string): Promise<DetailedStats | nu
 
   stats.averageTime = attemptsCount ? Math.round(totalTime / attemptsCount) : 0;
 
-  return stats;
+  return normalizeStats(stats);
 }

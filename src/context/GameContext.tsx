@@ -9,14 +9,30 @@ import type {
   AttemptPayload,
   SerializedAnswer,
   LegacySnapshot,
+  DetailedStats,
 } from '../types';
 import { generateProblem, getDifficulty } from '../utils/problemGenerator';
 import { LEVELS, ACHIEVEMENTS } from '../utils/gameConfig';
-import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats } from '../utils/statsUtils';
+import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats, normalizeStats } from '../utils/statsUtils';
 import { TIME_MODES } from '../utils/timeConfig';
 import { useAuth } from './AuthContext';
 import { recordAttempt, flushQueue, migrateLegacyData } from '../services/attemptService';
 import { fetchUserStats } from '../services/statsService';
+
+const loadStats = (): DetailedStats => {
+  if (typeof localStorage === 'undefined') {
+    return initializeStats();
+  }
+  try {
+    const stored = localStorage.getItem('stats');
+    if (stored) {
+      return normalizeStats(JSON.parse(stored));
+    }
+  } catch (error) {
+    console.warn('No se pudieron cargar estadísticas almacenadas:', error);
+  }
+  return initializeStats();
+};
 
 const initialState: GameState = {
   currentProblem: null,
@@ -30,7 +46,7 @@ const initialState: GameState = {
   bestStreak: parseInt(localStorage.getItem('bestStreak') || '0'),
   totalExercises: parseInt(localStorage.getItem('totalExercises') || '0'),
   correctExercises: parseInt(localStorage.getItem('correctExercises') || '0'),
-  stats: JSON.parse(localStorage.getItem('stats') || 'null') || initializeStats(),
+  stats: loadStats(),
   practiceMode: 'all',
   timeMode: 'no-limit',
   timeRemaining: 0,

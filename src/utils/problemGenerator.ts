@@ -1,5 +1,10 @@
-import type { Problem, PracticeMode, Fraction } from '../types';
+import type { Problem, PracticeMode, Fraction, MixedProblem } from '../types';
 import { LEVELS } from './gameConfig';
+
+type LevelConfig = (typeof LEVELS)[number];
+
+const randomInt = (min: number, max: number): number =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
 export function generateProblem(level: number, practiceMode: PracticeMode = 'all'): Problem {
   const levelConfig = LEVELS.find(l => l.id === level) || LEVELS[0];
@@ -9,21 +14,24 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
   const maxDenominator = levelConfig.maxDenominator;
   
   // Determinar qué operaciones usar basado en el modo de práctica
-  let availableOperations = levelConfig.operations;
+  let availableOperations = [...levelConfig.operations];
   if (practiceMode !== 'all') {
-    const operationMap = {
-      'addition': ['addition'],
-      'subtraction': ['subtraction'],
-      'multiplication': ['multiplication'],
-      'division': ['division'],
-      'fractions': ['fraction-addition', 'fraction-subtraction']
+    const operationMap: Record<PracticeMode, typeof availableOperations> = {
+      all: [...levelConfig.operations],
+      addition: ['addition'],
+      subtraction: ['subtraction'],
+      multiplication: ['multiplication'],
+      division: ['division'],
+      fractions: ['fraction-addition', 'fraction-subtraction'],
+      mixed: ['mixed'],
     };
-    availableOperations = operationMap[practiceMode] || availableOperations;
+    availableOperations = operationMap[practiceMode] ?? availableOperations;
   } else {
-    // En modo mixto, incluir fracciones
-    availableOperations = [...availableOperations, 'fraction-addition', 'fraction-subtraction'];
+    availableOperations = Array.from(
+      new Set([...availableOperations, 'fraction-addition', 'fraction-subtraction', 'mixed'] as const)
+    );
   }
-  
+
   const operation = availableOperations[Math.floor(Math.random() * availableOperations.length)];
   
   let num1: number, num2: number, answer: number, explanation: string;
@@ -81,6 +89,8 @@ export function generateProblem(level: number, practiceMode: PracticeMode = 'all
         answer: fracAnswer,
         explanation
       } as Problem;
+    case 'mixed':
+      return generateMixedProblem(level, levelConfig);
       
     default:
       throw new Error('Operación no soportada en generateProblem');
@@ -211,6 +221,112 @@ function subtractFractions(a: Fraction, b: Fraction): Fraction {
   return simplifyFraction({ numerator, denominator });
 }
 
+function generateMixedProblem(level: number, levelConfig: LevelConfig): MixedProblem {
+  const additionRange = Math.max(6, Math.min(levelConfig.maxNumber, 60));
+  const factorRange = Math.max(4, Math.min(levelConfig.maxNumberMult, 12));
+  const divisorRange = Math.max(2, Math.min(levelConfig.maxNumberDiv, 12));
+
+  const buildAddition = () => randomInt(2, additionRange);
+  const buildFactor = () => randomInt(2, factorRange);
+  const buildDivisor = () => randomInt(2, divisorRange);
+
+  const templates: Array<() => MixedProblem> = [
+    () => {
+      const a = buildAddition();
+      const b = buildFactor();
+      const c = buildFactor();
+      const product = b * c;
+      const answer = a + product;
+      return {
+        expression: `${a} + ${b} × ${c}`,
+        tokens: [a, '+', b, '×', c],
+        operation: 'mixed',
+        answer,
+        explanation: `Paso 1: Calcula primero la multiplicación: ${b} × ${c} = ${product}.
+Paso 2: Suma el resultado: ${a} + ${product} = ${answer}.`,
+      };
+    },
+    () => {
+      const b = buildFactor();
+      const c = buildFactor();
+      const product = b * c;
+      const a = product + buildAddition();
+      const answer = a - product;
+      return {
+        expression: `${a} - ${b} × ${c}`,
+        tokens: [a, '-', b, '×', c],
+        operation: 'mixed',
+        answer,
+        explanation: `Paso 1: Multiplica primero: ${b} × ${c} = ${product}.
+Paso 2: Resta el resultado: ${a} - ${product} = ${answer}.`,
+      };
+    },
+    () => {
+      const a = buildAddition();
+      const b = buildAddition();
+      const c = buildFactor();
+      const sum = a + b;
+      const answer = sum * c;
+      return {
+        expression: `(${a} + ${b}) × ${c}`,
+        tokens: ['(', a, '+', b, ')', '×', c],
+        operation: 'mixed',
+        answer,
+        explanation: `Paso 1: Resuelve el paréntesis: ${a} + ${b} = ${sum}.
+Paso 2: Multiplica el resultado: ${sum} × ${c} = ${answer}.`,
+      };
+    },
+    () => {
+      const a = randomInt(8, additionRange + 5);
+      const b = randomInt(2, Math.max(2, Math.min(a - 1, additionRange)));
+      const c = buildFactor();
+      const difference = a - b;
+      const answer = difference * c;
+      return {
+        expression: `(${a} - ${b}) × ${c}`,
+        tokens: ['(', a, '-', b, ')', '×', c],
+        operation: 'mixed',
+        answer,
+        explanation: `Paso 1: Resuelve el paréntesis: ${a} - ${b} = ${difference}.
+Paso 2: Multiplica el resultado: ${difference} × ${c} = ${answer}.`,
+      };
+    },
+    () => {
+      const a = buildFactor();
+      const b = buildFactor();
+      const c = buildAddition();
+      const product = a * b;
+      const answer = product + c;
+      return {
+        expression: `${a} × ${b} + ${c}`,
+        tokens: [a, '×', b, '+', c],
+        operation: 'mixed',
+        answer,
+        explanation: `Paso 1: Multiplica primero: ${a} × ${b} = ${product}.
+Paso 2: Suma el resultado: ${product} + ${c} = ${answer}.`,
+      };
+    },
+    () => {
+      const divisor = buildDivisor();
+      const quotient = randomInt(2, Math.max(3, Math.min(level + 3, 12)));
+      const dividend = divisor * quotient;
+      const c = buildAddition();
+      const answer = quotient + c;
+      return {
+        expression: `${dividend} ÷ ${divisor} + ${c}`,
+        tokens: [dividend, '÷', divisor, '+', c],
+        operation: 'mixed',
+        answer,
+        explanation: `Paso 1: Resuelve la división: ${dividend} ÷ ${divisor} = ${quotient}.
+Paso 2: Suma el resultado: ${quotient} + ${c} = ${answer}.`,
+      };
+    },
+  ];
+
+  const builder = templates[randomInt(0, templates.length - 1)];
+  return builder();
+}
+
 function generateFractionAdditionExplanation(a: Fraction, b: Fraction, answer: Fraction): string {
   return (
     `Paso 1: Busca un denominador común: ${a.denominator} × ${b.denominator} = ${a.denominator * b.denominator}\n` +
@@ -241,6 +357,7 @@ export function getDifficulty(level: number, operation: string): 'easy' | 'mediu
   // Dificultad específica por operación primero
   if (operation === 'multiplication' && level >= 3) return 'hard';
   if (operation === 'division' && level >= 2) return 'hard';
+  if (operation === 'mixed') return level >= 4 ? 'hard' : level >= 2 ? 'medium' : 'easy';
   
   // Dificultad general por nivel
   if (level === 1) return 'easy';

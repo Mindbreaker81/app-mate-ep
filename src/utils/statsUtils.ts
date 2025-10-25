@@ -1,22 +1,80 @@
-import type { DetailedStats, WeeklyProgress, OperationStats, SessionRecord } from '../types';
+import type {
+  DetailedStats,
+  WeeklyProgress,
+  OperationStats,
+  SessionRecord,
+  OperationDetail,
+  OperationKey,
+} from '../types';
+import { OPERATION_KEYS } from '../types';
 
-export function initializeStats(): DetailedStats {
-  return {
-    weeklyProgress: [],
-    averageTime: 0,
-    operationStats: {
-      addition: { total: 0, correct: 0, averageTime: 0, difficulty: 'easy' },
-      subtraction: { total: 0, correct: 0, averageTime: 0, difficulty: 'easy' },
-      multiplication: { total: 0, correct: 0, averageTime: 0, difficulty: 'easy' },
-      division: { total: 0, correct: 0, averageTime: 0, difficulty: 'easy' }
-    },
+const createOperationDetail = (): OperationDetail => ({
+  total: 0,
+  correct: 0,
+  averageTime: 0,
+  difficulty: 'easy',
+});
+
+export function normalizeStats(stats?: Partial<DetailedStats> | null): DetailedStats {
+  const base: DetailedStats = {
+    weeklyProgress: stats?.weeklyProgress ? [...stats.weeklyProgress] : [],
+    averageTime: stats?.averageTime ?? 0,
+    operationStats: {} as OperationStats,
     difficultyStats: {
       easy: { total: 0, correct: 0 },
       medium: { total: 0, correct: 0 },
-      hard: { total: 0, correct: 0 }
+      hard: { total: 0, correct: 0 },
     },
-    sessionHistory: []
+    sessionHistory: stats?.sessionHistory
+      ? stats.sessionHistory.map((record) => ({ ...record }))
+      : [],
   };
+
+  if (stats?.difficultyStats) {
+    base.difficultyStats.easy = {
+      total: stats.difficultyStats.easy?.total ?? 0,
+      correct: stats.difficultyStats.easy?.correct ?? 0,
+    };
+    base.difficultyStats.medium = {
+      total: stats.difficultyStats.medium?.total ?? 0,
+      correct: stats.difficultyStats.medium?.correct ?? 0,
+    };
+    base.difficultyStats.hard = {
+      total: stats.difficultyStats.hard?.total ?? 0,
+      correct: stats.difficultyStats.hard?.correct ?? 0,
+    };
+  }
+
+  OPERATION_KEYS.forEach((key) => {
+    const existing = stats?.operationStats?.[key];
+    base.operationStats[key] = existing
+      ? {
+          total: existing.total ?? 0,
+          correct: existing.correct ?? 0,
+          averageTime: existing.averageTime ?? 0,
+          difficulty: existing.difficulty ?? 'easy',
+        }
+      : createOperationDetail();
+  });
+
+  return base;
+}
+
+export function initializeStats(): DetailedStats {
+  return normalizeStats({
+    weeklyProgress: [],
+    averageTime: 0,
+    operationStats: OPERATION_KEYS.reduce((acc, key) => {
+      acc[key] = createOperationDetail();
+      return acc;
+    }, {} as OperationStats),
+    difficultyStats: {
+      easy: { total: 0, correct: 0 },
+      medium: { total: 0, correct: 0 },
+      hard: { total: 0, correct: 0 },
+    },
+    sessionHistory: [],
+  });
 }
 
 export function getCurrentWeek(): string {
@@ -33,21 +91,24 @@ export function updateWeeklyProgress(
   timeSpent: number
 ): DetailedStats {
   const currentWeek = getCurrentWeek();
-  const existingWeek = stats.weeklyProgress.find(w => w.week === currentWeek);
-  
+  const existingWeek = stats.weeklyProgress.find((w) => w.week === currentWeek);
+
   if (existingWeek) {
-    existingWeek.totalAnswers++;
-    if (isCorrect) existingWeek.correctAnswers++;
-    existingWeek.averageTime = (existingWeek.averageTime + timeSpent) / 2;
+    const previousTotal = existingWeek.totalAnswers;
+    existingWeek.totalAnswers += 1;
+    if (isCorrect) existingWeek.correctAnswers += 1;
+    existingWeek.averageTime = Math.round(
+      ((existingWeek.averageTime * previousTotal) + timeSpent) / existingWeek.totalAnswers
+    );
   } else {
     stats.weeklyProgress.push({
       week: currentWeek,
       totalAnswers: 1,
       correctAnswers: isCorrect ? 1 : 0,
-      averageTime: timeSpent
+      averageTime: timeSpent,
     });
   }
-  
+
   return stats;
 }
 
@@ -58,15 +119,18 @@ export function updateOperationStats(
   timeSpent: number,
   difficulty: 'easy' | 'medium' | 'hard'
 ): DetailedStats {
-  const opKey = operation as keyof OperationStats;
-  if (stats.operationStats[opKey]) {
-    stats.operationStats[opKey].total++;
-    if (isCorrect) stats.operationStats[opKey].correct++;
-    stats.operationStats[opKey].averageTime = 
-      (stats.operationStats[opKey].averageTime + timeSpent) / 2;
-    stats.operationStats[opKey].difficulty = difficulty;
+  const opKey = operation as OperationKey;
+  if (!stats.operationStats[opKey]) {
+    stats.operationStats[opKey] = createOperationDetail();
   }
-  
+
+  const detail = stats.operationStats[opKey];
+  const previousTotal = detail.total;
+  detail.total += 1;
+  if (isCorrect) detail.correct += 1;
+  detail.averageTime = Math.round(((detail.averageTime * previousTotal) + timeSpent) / detail.total);
+  detail.difficulty = difficulty;
+
   return stats;
 }
 
@@ -75,8 +139,8 @@ export function updateDifficultyStats(
   difficulty: 'easy' | 'medium' | 'hard',
   isCorrect: boolean
 ): DetailedStats {
-  stats.difficultyStats[difficulty].total++;
-  if (isCorrect) stats.difficultyStats[difficulty].correct++;
+  stats.difficultyStats[difficulty].total += 1;
+  if (isCorrect) stats.difficultyStats[difficulty].correct += 1;
   return stats;
 }
 
@@ -92,16 +156,15 @@ export function addSessionRecord(
 ): DetailedStats {
   const record: SessionRecord = {
     date: new Date(),
-    ...sessionData
+    ...sessionData,
   };
-  
+
   stats.sessionHistory.push(record);
-  
-  // Mantener solo los últimos 30 registros
+
   if (stats.sessionHistory.length > 30) {
     stats.sessionHistory = stats.sessionHistory.slice(-30);
   }
-  
+
   return stats;
 }
 
@@ -112,21 +175,24 @@ export function getAccuracyPercentage(correct: number, total: number): number {
 
 export function getWeakestOperation(stats: DetailedStats): string {
   const operations = Object.entries(stats.operationStats);
-  let weakest = operations[0];
-  
+  let weakest: [string, OperationDetail] | null = null;
+
   for (const [operation, data] of operations) {
     if (data.total === 0) continue;
     const accuracy = data.correct / data.total;
+    if (!weakest) {
+      weakest = [operation, data];
+      continue;
+    }
     const weakestAccuracy = weakest[1].correct / weakest[1].total;
-    
     if (accuracy < weakestAccuracy) {
       weakest = [operation, data];
     }
   }
-  
-  return weakest[0];
+
+  return weakest ? weakest[0] : OPERATION_KEYS[0];
 }
 
 export function getWeeklyProgressData(stats: DetailedStats): WeeklyProgress[] {
-  return stats.weeklyProgress.slice(-8); // Últimas 8 semanas
-} 
+  return stats.weeklyProgress.slice(-8);
+}

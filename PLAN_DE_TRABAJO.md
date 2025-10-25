@@ -14,7 +14,7 @@ Actualizaremos la app para niños que practican matemáticas (Vite + React + TS 
 
 - Stack: Vite, React 19, TypeScript, Tailwind, Vitest.
 - Lógica principal: `src/utils/problemGenerator.ts`, estado en `src/context/GameContext.tsx`.
-- Estadísticas locales en `localStorage` (incluye operationStats para 4 operaciones; fracciones no incluidas aún).
+- Estadísticas sincronizadas entre `localStorage` y Supabase; `operationStats` cubre operaciones básicas, fracciones y mixtas con normalización automática.
 - Despliegue: GitHub → Vercel (estático). Supabase ya conectado (proyecto supabase-pitagoritas).
 
 ## Objetivos y Alcance
@@ -159,10 +159,10 @@ create policy "attempts insert own" on public.attempts
 
 ### Estadísticas y modos
 
-- Incluir `mixed` y fracciones en `operationStats` y `DetailedStats` como categorías separadas.
-- Añadir modo de práctica `mixed` en `practiceConfig` (opcional o incluir en `all`).
-- Añadir pruebas de integración que cubran la generación y el cálculo de estadísticas para `mixed`.
-- Instrumentar métricas básicas (logs controlados) para monitorear errores o resultados anómalos de esta operación en producción.
+- `operationStats` y la UI de estadísticas incluyen categorías separadas para fracciones y mixtas.
+- Modo de práctica `mixed` disponible junto con la opción `all` actualizada.
+- Pruebas unitarias verifican generación y estadísticas asociadas a operaciones mixtas.
+- Pendiente: instrumentar logs controlados adicionales para diagnosticar anomalías específicas de mixtas en producción.
 
 ## Linting
 
@@ -197,28 +197,29 @@ create policy "attempts insert own" on public.attempts
 ## Plan de Implementación (fases)
 
 1) Fundaciones
-- [ ] Revisar configuración ESLint/Vitest existente y añadir `npx tsc --noEmit` como guardia local
-- [ ] Configurar CI (lint + test + typecheck + build)
-- [ ] Supabase client (`supabaseClient.ts`)
-- [ ] Definir flujo de migraciones SQL versionadas y documentación de aplicación
+- [x] Revisar configuración ESLint/Vitest existente y añadir `npx tsc --noEmit` como guardia local
+- [x] Configurar CI (lint + test + typecheck + build)
+- [x] Supabase client (`supabaseClient.ts`)
+- [x] Definir flujo de migraciones SQL versionadas y documentación de aplicación
 
 2) Autenticación y perfiles
-- [ ] `AuthContext` con signUp/signIn (username→email sintético, PIN)
-- [ ] Pantallas Login/Registro con avatar
-- [ ] Tabla `profiles` y RLS
+- [x] `AuthContext` con signUp/signIn (username→email sintético, PIN)
+- [x] Pantallas Login/Registro con avatar
+- [x] Tabla `profiles` y RLS
 
 3) Persistencia de intentos y sincronización
-- [ ] Tabla `attempts` y RLS
-- [ ] Guardar intento al `CHECK_ANSWER`
-- [ ] Carga agregada al login; migración desde `localStorage`
-- [ ] Implementar cola offline con backoff y registro de última sincronización
+- [x] Tabla `attempts` y RLS
+- [x] Guardar intento al `CHECK_ANSWER`
+- [x] Carga agregada al login; migración desde `localStorage`
+- [x] Implementar cola offline con backoff y registro de última sincronización
 
 4) Operación Mixta
-- [ ] Tipos (`Operation`, `Problem` variante `mixed`)
-- [ ] Generación y explicación en `problemGenerator`
-- [ ] UI en `Exercise.tsx`
-- [ ] Ampliar estadísticas para `mixed` y fracciones (categorías separadas)
-- [ ] Pruebas de integración y observabilidad para `mixed`
+- [x] Tipos (`Operation`, `Problem` variante `mixed`)
+- [x] Generación y explicación en `problemGenerator`
+- [x] UI en `Exercise.tsx`
+- [x] Ampliar estadísticas para `mixed` y fracciones (categorías separadas)
+- [x] Pruebas unitarias/integración para `mixed`
+- [ ] Instrumentación adicional (logs/métricas) para operaciones `mixed`
 
 5) Pulido y despliegue
 - [ ] QA manual (móviles y desktop)
@@ -293,5 +294,5 @@ Opcional:
 
 Checklist (añadir a fases 1/5):
 
-- [ ] Crear `.nvmrc` con Node 20 y documentar uso.
-- [ ] Verificar `npm run dev` levanta correctamente con variables.
+- [x] Crear `.nvmrc` con Node 20 y documentar uso.
+- [x] Verificar `npm run dev` levanta correctamente con variables.

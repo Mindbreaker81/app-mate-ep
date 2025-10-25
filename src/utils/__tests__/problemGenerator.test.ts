@@ -1,14 +1,19 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { generateProblem, calculateResponseTime, getDifficulty } from '../problemGenerator';
 import { LEVELS } from '../gameConfig';
-import type { Fraction, Problem } from '../../types';
+import type { Problem, MixedProblem } from '../../types';
 
-type NumericProblem = Extract<Problem, { answer: number }>;
-type FractionProblem = Extract<Problem, { answer: Fraction }>;
+type NumericProblem = Extract<Problem, { operation: 'addition' | 'subtraction' | 'multiplication' | 'division' }>;
+type FractionProblem = Extract<Problem, { operation: 'fraction-addition' | 'fraction-subtraction' }>;
 
-const isNumericProblem = (problem: Problem): problem is NumericProblem => typeof problem.answer === 'number';
+const isNumericProblem = (problem: Problem): problem is NumericProblem =>
+  problem.operation === 'addition' ||
+  problem.operation === 'subtraction' ||
+  problem.operation === 'multiplication' ||
+  problem.operation === 'division';
 const isFractionProblem = (problem: Problem): problem is FractionProblem =>
-  typeof problem.answer === 'object' && problem.answer !== null;
+  problem.operation === 'fraction-addition' || problem.operation === 'fraction-subtraction';
+const isMixedProblem = (problem: Problem): problem is MixedProblem => problem.operation === 'mixed';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -33,10 +38,26 @@ describe('problemGenerator', () => {
         expect(typeof problem.num2.denominator).toBe('number');
         expect(typeof problem.answer.numerator).toBe('number');
         expect(typeof problem.answer.denominator).toBe('number');
+      } else if (isMixedProblem(problem)) {
+        expect(typeof problem.expression).toBe('string');
+        expect(problem.tokens.length).toBeGreaterThan(0);
+        expect(typeof problem.answer).toBe('number');
+        expect(problem.expression).toMatch(/[×÷]/);
       } else {
         expect.fail('Generated problem has unexpected shape');
       }
       expect(typeof problem.explanation).toBe('string');
+    });
+
+    it('should generate mixed operation problems', () => {
+      const problem = generateProblem(3, 'mixed');
+      if (!isMixedProblem(problem)) {
+        expect.fail('Expected mixed problem');
+      }
+      const expressionJs = problem.expression.replace(/×/g, '*').replace(/÷/g, '/');
+      const computed = Function(`return ${expressionJs}`)();
+      expect(computed).toBe(problem.answer);
+      expect(problem.tokens.length).toBeGreaterThan(0);
     });
 
     it('should generate addition problems correctly', () => {
