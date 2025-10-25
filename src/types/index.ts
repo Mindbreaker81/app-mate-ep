@@ -1,4 +1,10 @@
-export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'fraction-addition' | 'fraction-subtraction';
+export type Operation =
+  | 'addition'
+  | 'subtraction'
+  | 'multiplication'
+  | 'division'
+  | 'fraction-addition'
+  | 'fraction-subtraction';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -49,6 +55,13 @@ export interface Level {
   unlocked: boolean;
 }
 
+export interface UserProfile {
+  id: string;
+  username: string;
+  avatar: string | null;
+  created_at: string;
+}
+
 export interface GameState {
   currentProblem: Problem | null;
   userAnswer: string | Fraction;
@@ -66,6 +79,32 @@ export interface GameState {
   timeMode: TimeMode;
   timeRemaining: number;
   isTimerActive: boolean;
+}
+
+export type SerializedAnswer = number | string | Fraction | null;
+
+export interface AttemptPayload {
+  operation: Operation;
+  level: number;
+  practiceMode: PracticeMode;
+  isCorrect: boolean;
+  timeSpent: number;
+  userAnswer: SerializedAnswer;
+  correctAnswer: SerializedAnswer;
+  createdAt: string;
+}
+
+export interface PendingAttempt extends AttemptPayload {
+  id: string;
+  retryCount: number;
+}
+
+export interface LegacySnapshot {
+  stats: DetailedStats;
+  totalExercises: number;
+  correctExercises: number;
+  level: number;
+  practiceMode: PracticeMode;
 }
 
 export interface DetailedStats {
@@ -133,12 +172,22 @@ export interface TimeModeConfig {
 export type GameAction =
   | { type: 'SET_PROBLEM'; payload: Problem }
   | { type: 'SET_ANSWER'; payload: string | Fraction }
-  | { type: 'CHECK_ANSWER' }
+  | {
+      type: 'CHECK_ANSWER';
+      payload: {
+        isCorrect: boolean;
+        timeSpent: number;
+        difficulty: Difficulty;
+        userAnswer: SerializedAnswer;
+        problem: Problem;
+      };
+    }
   | { type: 'NEXT_PROBLEM' }
   | { type: 'RESET_GAME' }
   | { type: 'UNLOCK_ACHIEVEMENT'; payload: Achievement }
   | { type: 'UPDATE_STREAK'; payload: number }
   | { type: 'UPDATE_STATS'; payload: Partial<DetailedStats> }
+  | { type: 'SET_STATS'; payload: DetailedStats }
   | { type: 'SET_PRACTICE_MODE'; payload: PracticeMode }
   | { type: 'SET_TIME_MODE'; payload: TimeMode }
   | { type: 'UPDATE_TIMER'; payload: number }
