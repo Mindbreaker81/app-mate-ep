@@ -1,4 +1,8 @@
-export const SYNTHETIC_EMAIL_DOMAIN = 'pitagoritas.local';
+const DEFAULT_EMAIL_DOMAIN = 'pitagoritas-mail.com';
+
+const envDomain = (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_SUPABASE_EMAIL_DOMAIN;
+
+export const SYNTHETIC_EMAIL_DOMAIN = envDomain && envDomain.trim().length > 0 ? envDomain.trim().toLowerCase() : DEFAULT_EMAIL_DOMAIN;
 
 export function normalizeUsername(username: string): string {
   return username.trim().toLowerCase();

@@ -76,11 +76,11 @@ export function Exercise() {
       const den = parseInt(fracAnswer.denominator, 10);
       if (!isNaN(num) && !isNaN(den) && den !== 0) {
         setAnswer({ numerator: num, denominator: den });
-        setTimeout(() => checkAnswer(), 0);
+        checkAnswer({ numerator: num, denominator: den });
       }
     } else {
       setAnswer(userAnswer);
-      setTimeout(() => checkAnswer(), 0);
+      checkAnswer(userAnswer);
     }
   };
 

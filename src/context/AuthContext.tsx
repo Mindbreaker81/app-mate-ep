@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import type { UserProfile } from '../types';
 import {
@@ -39,9 +40,12 @@ async function upsertProfile(payload: { id: string; username: string; avatar: st
     .upsert({ id: payload.id, username: payload.username, avatar: payload.avatar }, { onConflict: 'id' });
 
   if (error) {
+    console.error('Supabase profile upsert error:', error);
     throw error;
   }
 }
+
+const SESSION_TIMEOUT_MS = 7000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -57,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (profileError) {
+      console.error('Supabase fetchProfile error:', profileError);
       setError(profileError.message);
       return null;
     }
@@ -82,10 +87,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const initialize = async () => {
-      const { data } = await supabase.auth.getSession();
-      await resolveSession(data.session ?? null);
-      if (isMounted) {
-        setLoading(false);
+      try {
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+        const timeoutPromise: Promise<{ data: { session: Session | null }; error: AuthError | null }> = new Promise(
+          (resolve) => {
+            timeoutId = setTimeout(
+              () =>
+                resolve({
+                  data: { session: null },
+                  error: {
+                    name: 'timeout',
+                    message: 'getSession timeout',
+                    status: 408,
+                  } as AuthError,
+                }),
+              SESSION_TIMEOUT_MS,
+            );
+          },
+        );
+
+        const raceResult = (await Promise.race([supabase.auth.getSession(), timeoutPromise])) as {
+          data: { session: Session | null };
+          error: AuthError | null;
+        };
+
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        if (raceResult.error) {
+          if (raceResult.error.message === 'getSession timeout') {
+            console.warn(`Supabase getSession tardó más de ${SESSION_TIMEOUT_MS}ms. Continuando sin sesión.`);
+          } else {
+            console.error('Supabase getSession error:', raceResult.error);
+          }
+        }
+
+        await resolveSession(raceResult.data.session ?? null);
+      } catch (initError) {
+        console.error('Supabase getSession arrojó una excepción:', initError);
+        await resolveSession(null);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -101,6 +146,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       listener.subscription.unsubscribe();
     };
   }, [clearError, fetchProfile]);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.debug('AuthProvider estado → loading:', loading, 'session:', session?.user?.id ?? null);
+    }
+  }, [loading, session]);
 
   const signIn = useCallback(
     async ({ username, pin }: SignInPayload) => {
@@ -144,39 +195,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const { data: existingUser, error: usernameCheckError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', sanitizedUsername)
-        .maybeSingle();
-
-      if (usernameCheckError) {
-        setError('Tuvimos un problema revisando el usuario. Intenta de nuevo.');
-        return;
-      }
-
-      if (existingUser) {
-        setError('Ese nombre de usuario ya está en uso.');
-        return;
-      }
-
       const email = buildSyntheticEmail(sanitizedUsername);
 
-      const { data, error: signUpError } = await supabase.auth.signUp({ email, password: pin });
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: pin,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            username: sanitizedUsername,
+            createdFrom: 'pitagoritas-app',
+          },
+        },
+      });
 
       if (signUpError || !data.user) {
-        setError('No pudimos crear tu cuenta. Intenta de nuevo.');
+        if (signUpError) {
+          console.error('Supabase signUp error:', signUpError);
+        }
+        const message = signUpError?.message ?? '';
+        if (message.includes('already registered')) {
+          setError('Ese nombre de usuario ya está en uso. Elige otro.');
+        } else if (message.includes('password')) {
+          setError('El PIN no cumple con los requisitos de seguridad. Usa 6 dígitos.');
+        } else if (message.includes('retry') || message.includes('security purposes')) {
+          setError('Hiciste demasiados intentos seguidos. Espera unos segundos antes de intentarlo de nuevo.');
+        } else if (message.includes('Failed to fetch') || message.includes('abort') || message.includes('TypeError')) {
+          setError('No pudimos conectar con Supabase. Revisa tu conexión y variables VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY.');
+        } else if (message.includes('invalid email')) {
+          setError('El nombre de usuario no es válido. Usa solo letras y números.');
+        } else {
+          setError('No pudimos crear tu cuenta. Intenta de nuevo.');
+        }
+        return;
+      }
+
+      let resolvedSession = data.session ?? null;
+      if (!resolvedSession) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password: pin });
+        if (signInError) {
+          console.error('Supabase signIn after signUp error:', signInError);
+        } else {
+          resolvedSession = signInData.session ?? null;
+        }
+      }
+
+      if (!resolvedSession?.user) {
+        setError('Cuenta creada. Revisa tu correo o intenta iniciar sesión manualmente.');
         return;
       }
 
       try {
-        await upsertProfile({ id: data.user.id, username: sanitizedUsername, avatar });
+        await upsertProfile({ id: resolvedSession.user.id, username: sanitizedUsername, avatar });
       } catch (profileError) {
-        setError('Cuenta creada, pero no pudimos guardar tu perfil. Intenta iniciar sesión.');
+        const message = profileError instanceof Error ? profileError.message : String(profileError);
+        if (message.includes('duplicate key value') || message.includes('23505')) {
+          setError('Ese nombre de usuario ya está en uso. Elige otro.');
+        } else {
+          setError('Cuenta creada, pero no pudimos guardar tu perfil. Intenta iniciar sesión.');
+        }
       }
 
-      await fetchProfile(data.user.id);
-      setSession(data.session ?? null);
+      if (resolvedSession?.user) {
+        await fetchProfile(resolvedSession.user.id);
+      }
+
+      setSession(resolvedSession);
     },
     [clearError, fetchProfile]
   );

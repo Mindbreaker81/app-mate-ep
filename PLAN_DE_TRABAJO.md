@@ -37,7 +37,7 @@ Actualizaremos la app para niños que practican matemáticas (Vite + React + TS 
 
 ### Supabase Auth
 
-- Usaremos email sintético `username@pitagoritas.local` + PIN como contraseña (Auth estándar).
+- Usaremos email sintético `username@<dominio>` + PIN como contraseña (Auth estándar). El dominio se controla con `VITE_SUPABASE_EMAIL_DOMAIN` (por defecto `pitagoritas-mail.com`, se debe añadir a Auth > Allowed email domains en Supabase).
 - Asegurar política de password mínima (recomendado 6 dígitos) y rate-limiting en intentos (vía Supabase + reglas del frontend, p. ej., tres intentos antes de cooldown corto).
 - Versionar los cambios de esquema/Auth mediante migraciones SQL (directorio `supabase/migrations`) y documentar su aplicación en entornos locales y de CI para evitar drift.
 

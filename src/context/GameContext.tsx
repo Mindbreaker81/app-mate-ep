@@ -370,7 +370,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 interface GameContextType {
   state: GameState;
   dispatch: React.Dispatch<GameAction>;
-  checkAnswer: () => void;
+  checkAnswer: (overrideAnswer?: string | Fraction) => void;
   nextProblem: () => void;
   resetGame: () => void;
   setAnswer: (answer: string | Fraction) => void;
@@ -396,11 +396,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     practiceMode: state.practiceMode,
   };
 
-  const checkAnswer = useCallback(() => {
+  const checkAnswer = useCallback(
+    (overrideAnswer?: string | Fraction) => {
     if (!state.currentProblem) return;
     const evaluation = buildCheckAnswerPayload({
       currentProblem: state.currentProblem,
-      userAnswer: state.userAnswer,
+        userAnswer: overrideAnswer ?? state.userAnswer,
       level: state.level,
       timeMode: state.timeMode,
       timeRemaining: state.timeRemaining,
@@ -410,16 +411,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const attemptPayload = buildAttemptPayload(state.level, state.practiceMode, evaluation);
       recordAttempt(sessionUserId, attemptPayload);
     }
-  }, [
-    state.currentProblem,
-    state.userAnswer,
-    state.level,
-    state.practiceMode,
-    state.timeMode,
-    state.timeRemaining,
-    sessionUserId,
-    dispatch,
-  ]);
+    },
+    [
+      state.currentProblem,
+      state.userAnswer,
+      state.level,
+      state.practiceMode,
+      state.timeMode,
+      state.timeRemaining,
+      sessionUserId,
+      dispatch,
+    ],
+  );
   
   // Efecto para manejar el timer
   useEffect(() => {
@@ -430,7 +433,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     } else if (state.timeRemaining === 0 && state.isTimerActive) {
       dispatch({ type: 'STOP_TIMER' });
       if (state.userAnswer && state.currentProblem) {
-        checkAnswer();
+        checkAnswer(state.userAnswer);
       }
     }
 
