@@ -222,9 +222,9 @@ create policy "attempts insert own" on public.attempts
 - [x] Instrumentación adicional (logs/métricas) para operaciones `mixed`
 
 5) Pulido y despliegue
-- [ ] QA manual (móviles y desktop)
-- [ ] Variables en Vercel, smoke test en Preview
-- [ ] Merge a main y release
+- [ ] QA manual (móviles y desktop) — asistir con `npm test -- --run` (incluye smoke test de App) y validar en dispositivos reales
+- [ ] Variables en Vercel, smoke test en Preview — `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` obligatorios (el build falla sin ellos); ejecutar `npm run build` en Preview
+- [ ] Merge a main y release — preparar PR final, monitorear telemetría e indicadores en el primer despliegue
 
 ## Criterios de Aceptación
 
