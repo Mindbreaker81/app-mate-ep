@@ -22,7 +22,7 @@ export const Help: React.FC<HelpProps> = ({ onClose }) => (
         <b>Ejercicios:</b> Selecciona el modo (todas las operaciones, sumas, restas, etc.) y elige el tiempo si lo deseas. Escribe tu respuesta y pulsa <b>Enter</b> o el botón de enviar.
       </li>
       <li>
-        <b>Botón "Siguiente"</b>: Aparece tras responder. Úsalo para pasar al siguiente ejercicio.
+        <b>Botón &ldquo;Siguiente&rdquo;</b>: Aparece tras responder. Úsalo para pasar al siguiente ejercicio.
       </li>
       <li>
         <b>Colores del temporizador:</b> Verde (mucho tiempo), amarillo (tiempo medio), rojo (poco tiempo).

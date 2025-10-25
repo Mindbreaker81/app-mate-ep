@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
-import type { GameState, GameAction, Fraction, PracticeMode, TimeMode } from '../types';
+import type { GameState, GameAction, Fraction, PracticeMode, TimeMode, Problem } from '../types';
 import { generateProblem, getDifficulty } from '../utils/problemGenerator';
 import { LEVELS, ACHIEVEMENTS } from '../utils/gameConfig';
 import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats } from '../utils/statsUtils';
@@ -25,8 +25,8 @@ const initialState: GameState = {
 };
 
 function simplifyFraction(frac: Fraction): Fraction {
-  let numerator = Math.abs(frac.numerator);
-  let denominator = Math.abs(frac.denominator);
+  const numerator = Math.abs(frac.numerator);
+  const denominator = Math.abs(frac.denominator);
   if (denominator === 0) return { numerator: 0, denominator: 1 };
   function gcd(a: number, b: number): number {
     a = Math.abs(a);
@@ -47,8 +47,17 @@ function fractionEquals(a: Fraction, b: Fraction): boolean {
   return sa.numerator === sb.numerator && sa.denominator === sb.denominator;
 }
 
-function isFractionProblem(problem: any): problem is { answer: Fraction } {
-  return problem && typeof problem.answer === 'object' && problem.answer !== null && 'numerator' in problem.answer && 'denominator' in problem.answer;
+type FractionAnswerProblem = Extract<Problem, { answer: Fraction }>;
+
+function isFractionProblem(problem: Problem | null): problem is FractionAnswerProblem {
+  return (
+    !!problem &&
+    typeof problem === 'object' &&
+    typeof (problem as FractionAnswerProblem).answer === 'object' &&
+    (problem as FractionAnswerProblem).answer !== null &&
+    'numerator' in (problem as FractionAnswerProblem).answer &&
+    'denominator' in (problem as FractionAnswerProblem).answer
+  );
 }
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -256,7 +265,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
-  const timerRef = useRef<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   // Efecto para manejar el timer
   useEffect(() => {
@@ -275,6 +284,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
   }, [state.isTimerActive, state.timeRemaining, state.userAnswer]);
@@ -294,7 +304,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (!state.currentProblem) {
       dispatch({ type: 'SET_PROBLEM', payload: generateProblem(state.level, state.practiceMode) });
     }
-  }, [state.level, state.practiceMode]);
+  }, [state.currentProblem, state.level, state.practiceMode]);
   
   const checkAnswer = () => {
     dispatch({ type: 'CHECK_ANSWER' });

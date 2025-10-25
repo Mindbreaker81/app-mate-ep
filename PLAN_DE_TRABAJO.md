@@ -7,8 +7,8 @@ Actualizaremos la app para niños que practican matemáticas (Vite + React + TS 
 - Autenticación infantil con username + PIN numérico y elección de avatar.
 - Persistencia en Supabase de intentos, progreso y estadísticas por usuario.
 - Nueva operación mixta que combine suma, resta, multiplicación y división en una sola expresión con orden de operaciones.
-- Configurar ESLint y crear tests (Vitest + Testing Library) para validar cada paso.
-- CI en GitHub Actions para lint + tests en PRs.
+- Reforzar linting y cobertura de tests (Vitest + Testing Library) ya existentes añadiendo validaciones de tipeo antes de cada release.
+- CI en GitHub Actions ejecutando lint, pruebas y chequeo de tipos en cada PR.
 
 ## Estado actual (diagnóstico)
 
@@ -39,6 +39,7 @@ Actualizaremos la app para niños que practican matemáticas (Vite + React + TS 
 
 - Usaremos email sintético `username@pitagoritas.local` + PIN como contraseña (Auth estándar).
 - Asegurar política de password mínima (recomendado 6 dígitos) y rate-limiting en intentos (vía Supabase + reglas del frontend, p. ej., tres intentos antes de cooldown corto).
+- Versionar los cambios de esquema/Auth mediante migraciones SQL (directorio `supabase/migrations`) y documentar su aplicación en entornos locales y de CI para evitar drift.
 
 ### Esquema de base de datos
 
@@ -108,6 +109,8 @@ create policy "attempts insert own" on public.attempts
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
+- Gestionar las variables vía `.env.local` (gitignored), secretos cifrados en Vercel y equivalentes en CI (`CI_SUPABASE_*`), asegurando que los pipelines de Vitest y build reciben claves mediante parámetros encriptados sin exponerlas en logs.
+
 ### Cliente Supabase
 
 - Archivo `src/lib/supabaseClient.ts` con `createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)`.
@@ -117,12 +120,15 @@ create policy "attempts insert own" on public.attempts
 - `AuthContext` para exponer sesión, `signIn`, `signUp`, `signOut`.
 - Mapeo username ↔ email sintético; PIN como contraseña.
 - Sincronizar perfil `profiles` tras signup (insert/upsert).
+- Limitar reintentos de PIN en frontend con cooldown progresivo, expirar sesiones inactivas y evitar almacenamiento de información sensible para cumplir con COPPA.
 
 ### Persistencia de intentos y sincronización
 
 - En `GameContext` tras `CHECK_ANSWER`, insertar en `attempts` (no bloquear UI). Reintento con backoff si offline.
 - Al iniciar sesión, cargar agregados desde `attempts` y poblar `stats` locales (o calcular en cliente).
 - Migración inicial: si existen datos en `localStorage` y el usuario no está marcado como migrado, subir conteos y marcar flag.
+- Implementar una cola resiliente (IndexedDB/localStorage) que guarde intentos pendientes cuando no haya conectividad y reprocesarlos con backoff al restablecerse.
+- Guardar la fecha de última sincronización para evitar duplicados y poder auditar migraciones.
 
 ## Nueva Operación Mixta ("mixed")
 
@@ -155,14 +161,16 @@ create policy "attempts insert own" on public.attempts
 
 - Incluir `mixed` y fracciones en `operationStats` y `DetailedStats` como categorías separadas.
 - Añadir modo de práctica `mixed` en `practiceConfig` (opcional o incluir en `all`).
+- Añadir pruebas de integración que cubran la generación y el cálculo de estadísticas para `mixed`.
+- Instrumentar métricas básicas (logs controlados) para monitorear errores o resultados anómalos de esta operación en producción.
 
 ## Linting
 
-- ESLint (TypeScript + React + Hooks) y compat con Prettier.
-- Paquetes: `eslint`, `@typescript-eslint/parser`, `@typescript-eslint/eslint-plugin`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, `eslint-config-prettier`.
-- Scripts:
+- ESLint (TypeScript + React + Hooks) y compat con Prettier ya están instalados; validar reglas compartidas y mantener el formato consistente con Prettier.
+- Scripts disponibles:
   - `npm run lint` → `eslint . --ext .ts,.tsx`
   - `npm run lint:fix` → `eslint . --ext .ts,.tsx --fix`
+- Añadir `npx tsc --noEmit` como verificación de tipos previa a los builds.
 
 ## Tests (Vitest + Testing Library)
 
@@ -176,20 +184,23 @@ create policy "attempts insert own" on public.attempts
   - CHECK_ANSWER numérico y fracciones; NEXT_PROBLEM; SET/RESET; timer.
 - Componentes clave (`Exercise`, `PracticeModes`, `ScoreBoard`):
   - render según operación, input y flujo submit/next; small integration tests.
+- Confeti: usar `vi.useFakeTimers` para validar cleanup <2s, `pointer-events: none` y ausencia de fugas de listeners.
 
 ## CI/CD (GitHub Actions + Vercel)
 
 - Workflow `.github/workflows/ci.yml`:
   - Node 20.
-  - Instalar deps, `npm run lint`, `npm run test`.
+  - Instalar deps, `npm run lint`, `npm run test`, `npx tsc --noEmit` y `npm run build` para detectar regresiones anticipadamente.
 - Vercel: variables de entorno (URL y Anon Key) en Preview y Production. Deploy automático desde GitHub.
+- Publicar artefactos de cobertura y reportes de lint en CI para facilitar diagnóstico.
 
 ## Plan de Implementación (fases)
 
 1) Fundaciones
-- [ ] Añadir ESLint y scripts
-- [ ] Configurar CI (lint + test)
+- [ ] Revisar configuración ESLint/Vitest existente y añadir `npx tsc --noEmit` como guardia local
+- [ ] Configurar CI (lint + test + typecheck + build)
 - [ ] Supabase client (`supabaseClient.ts`)
+- [ ] Definir flujo de migraciones SQL versionadas y documentación de aplicación
 
 2) Autenticación y perfiles
 - [ ] `AuthContext` con signUp/signIn (username→email sintético, PIN)
@@ -200,12 +211,14 @@ create policy "attempts insert own" on public.attempts
 - [ ] Tabla `attempts` y RLS
 - [ ] Guardar intento al `CHECK_ANSWER`
 - [ ] Carga agregada al login; migración desde `localStorage`
+- [ ] Implementar cola offline con backoff y registro de última sincronización
 
 4) Operación Mixta
 - [ ] Tipos (`Operation`, `Problem` variante `mixed`)
 - [ ] Generación y explicación en `problemGenerator`
 - [ ] UI en `Exercise.tsx`
 - [ ] Ampliar estadísticas para `mixed` y fracciones (categorías separadas)
+- [ ] Pruebas de integración y observabilidad para `mixed`
 
 5) Pulido y despliegue
 - [ ] QA manual (móviles y desktop)
@@ -218,7 +231,7 @@ create policy "attempts insert own" on public.attempts
 - Intentos guardados por usuario en Supabase con RLS activa.
 - Estadísticas cargan desde BD y se reflejan en UI.
 - Nueva operación `mixed` disponible y evaluada correctamente con explicación.
-- Lint sin errores y suite de tests pasando en CI.
+- Lint, typecheck (`npx tsc --noEmit`), build y suite de tests pasando en CI.
 
 ## Consideraciones de seguridad y UX
 
@@ -255,7 +268,8 @@ Plan de implementación:
 - Revisar `Exercise.tsx` y componentes `CSSConfetti`/`Confetti`.
 - Añadir `pointer-events: none` al contenedor del confeti.
 - Forzar cleanup al disparar `nextProblem` y al finalizar animación (timeout/Promise).
-- Test manual y, si es posible, test de integración sencillo con espía de timers.
+- Test manual y test de integración con `vi.useFakeTimers` asegurando desmontaje <2s y limpieza de listeners.
+- Instrumentar logs controlados que permitan detectar duraciones superiores a lo esperado en producción.
 
 ## Entorno local de desarrollo
 

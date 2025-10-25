@@ -136,9 +136,9 @@ export type GameAction =
   | { type: 'CHECK_ANSWER' }
   | { type: 'NEXT_PROBLEM' }
   | { type: 'RESET_GAME' }
-  | { type: 'UNLOCK_ACHIEVEMENT'; payload: any }
+  | { type: 'UNLOCK_ACHIEVEMENT'; payload: Achievement }
   | { type: 'UPDATE_STREAK'; payload: number }
-  | { type: 'UPDATE_STATS'; payload: any }
+  | { type: 'UPDATE_STATS'; payload: Partial<DetailedStats> }
   | { type: 'SET_PRACTICE_MODE'; payload: PracticeMode }
   | { type: 'SET_TIME_MODE'; payload: TimeMode }
   | { type: 'UPDATE_TIMER'; payload: number }
