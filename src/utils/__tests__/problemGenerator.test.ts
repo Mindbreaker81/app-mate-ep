@@ -1,20 +1,31 @@
 import { describe, it, expect } from 'vitest';
 import { generateProblem, calculateResponseTime, getDifficulty } from '../problemGenerator';
+import { LEVELS } from '../gameConfig';
 
 describe('problemGenerator', () => {
   describe('generateProblem', () => {
     it('should generate a problem with valid structure', () => {
       const problem = generateProblem(1);
       
-      expect(problem).toHaveProperty('num1');
-      expect(problem).toHaveProperty('num2');
       expect(problem).toHaveProperty('operation');
-      expect(problem).toHaveProperty('answer');
       expect(problem).toHaveProperty('explanation');
-      
-      expect(typeof problem.num1).toBe('number');
-      expect(typeof problem.num2).toBe('number');
-      expect(typeof problem.answer).toBe('number');
+
+      if (typeof (problem as any).num1 === 'number' && typeof (problem as any).num2 === 'number') {
+        expect(typeof (problem as any).answer).toBe('number');
+      } else {
+        // Fracciones
+        const p = problem as unknown as {
+          num1: { numerator: number; denominator: number };
+          num2: { numerator: number; denominator: number };
+          answer: { numerator: number; denominator: number };
+        };
+        expect(typeof p.num1.numerator).toBe('number');
+        expect(typeof p.num1.denominator).toBe('number');
+        expect(typeof p.num2.numerator).toBe('number');
+        expect(typeof p.num2.denominator).toBe('number');
+        expect(typeof p.answer.numerator).toBe('number');
+        expect(typeof p.answer.denominator).toBe('number');
+      }
       expect(typeof problem.explanation).toBe('string');
     });
 
@@ -55,14 +66,30 @@ describe('problemGenerator', () => {
       }
     });
 
-    it('should respect level constraints', () => {
-      const level1Problem = generateProblem(1);
-      const level4Problem = generateProblem(4);
-      
-      expect(level1Problem.num1).toBeLessThanOrEqual(20);
-      expect(level1Problem.num2).toBeLessThanOrEqual(20);
-      expect(level4Problem.num1).toBeLessThanOrEqual(200);
-      expect(level4Problem.num2).toBeLessThanOrEqual(200);
+    it('should respect level constraints for addition', () => {
+      const level1Problem = generateProblem(1, 'addition');
+      const level4Problem = generateProblem(4, 'addition');
+
+      const l1Max = LEVELS.find(l => l.id === 1)!.maxNumber;
+      const l4Max = LEVELS.find(l => l.id === 4)!.maxNumber;
+
+      expect(typeof level1Problem.num1).toBe('number');
+      expect(typeof level1Problem.num2).toBe('number');
+      expect(typeof level4Problem.num1).toBe('number');
+      expect(typeof level4Problem.num2).toBe('number');
+
+      if (typeof level1Problem.num1 === 'number' && typeof level1Problem.num2 === 'number') {
+        expect(level1Problem.num1).toBeGreaterThanOrEqual(1);
+        expect(level1Problem.num2).toBeGreaterThanOrEqual(1);
+        expect(level1Problem.num1).toBeLessThanOrEqual(l1Max);
+        expect(level1Problem.num2).toBeLessThanOrEqual(l1Max);
+      }
+      if (typeof level4Problem.num1 === 'number' && typeof level4Problem.num2 === 'number') {
+        expect(level4Problem.num1).toBeGreaterThanOrEqual(1);
+        expect(level4Problem.num2).toBeGreaterThanOrEqual(1);
+        expect(level4Problem.num1).toBeLessThanOrEqual(l4Max);
+        expect(level4Problem.num2).toBeLessThanOrEqual(l4Max);
+      }
     });
   });
 
