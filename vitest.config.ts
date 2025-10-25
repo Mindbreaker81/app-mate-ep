@@ -1,4 +1,6 @@
 /// <reference types="vitest" />
+process.env.TAILWIND_DISABLE_SOURCE_MAP = process.env.TAILWIND_DISABLE_SOURCE_MAP ?? '1';
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
