@@ -5,7 +5,7 @@ export const PRACTICE_MODES: PracticeModeConfig[] = [
     mode: 'all',
     label: 'Todas las Operaciones',
     icon: '🧮',
-    description: 'Practica sumas, restas, multiplicaciones y divisiones'
+    description: 'Practica sumas, restas, multiplicaciones, divisiones, fracciones y mixtas'
   },
   {
     mode: 'addition',
@@ -36,6 +36,12 @@ export const PRACTICE_MODES: PracticeModeConfig[] = [
     label: 'Fracciones (sumas y restas)',
     icon: '½',
     description: 'Practica sumas y restas de fracciones'
+  },
+  {
+    mode: 'mixed',
+    label: 'Operaciones Mixtas',
+    icon: '🔀',
+    description: 'Trabaja expresiones con múltiples operaciones y orden de operaciones'
   }
 ];
 

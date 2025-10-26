@@ -4,7 +4,7 @@ import { formatTime } from '../utils/timeConfig';
 import { getPracticeModeConfig } from '../utils/practiceConfig';
 import { CSSConfetti } from './CSSConfetti';
 import { Confetti } from './Confetti';
-import type { Problem, Fraction } from '../types';
+import type { Problem, Fraction, MixedProblem } from '../types';
 
 // Hook para animar estrellas
 function useStarAnimation(trigger: boolean) {
@@ -30,6 +30,10 @@ function isFractionProblem(problem: Problem): problem is {
     problem.operation === 'fraction-addition' ||
     problem.operation === 'fraction-subtraction'
   );
+}
+
+function isMixedProblem(problem: Problem): problem is MixedProblem {
+  return problem.operation === 'mixed';
 }
 
 // Hook para manejar el confeti
@@ -72,11 +76,11 @@ export function Exercise() {
       const den = parseInt(fracAnswer.denominator, 10);
       if (!isNaN(num) && !isNaN(den) && den !== 0) {
         setAnswer({ numerator: num, denominator: den });
-        setTimeout(() => checkAnswer(), 0);
+        checkAnswer({ numerator: num, denominator: den });
       }
     } else {
       setAnswer(userAnswer);
-      setTimeout(() => checkAnswer(), 0);
+      checkAnswer(userAnswer);
     }
   };
 
@@ -86,6 +90,7 @@ export function Exercise() {
       case 'subtraction': return '-';
       case 'multiplication': return '×';
       case 'division': return '÷';
+      case 'mixed': return '…';
       default: return '+';
     }
   };
@@ -165,6 +170,22 @@ export function Exercise() {
                 />
               </span>
             </>
+          ) : currentProblem && isMixedProblem(currentProblem) ? (
+            <div className="space-y-4">
+              <div className="text-3xl font-semibold text-gray-800">
+                {currentProblem.expression}
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-2xl text-blue-600">=</span>
+                <input
+                  type="number"
+                  className="w-24 border-b-2 border-blue-400 text-center"
+                  value={typeof userAnswer === 'string' ? userAnswer : ''}
+                  onChange={e => setAnswer(e.target.value)}
+                  disabled={isCorrect !== null}
+                />
+              </div>
+            </div>
           ) : currentProblem ? (
             <>
               <span>{currentProblem.num1}</span>

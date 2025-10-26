@@ -1,4 +1,14 @@
-export type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division' | 'fraction-addition' | 'fraction-subtraction';
+export const OPERATION_KEYS = [
+  'addition',
+  'subtraction',
+  'multiplication',
+  'division',
+  'fraction-addition',
+  'fraction-subtraction',
+  'mixed',
+] as const;
+
+export type Operation = (typeof OPERATION_KEYS)[number];
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -12,6 +22,16 @@ export type FractionProblem = {
   num2: Fraction;
   operation: 'fraction-addition' | 'fraction-subtraction';
   answer: Fraction;
+  explanation: string;
+};
+
+export type MixedToken = number | '+' | '-' | '×' | '÷' | '(' | ')';
+
+export type MixedProblem = {
+  expression: string;
+  tokens: MixedToken[];
+  operation: 'mixed';
+  answer: number;
   explanation: string;
 };
 
@@ -29,7 +49,8 @@ export type Problem =
       operation: 'fraction-addition' | 'fraction-subtraction';
       answer: Fraction;
       explanation: string;
-    };
+    }
+  | MixedProblem;
 
 export interface Achievement {
   id: string;
@@ -47,6 +68,13 @@ export interface Level {
   operations: string[];
   maxNumber: number;
   unlocked: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  username: string;
+  avatar: string | null;
+  created_at: string;
 }
 
 export interface GameState {
@@ -68,6 +96,32 @@ export interface GameState {
   isTimerActive: boolean;
 }
 
+export type SerializedAnswer = number | string | Fraction | null;
+
+export interface AttemptPayload {
+  operation: Operation;
+  level: number;
+  practiceMode: PracticeMode;
+  isCorrect: boolean;
+  timeSpent: number;
+  userAnswer: SerializedAnswer;
+  correctAnswer: SerializedAnswer;
+  createdAt: string;
+}
+
+export interface PendingAttempt extends AttemptPayload {
+  id: string;
+  retryCount: number;
+}
+
+export interface LegacySnapshot {
+  stats: DetailedStats;
+  totalExercises: number;
+  correctExercises: number;
+  level: number;
+  practiceMode: PracticeMode;
+}
+
 export interface DetailedStats {
   weeklyProgress: WeeklyProgress[];
   averageTime: number;
@@ -83,12 +137,9 @@ export interface WeeklyProgress {
   averageTime: number;
 }
 
-export interface OperationStats {
-  addition: OperationDetail;
-  subtraction: OperationDetail;
-  multiplication: OperationDetail;
-  division: OperationDetail;
-}
+export type OperationKey = Operation;
+
+export type OperationStats = Record<OperationKey, OperationDetail>;
 
 export interface OperationDetail {
   total: number;
@@ -112,7 +163,7 @@ export interface SessionRecord {
   operations: string[];
 }
 
-export type PracticeMode = 'all' | 'addition' | 'subtraction' | 'multiplication' | 'division' | 'fractions';
+export type PracticeMode = 'all' | 'addition' | 'subtraction' | 'multiplication' | 'division' | 'fractions' | 'mixed';
 
 export interface PracticeModeConfig {
   mode: PracticeMode;
@@ -133,12 +184,22 @@ export interface TimeModeConfig {
 export type GameAction =
   | { type: 'SET_PROBLEM'; payload: Problem }
   | { type: 'SET_ANSWER'; payload: string | Fraction }
-  | { type: 'CHECK_ANSWER' }
+  | {
+      type: 'CHECK_ANSWER';
+      payload: {
+        isCorrect: boolean;
+        timeSpent: number;
+        difficulty: Difficulty;
+        userAnswer: SerializedAnswer;
+        problem: Problem;
+      };
+    }
   | { type: 'NEXT_PROBLEM' }
   | { type: 'RESET_GAME' }
-  | { type: 'UNLOCK_ACHIEVEMENT'; payload: any }
+  | { type: 'UNLOCK_ACHIEVEMENT'; payload: Achievement }
   | { type: 'UPDATE_STREAK'; payload: number }
-  | { type: 'UPDATE_STATS'; payload: any }
+  | { type: 'UPDATE_STATS'; payload: Partial<DetailedStats> }
+  | { type: 'SET_STATS'; payload: DetailedStats }
   | { type: 'SET_PRACTICE_MODE'; payload: PracticeMode }
   | { type: 'SET_TIME_MODE'; payload: TimeMode }
   | { type: 'UPDATE_TIMER'; payload: number }

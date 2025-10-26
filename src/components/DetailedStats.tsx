@@ -12,8 +12,13 @@ export function DetailedStats() {
     addition: 'Sumas',
     subtraction: 'Restas', 
     multiplication: 'Multiplicaciones',
-    division: 'Divisiones'
+    division: 'Divisiones',
+    'fraction-addition': 'Fracciones (+)',
+    'fraction-subtraction': 'Fracciones (-)',
+    mixed: 'Operaciones mixtas'
   };
+  const formatOperationLabel = (operation: string) =>
+    operationLabels[operation as keyof typeof operationLabels] ?? operation;
   
   const difficultyLabels = {
     easy: 'Fácil',
@@ -44,7 +49,7 @@ export function DetailedStats() {
         <div className="bg-purple-50 p-4 rounded-lg">
           <h3 className="font-semibold text-purple-800">Operación Más Débil</h3>
           <p className="text-lg font-bold text-purple-600">
-            {operationLabels[weakestOp as keyof typeof operationLabels]}
+            {formatOperationLabel(weakestOp)}
           </p>
         </div>
       </div>
@@ -57,7 +62,7 @@ export function DetailedStats() {
             <div key={operation} className="bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold text-gray-700">
-                  {operationLabels[operation as keyof typeof operationLabels]}
+                  {formatOperationLabel(operation)}
                 </span>
                 <span className="text-sm text-gray-500">
                   {data.difficulty === 'easy' ? '🟢' : data.difficulty === 'medium' ? '🟡' : '🔴'}
@@ -174,7 +179,7 @@ export function DetailedStats() {
         <h3 className="font-semibold text-yellow-800 mb-2">💡 Recomendaciones</h3>
         <ul className="text-sm text-yellow-700 space-y-1">
           {weakestOp && (
-            <li>• Practica más {operationLabels[weakestOp as keyof typeof operationLabels].toLowerCase()}</li>
+            <li>• Practica más {formatOperationLabel(weakestOp).toLowerCase()}</li>
           )}
           {stats.averageTime > 30 && (
             <li>• Intenta resolver los ejercicios más rápido</li>

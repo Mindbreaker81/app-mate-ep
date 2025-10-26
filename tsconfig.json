@@ -15,6 +15,7 @@
 
     /* JSX */
     "jsx": "react-jsx",
+    "types": ["vitest", "vite/client"],
 
     /* Linting */
     "strict": true,
