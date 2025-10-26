@@ -106,6 +106,36 @@ function enqueue(userId: string, attempt: AttemptPayload): void {
   saveQueue(userId, queue);
 }
 
+// Guardar intento directamente en Supabase (sin cola)
+export async function recordAttemptDirect(userId: string, attempt: AttemptPayload): Promise<void> {
+  try {
+    const { error } = await supabase.from('attempts').insert({
+      user_id: userId,
+      operation: attempt.operation,
+      level: attempt.level,
+      practice_mode: attempt.practiceMode,
+      is_correct: attempt.isCorrect,
+      time_spent: attempt.timeSpent,
+      user_answer: attempt.userAnswer,
+      correct_answer: attempt.correctAnswer,
+      created_at: attempt.createdAt,
+    });
+
+    if (error) {
+      console.error('[attemptService] Error al guardar intento:', error);
+      // Si falla, usar el sistema de cola como fallback
+      enqueue(userId, attempt);
+      void flushQueue(userId);
+    }
+  } catch (error) {
+    console.error('[attemptService] Excepción al guardar intento:', error);
+    // Si falla, usar el sistema de cola como fallback
+    enqueue(userId, attempt);
+    void flushQueue(userId);
+  }
+}
+
+// Mantener la función anterior para compatibilidad con migración
 export function recordAttempt(userId: string, attempt: AttemptPayload): void {
   enqueue(userId, attempt);
   void flushQueue(userId);

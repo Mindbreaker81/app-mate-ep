@@ -1,41 +1,76 @@
-# Pitágoritas
+# Pitagoritas
 
 © 2025 Edmundo Rosales Mayor. Todos los derechos reservados.
 
-# 🧮 Pitágoritas - ¡Sumas puntos, restas dudas y multiplicas diversión!
+# 🧮 Pitagoritas - ¡Sumas puntos, restas dudas y multiplicas diversión!
 
-Una aplicación web interactiva y divertida para que los niños de 4º de Primaria practiquen matemáticas de forma lúdica. Desarrollada con React, TypeScript, Vite y Tailwind CSS.
+Una aplicación web interactiva para que niños de 4º de Primaria practiquen matemáticas de forma divertida. Con sistema de autenticación, persistencia en la nube y seguimiento de progreso personalizado.
+
+**Stack:** React 19 • TypeScript • Vite • Tailwind CSS • Supabase
+
+**🔗 Deploy:** [https://pitagoritas.vercel.app](https://app-mate-ep.vercel.app) (o tu URL de Vercel)
 
 ## ✨ Características
 
-- **Ejercicios aleatorios**: Sumas, restas, multiplicaciones, divisiones exactas y fracciones propias positivas
-- **Sistema de niveles**: 10 niveles, todos incluyen todas las operaciones, dificultad escalable con tablas para enteros y fracciones
-- **Logros y medallas**: Sistema de gamificación para motivar el aprendizaje
-- **Rachas de respuestas**: Seguimiento de respuestas correctas consecutivas
-- **Explicaciones paso a paso**: Cuando el niño falla, se muestra la solución detallada, incluyendo fracciones
-- **Validación robusta**: Fracciones deben ser equivalentes y simplificadas
-- **Sistema de puntuación**: Contador visible de respuestas correctas
-- **Puntuación máxima**: Se guarda automáticamente en el navegador
-- **Animaciones**: Confeti cuando la respuesta es correcta y feedback visual reforzado
-- **Diseño responsivo**: Funciona perfectamente en móviles y tablets
-- **Interfaz atractiva**: Colores y diseño pensado para niños
-- **Sección de ayuda**: Accesible y clara desde el header
+### 🔐 Autenticación y Perfiles
+- **Login infantil**: Sistema de autenticación con username único y PIN de 6 dígitos
+- **Avatares personalizables**: Selección de emojis como avatar
+- **Progreso personalizado**: Cada usuario tiene su propio historial y estadísticas
+- **Persistencia en la nube**: Datos guardados en Supabase con seguridad RLS
+
+### 📝 Ejercicios y Operaciones
+- **7 tipos de operaciones**: Suma, resta, multiplicación, división, fracciones y operaciones mixtas
+- **Operación mixta**: Combina múltiples operaciones con orden de precedencia (PEMDAS)
+- **10 niveles progresivos**: Dificultad escalable para todas las operaciones
+- **Validación robusta**: Fracciones deben estar simplificadas
+- **Explicaciones paso a paso**: Solución detallada cuando fallas
+
+### 🎮 Gamificación
+- **Sistema de logros**: 9 medallas desbloqueables
+- **Rachas**: Seguimiento de respuestas correctas consecutivas
+- **Puntuación máxima**: Record personal guardado
+- **Modos de práctica**: Enf
+
+ócate en operaciones específicas
+- **Modos de tiempo**: Practica contra reloj (30s, 1min, 2min)
+
+### 📊 Estadísticas y Progreso
+- **Guardado inmediato**: Cada intento se guarda instantáneamente en Supabase
+- **Estadísticas detalladas**: Por operación, dificultad y progreso semanal
+- **Funciona offline**: Cola local sincroniza cuando hay conexión
+- **Sincronización inteligente**: Solo al login, no duplica conteos
+
+### 🎨 UX y Diseño
+- **Diseño responsivo**: Perfecto en móviles y tablets
+- **Interfaz intuitiva**: Pensada para niños de 4º Primaria
+- **Feedback visual claro**: Sin animaciones que bloqueen la pantalla
+- **Sección de ayuda**: Instrucciones accesibles desde el header
 
 ## 🚀 Tecnologías
 
-- **React 18** - Biblioteca de interfaz de usuario
-- **TypeScript** - Tipado estático para mayor robustez
-- **Vite** - Herramienta de construcción rápida
-- **Tailwind CSS** - Framework de CSS utilitario
-- **Canvas Confetti** - Animaciones de confeti
-- **Vitest** - Framework de pruebas unitarias
+**Frontend:**
+- React 19 - Biblioteca de interfaz de usuario
+- TypeScript 5.8 - Tipado estático para mayor robustez
+- Vite 7 - Build tool ultrarrápido
+- Tailwind CSS 3 - Framework de CSS utilitario
+
+**Backend:**
+- Supabase - Backend as a Service (PostgreSQL + Auth)
+- Row Level Security (RLS) - Seguridad a nivel de fila
+
+**Testing y Calidad:**
+- Vitest - Framework de pruebas unitarias
+- Testing Library - Testing de componentes React
+- ESLint + Prettier - Linting y formateo de código
+- GitHub Actions - CI/CD automatizado
 
 ## 📦 Instalación
 
 ### Prerrequisitos
 
-- Node.js 16.x o superior
+- Node.js 20.x (ver `.nvmrc`)
 - npm 7.x o superior
+- Cuenta en [Supabase](https://supabase.com) (para desarrollo)
 
 ### Pasos de instalación
 
@@ -50,89 +85,127 @@ Una aplicación web interactiva y divertida para que los niños de 4º de Primar
    npm install
    ```
 
-3. **Ejecutar en modo desarrollo**
+3. **Configurar variables de entorno**
+   
+   Crea un archivo `.env.local` en la raíz:
+   ```env
+   VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+   VITE_SUPABASE_ANON_KEY=tu-anon-key
+   VITE_SUPABASE_EMAIL_DOMAIN=gmail.com
+   ```
+
+4. **Configurar base de datos**
+   
+   Ejecuta las migraciones en Supabase Dashboard → SQL Editor:
+   ```bash
+   # En orden:
+   supabase/migrations/0001_create_profiles_attempts.sql
+   supabase/migrations/0002_auto_create_profile_trigger.sql
+   ```
+   
+   O con Supabase CLI:
+   ```bash
+   supabase db push
+   ```
+
+5. **Ejecutar en modo desarrollo**
    ```bash
    npm run dev
    ```
 
-4. **Abrir en el navegador**
+6. **Abrir en el navegador**
    ```
    http://localhost:5173
    ```
 
 ## 🧪 Pruebas
 
-Para ejecutar las pruebas unitarias:
-
 ```bash
-npm run test
-```
+# Ejecutar todos los tests
+npm test
 
-Para ejecutar las pruebas en modo watch:
-
-```bash
+# Watch mode
 npm run test:watch
+
+# Con UI interactiva
+npm run test:ui
+
+# Con cobertura
+npm test -- --coverage
 ```
+
+**Cobertura actual:** ~36% con 32 tests pasando
 
 ## 🏗️ Scripts disponibles
 
-- `npm run dev` - Inicia el servidor de desarrollo
-- `npm run build` - Construye la aplicación para producción
-- `npm run preview` - Previsualiza la build de producción
-- `npm run test` - Ejecuta las pruebas unitarias
-- `npm run test:watch` - Ejecuta las pruebas en modo watch
+```bash
+# Desarrollo
+npm run dev          # Servidor de desarrollo
+npm run preview      # Preview de build de producción
+
+# Build
+npm run typecheck    # Verificación de tipos TypeScript
+npm run build        # Build para producción (incluye typecheck)
+
+# Testing
+npm test             # Ejecutar tests
+npm run test:watch   # Tests en watch mode
+npm run test:ui      # Tests con UI interactiva
+
+# Calidad de código
+npm run lint         # Linting
+npm run lint:fix     # Linting con auto-fix
+```
 
 ## 📱 Uso de la aplicación
 
-1. **Inicio**: La aplicación muestra automáticamente un ejercicio matemático
-2. **Responder**: El niño escribe su respuesta en el campo de texto
-3. **Comprobar**: Al hacer clic en "Comprobar", se valida la respuesta
-4. **Resultado**: 
-   - Si es correcta: Aparece confeti y se suma un punto
-   - Si es incorrecta: Se muestra la respuesta correcta y la explicación
-5. **Continuar**: Se puede pasar al siguiente ejercicio o reiniciar el juego
+### Primera vez
 
-## 🎯 Funcionalidades educativas
+1. **Registro**:
+   - Click en "Registrarme"
+   - Elige un username único (3-15 caracteres)
+   - Crea un PIN de 6 dígitos
+   - Selecciona tu avatar favorito 😃
 
-### Sistema de Niveles
+2. **Login**:
+   - Ingresa tu username
+   - Ingresa tu PIN
+   - ¡Listo para jugar!
 
-- **10 niveles**: Todos los niveles incluyen sumas, restas, multiplicaciones, divisiones exactas y fracciones propias positivas. La dificultad escala progresivamente tanto para enteros como para fracciones, aumentando el rango de números y la complejidad de las fracciones.
+### Durante el juego
 
-### Sistema de Logros
+1. **Ejercicio**: La app muestra un problema matemático
+2. **Responder**: Escribe tu respuesta en el campo de texto
+3. **Comprobar**: Presiona Enter o click en "Enviar"
+4. **Feedback**:
+   - ✅ Correcto: Se suma un punto y racha
+   - ❌ Incorrecto: Se muestra la explicación paso a paso
+5. **Siguiente**: Click en "Siguiente" para continuar
 
-- 🎯 ¡Primer Acierto! - Primer ejercicio correcto
-- ➕ Sumador Experto - 10 sumas correctas
-- ➖ Rey de las Restas - 10 restas correctas
-- ✖️ Maestro de las Multiplicaciones - 10 multiplicaciones correctas
-- ➗ Campeón de las Divisiones - 10 divisiones correctas
-- 🔥 ¡En Racha! - 5 correctas seguidas
-- ⚡ ¡Imparable! - 10 correctas seguidas
-- 🏆 Campeón de Matemáticas - 50 ejercicios correctos
-- 💎 ¡Puntuación Perfecta! - 20 ejercicios sin fallar
+### Personalización
 
-### Tipos de ejercicios
+- **Modos de práctica**: Enfoca tu práctica en una operación específica
+- **Modos de tiempo**: Añade presión de tiempo para desafíos
+- **Estadísticas**: Revisa tu progreso y áreas de mejora
+- **Logros**: Desbloquea medallas al alcanzar hitos
 
-- **Sumas**: Números enteros y fracciones propias positivas (según nivel)
-- **Restas**: Números enteros y fracciones propias positivas (resultado positivo, según nivel)
-- **Multiplicaciones**: Tablas del 1 al 12
-- **Divisiones**: Divisiones exactas sin decimales
-- **Fracciones**: Sumas y restas de fracciones propias positivas, con validación de equivalencia y simplificación
+## 🎯 Sistema de Logros
 
-### Sistema de puntuación
+- 🎯 **¡Primer Acierto!** - Primer ejercicio correcto
+- ➕ **Sumador Experto** - 10 sumas correctas
+- ➖ **Rey de las Restas** - 10 restas correctas
+- ✖️ **Maestro de las Multiplicaciones** - 10 multiplicaciones correctas
+- ➗ **Campeón de las Divisiones** - 10 divisiones correctas
+- 🔥 **¡En Racha!** - 5 correctas seguidas
+- ⚡ **¡Imparable!** - 10 correctas seguidas
+- 🏆 **Campeón de Matemáticas** - 50 ejercicios correctos
+- 💎 **¡Puntuación Perfecta!** - 20 ejercicios sin fallar
 
-- **Puntuación actual**: Se incrementa con cada respuesta correcta
-- **Puntuación máxima**: Se guarda automáticamente y persiste entre sesiones
-- **Racha actual**: Respuestas correctas consecutivas
-- **Mejor racha**: Racha más alta alcanzada
-- **Estadísticas**: Total de ejercicios y porcentaje de acierto
+## 📚 Documentación
 
-### Explicaciones educativas
-
-Cada ejercicio incluye una explicación paso a paso cuando el niño falla:
-- Descomposición de números
-- Proceso de cálculo
-- Verificación del resultado
-- Explicación detallada para fracciones
+- **[CHANGELOG.md](./CHANGELOG.md)** - Historial de cambios y versiones
+- **[TECHNICAL.md](./TECHNICAL.md)** - Documentación técnica completa
+- **[PLAN_DE_TRABAJO.md](./PLAN_DE_TRABAJO.md)** - Plan de desarrollo y fases
 
 ## 🌐 Despliegue en Vercel
 
@@ -141,7 +214,7 @@ Cada ejercicio incluye una explicación paso a paso cuando el niño falla:
 1. **Subir el código a GitHub**
    ```bash
    git add .
-   git commit -m "Initial commit"
+   git commit -m "Deploy to Vercel"
    git push origin main
    ```
 
@@ -157,29 +230,30 @@ Cada ejercicio incluye una explicación paso a paso cuando el niño falla:
    - Output Directory: `dist`
    - Install Command: `npm install`
 
-### Opción 2: Despliegue manual
+4. **Configurar variables de entorno en Vercel**
+   - Settings → Environment Variables
+   - Agregar:
+     - `VITE_SUPABASE_URL`
+     - `VITE_SUPABASE_ANON_KEY`
+     - `VITE_SUPABASE_EMAIL_DOMAIN`
+   - Aplicar a: Production, Preview, Development
 
-1. **Instalar Vercel CLI**
-   ```bash
-   npm install -g vercel
-   ```
+5. **Re-deploy después de configurar variables**
+   - Las variables `VITE_*` se hornean durante el build
+   - Deployments → ... → Redeploy
 
-2. **Construir la aplicación**
-   ```bash
-   npm run build
-   ```
+### Opción 2: Despliegue manual con Vercel CLI
 
-3. **Desplegar**
-   ```bash
-   vercel --prod
-   ```
+```bash
+# Instalar Vercel CLI
+npm install -g vercel
 
-### Variables de entorno (opcional)
+# Login
+vercel login
 
-Si necesitas configurar variables de entorno en Vercel:
-- Ve a tu proyecto en Vercel Dashboard
-- Settings → Environment Variables
-- Agrega las variables necesarias
+# Deploy
+vercel --prod
+```
 
 ## 📁 Estructura del proyecto
 
@@ -187,60 +261,55 @@ Si necesitas configurar variables de entorno en Vercel:
 pitagoritas/
 ├── src/
 │   ├── components/          # Componentes React
-│   │   ├── Exercise.tsx     # Componente principal del ejercicio
-│   │   ├── Home.tsx         # Página principal
-│   │   ├── Layout.tsx       # Layout de la aplicación
-│   │   ├── ScoreBoard.tsx   # Tablero de puntuación
-│   │   └── Achievements.tsx # Sistema de logros
-│   ├── context/             # Contexto de React
-│   │   └── GameContext.tsx  # Estado global del juego
-│   ├── types/               # Definiciones de TypeScript
-│   │   └── index.ts         # Tipos de la aplicación
-│   ├── utils/               # Utilidades
-│   │   ├── problemGenerator.ts  # Generador de problemas
-│   │   ├── gameConfig.ts    # Configuración de niveles y logros
-│   │   └── __tests__/       # Pruebas unitarias
-│   ├── test/                # Configuración de pruebas
-│   │   └── setup.ts         # Setup de Vitest
-│   ├── App.tsx              # Componente raíz
-│   ├── main.ts              # Punto de entrada
-│   └── style.css            # Estilos globales
-├── public/                  # Archivos estáticos
-├── index.html               # HTML principal
-├── package.json             # Dependencias y scripts
-├── tailwind.config.js       # Configuración de Tailwind
-├── vitest.config.ts         # Configuración de Vitest
-└── README.md                # Este archivo
+│   │   ├── auth/           # Sistema de autenticación
+│   │   ├── Exercise.tsx    # Componente de ejercicios
+│   │   ├── DetailedStats.tsx # Estadísticas detalladas
+│   │   └── ...
+│   ├── context/            # Contextos de React
+│   │   ├── AuthContext.tsx # Autenticación
+│   │   └── GameContext.tsx # Estado del juego
+│   ├── services/           # Servicios
+│   │   ├── attemptService.ts  # Guardado de intentos
+│   │   ├── statsService.ts    # Estadísticas
+│   │   └── instrumentationService.ts # Telemetría
+│   ├── lib/
+│   │   └── supabaseClient.ts  # Cliente de Supabase
+│   ├── utils/              # Utilidades
+│   │   ├── problemGenerator.ts # Generador de problemas
+│   │   ├── statsUtils.ts      # Funciones de estadísticas
+│   │   └── ...
+│   ├── types/              # Tipos TypeScript
+│   ├── App.tsx
+│   └── main.tsx
+├── supabase/
+│   └── migrations/         # Migraciones SQL versionadas
+├── .github/workflows/
+│   └── ci.yml             # CI/CD
+├── archive/               # Archivos obsoletos archivados
+├── public/
+├── package.json
+├── tsconfig.json
+├── tailwind.config.js
+└── vitest.config.ts
 ```
 
-## 🎨 Personalización
+## 🔧 Troubleshooting
 
-### Colores y tema
+### La app muestra "página en blanco" en Vercel
 
-Los colores se pueden personalizar editando `tailwind.config.js`:
+**Solución:** Verifica que las variables de entorno estén configuradas y re-despliega.
 
-```javascript
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        primary: '#3B82F6',
-        secondary: '#8B5CF6',
-        // ... más colores
-      }
-    }
-  }
-}
-```
+### Estadísticas aparecen en 0 después de login
 
-### Dificultad de ejercicios
+**Solución:** Implementado delay de 500ms para asegurar que la sesión esté establecida. Si persiste, verifica las políticas RLS en Supabase.
 
-Para ajustar la dificultad, modifica `src/utils/problemGenerator.ts`:
+### Botón "Salir" no funciona
 
-```typescript
-// Cambiar rangos de números
-num1 = Math.floor(Math.random() * 50) + 1; // Números más pequeños
-```
+**Solución:** Ya corregido con `preventDefault()` y `stopPropagation()`. Si persiste, limpia caché del navegador.
+
+### Datos se pierden al hacer logout
+
+**Solución:** Implementado guardado inmediato. Cada intento se guarda instantáneamente en Supabase.
 
 ## 🤝 Contribuir
 
@@ -250,14 +319,22 @@ num1 = Math.floor(Math.random() * 50) + 1; // Números más pequeños
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
+## 📝 Changelog
+
+Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de cambios.
+
+**Última versión:** 1.0.0 (2025-10-26)
+
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+Este proyecto es privado. Todos los derechos reservados.
 
 ## 👨‍💻 Autor
+
+**Edmundo Rosales Mayor**
 
 Desarrollado para ayudar a niños de 4º de Primaria a practicar matemáticas de forma divertida.
 
 ---
 
-**¡Sumas puntos, restas dudas y multiplicas diversión! 🧮🎓** 
+**¡Sumas puntos, restas dudas y multiplicas diversión! 🧮🎓**

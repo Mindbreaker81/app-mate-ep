@@ -16,7 +16,7 @@ import { LEVELS, ACHIEVEMENTS } from '../utils/gameConfig';
 import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats, normalizeStats } from '../utils/statsUtils';
 import { TIME_MODES } from '../utils/timeConfig';
 import { useAuth } from './AuthContext';
-import { recordAttempt, flushQueue, migrateLegacyData } from '../services/attemptService';
+import { recordAttemptDirect, flushQueue, migrateLegacyData } from '../services/attemptService';
 import { fetchUserStats } from '../services/statsService';
 
 const loadStats = (): DetailedStats => {
@@ -206,8 +206,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const newTotalExercises = state.totalExercises + 1;
       const newCorrectExercises = isCorrect ? state.correctExercises + 1 : state.correctExercises;
       
-      // Actualizar estadísticas
-      let newStats = { ...state.stats };
+      // Actualizar estadísticas (las funciones son inmutables, retornan nuevos objetos)
+      let newStats = state.stats;
       newStats = updateWeeklyProgress(newStats, isCorrect, timeSpent);
       newStats = updateOperationStats(newStats, problem.operation, isCorrect, timeSpent, difficulty);
       newStats = updateDifficultyStats(newStats, difficulty, isCorrect);
@@ -407,9 +407,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       timeRemaining: state.timeRemaining,
     });
     dispatch({ type: 'CHECK_ANSWER', payload: evaluation });
+    
+    // Guardar intento inmediatamente en Supabase
     if (sessionUserId) {
       const attemptPayload = buildAttemptPayload(state.level, state.practiceMode, evaluation);
-      recordAttempt(sessionUserId, attemptPayload);
+      void recordAttemptDirect(sessionUserId, attemptPayload);
     }
     },
     [
@@ -462,13 +464,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.currentProblem, state.level, state.practiceMode]);
 
-  // Sincronización con Supabase al iniciar sesión
+  // Sincronización con Supabase SOLO al iniciar sesión (no durante la sesión activa)
   useEffect(() => {
     if (!sessionUserId) {
       syncedRef.current = false;
       return;
     }
 
+    // Si ya se sincronizó en esta sesión, no volver a hacerlo
     if (syncedRef.current) {
       return;
     }
@@ -478,6 +481,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const snapshot = legacySnapshotRef.current;
 
     const sync = async () => {
+      // 1. Migrar datos legacy si existen
       try {
         if (snapshot) {
           await migrateLegacyData(userId, snapshot);
@@ -486,15 +490,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         console.warn('No se pudieron migrar los datos locales:', error);
       }
 
+      // 2. Cargar estadísticas desde Supabase SOLO al iniciar sesión
+      // IMPORTANTE: Esperar un poco para asegurar que la sesión esté establecida en Supabase
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       try {
         const remoteStats = await fetchUserStats(userId);
         if (remoteStats) {
+          // SET_STATS reemplaza completamente las stats con las de Supabase
+          // Esto solo ocurre UNA VEZ al iniciar sesión
           dispatch({ type: 'SET_STATS', payload: remoteStats });
         }
       } catch (error) {
-        console.warn('No se pudieron obtener estadísticas remotas:', error);
+        console.error('[GameContext] Error al obtener estadísticas remotas:', error);
       }
 
+      // 3. Sincronizar cola pendiente si hay
       await flushQueue(userId);
     };
 

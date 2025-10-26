@@ -56,6 +56,6 @@ describe('App smoke test', () => {
       expect(supabaseState.auth.getSession).toHaveBeenCalled();
     });
 
-    expect(await screen.findByText(/Bienvenido a Pitágoritas/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Bienvenido a Pitagoritas/i)).toBeInTheDocument();
   });
 });

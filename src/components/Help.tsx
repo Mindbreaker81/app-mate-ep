@@ -13,7 +13,7 @@ export const Help: React.FC<HelpProps> = ({ onClose }) => (
     >
       ✕
     </button>
-    <h2 className="text-2xl font-bold mb-4 text-blue-700">¿Cómo se usa Pitágoritas?</h2>
+    <h2 className="text-2xl font-bold mb-4 text-blue-700">¿Cómo se usa Pitagoritas?</h2>
     <ul className="list-disc pl-6 space-y-2 text-gray-700 text-lg mb-6">
       <li>
         <b>Navegación:</b> Usa las pestañas o botones principales para cambiar entre modos de práctica, estadísticas, logros y más.

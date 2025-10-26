@@ -91,17 +91,26 @@ export function updateWeeklyProgress(
   timeSpent: number
 ): DetailedStats {
   const currentWeek = getCurrentWeek();
-  const existingWeek = stats.weeklyProgress.find((w) => w.week === currentWeek);
+  const existingWeekIndex = stats.weeklyProgress.findIndex((w) => w.week === currentWeek);
 
-  if (existingWeek) {
+  // Crear copia del array weeklyProgress
+  const newWeeklyProgress = [...stats.weeklyProgress];
+
+  if (existingWeekIndex !== -1) {
+    // Crear copia del objeto week y actualizar
+    const existingWeek = newWeeklyProgress[existingWeekIndex];
     const previousTotal = existingWeek.totalAnswers;
-    existingWeek.totalAnswers += 1;
-    if (isCorrect) existingWeek.correctAnswers += 1;
-    existingWeek.averageTime = Math.round(
-      ((existingWeek.averageTime * previousTotal) + timeSpent) / existingWeek.totalAnswers
-    );
+    newWeeklyProgress[existingWeekIndex] = {
+      ...existingWeek,
+      totalAnswers: existingWeek.totalAnswers + 1,
+      correctAnswers: existingWeek.correctAnswers + (isCorrect ? 1 : 0),
+      averageTime: Math.round(
+        ((existingWeek.averageTime * previousTotal) + timeSpent) / (existingWeek.totalAnswers + 1)
+      ),
+    };
   } else {
-    stats.weeklyProgress.push({
+    // Agregar nueva semana
+    newWeeklyProgress.push({
       week: currentWeek,
       totalAnswers: 1,
       correctAnswers: isCorrect ? 1 : 0,
@@ -109,7 +118,10 @@ export function updateWeeklyProgress(
     });
   }
 
-  return stats;
+  return {
+    ...stats,
+    weeklyProgress: newWeeklyProgress,
+  };
 }
 
 export function updateOperationStats(
@@ -120,18 +132,24 @@ export function updateOperationStats(
   difficulty: 'easy' | 'medium' | 'hard'
 ): DetailedStats {
   const opKey = operation as OperationKey;
-  if (!stats.operationStats[opKey]) {
-    stats.operationStats[opKey] = createOperationDetail();
-  }
+  const existingDetail = stats.operationStats[opKey] || createOperationDetail();
 
-  const detail = stats.operationStats[opKey];
-  const previousTotal = detail.total;
-  detail.total += 1;
-  if (isCorrect) detail.correct += 1;
-  detail.averageTime = Math.round(((detail.averageTime * previousTotal) + timeSpent) / detail.total);
-  detail.difficulty = difficulty;
+  const previousTotal = existingDetail.total;
+  const newTotal = existingDetail.total + 1;
 
-  return stats;
+  // Crear copia del operationStats con el detalle actualizado
+  return {
+    ...stats,
+    operationStats: {
+      ...stats.operationStats,
+      [opKey]: {
+        total: newTotal,
+        correct: existingDetail.correct + (isCorrect ? 1 : 0),
+        averageTime: Math.round(((existingDetail.averageTime * previousTotal) + timeSpent) / newTotal),
+        difficulty,
+      },
+    },
+  };
 }
 
 export function updateDifficultyStats(
@@ -139,9 +157,19 @@ export function updateDifficultyStats(
   difficulty: 'easy' | 'medium' | 'hard',
   isCorrect: boolean
 ): DetailedStats {
-  stats.difficultyStats[difficulty].total += 1;
-  if (isCorrect) stats.difficultyStats[difficulty].correct += 1;
-  return stats;
+  const existingDiff = stats.difficultyStats[difficulty];
+  
+  // Crear copia del difficultyStats con el nivel actualizado
+  return {
+    ...stats,
+    difficultyStats: {
+      ...stats.difficultyStats,
+      [difficulty]: {
+        total: existingDiff.total + 1,
+        correct: existingDiff.correct + (isCorrect ? 1 : 0),
+      },
+    },
+  };
 }
 
 export function addSessionRecord(

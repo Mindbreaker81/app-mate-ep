@@ -21,6 +21,7 @@ export async function fetchUserStats(userId: string): Promise<DetailedStats | nu
     .order('created_at', { ascending: true });
 
   if (error) {
+    console.error('[statsService] Error al cargar estadísticas:', error);
     recordSyncAnomaly('supabase-fetch-error', {
       message: error.message,
       code: error.code,
@@ -28,8 +29,8 @@ export async function fetchUserStats(userId: string): Promise<DetailedStats | nu
     return null;
   }
 
-  const stats = initializeStats();
-  if (!data) {
+  let stats = initializeStats();
+  if (!data || data.length === 0) {
     return stats;
   }
 
@@ -46,9 +47,10 @@ export async function fetchUserStats(userId: string): Promise<DetailedStats | nu
     }
 
     const difficulty = getDifficulty(attempt.level, attempt.operation);
-    updateWeeklyProgress(stats, attempt.is_correct, attempt.time_spent);
-    updateOperationStats(stats, attempt.operation, attempt.is_correct, attempt.time_spent, difficulty);
-    updateDifficultyStats(stats, difficulty, attempt.is_correct);
+    // Las funciones son inmutables: retornan nuevos objetos
+    stats = updateWeeklyProgress(stats, attempt.is_correct, attempt.time_spent);
+    stats = updateOperationStats(stats, attempt.operation, attempt.is_correct, attempt.time_spent, difficulty);
+    stats = updateDifficultyStats(stats, difficulty, attempt.is_correct);
     totalTime += attempt.time_spent;
     attemptsCount += 1;
   });

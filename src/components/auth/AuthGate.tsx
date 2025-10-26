@@ -30,7 +30,7 @@ export function AuthGate({ children }: AuthGateProps) {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 px-4">
         <div className="bg-white shadow-xl rounded-3xl p-8 max-w-2xl w-full space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-gray-800">Bienvenido a Pitágoritas</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Bienvenido a Pitagoritas</h1>
             <p className="text-gray-600">Crea tu perfil o inicia sesión con tu usuario y PIN.</p>
           </div>
           <div className="flex justify-center gap-4">

@@ -45,7 +45,7 @@ async function upsertProfile(payload: { id: string; username: string; avatar: st
   }
 }
 
-const SESSION_TIMEOUT_MS = 7000;
+const SESSION_TIMEOUT_MS = 15000; // Aumentado a 15 segundos para conexiones lentas
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -61,9 +61,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (profileError) {
-      console.error('Supabase fetchProfile error:', profileError);
+      console.error('[AuthContext] Error al buscar perfil:', profileError);
       setError(profileError.message);
       return null;
+    }
+
+    // Si no se encuentra el perfil, reintentar una vez
+    if (!data) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const { data: retryData, error: retryError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar, created_at')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (retryError) {
+        console.error('[AuthContext] Error en reintento:', retryError);
+      } else {
+        const userProfile = retryData ?? null;
+        setProfile(userProfile);
+        return userProfile;
+      }
     }
 
     const userProfile = data ?? null;
@@ -174,9 +193,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setError('No pudimos iniciar sesión. Verifica tu usuario y PIN.');
         return;
       }
-
-      await fetchProfile(data.user?.id ?? data.session?.user.id ?? '');
+      
+      // IMPORTANTE: Establecer la sesión PRIMERO antes de buscar el perfil
+      // Esto asegura que auth.uid() esté disponible para las políticas RLS
       setSession(data.session ?? null);
+      
+      // Esperar un poco para que la sesión se propague
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const userId = data.user?.id ?? data.session?.user.id ?? '';
+      const existingProfile = await fetchProfile(userId);
+      
+      if (!existingProfile) {
+        setError('Tu cuenta existe pero falta información de perfil. Contacta soporte o vuelve a registrarte.');
+        await supabase.auth.signOut();
+        setSession(null);
+        return;
+      }
     },
     [clearError, fetchProfile]
   );
@@ -267,7 +300,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     clearError();
-    await supabase.auth.signOut();
+    
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('[AuthContext] Error en signOut:', error);
+    }
+    
     setSession(null);
     setProfile(null);
   }, [clearError]);
