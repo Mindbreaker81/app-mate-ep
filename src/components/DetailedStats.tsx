@@ -1,25 +1,36 @@
+import { useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { getAccuracyPercentage, getWeakestOperation, getWeeklyProgressData } from '../utils/statsUtils';
+
+const operationLabels = {
+  addition: 'Sumas',
+  subtraction: 'Restas',
+  multiplication: 'Multiplicaciones',
+  division: 'Divisiones',
+  'fraction-addition': 'Fracciones (+)',
+  'fraction-subtraction': 'Fracciones (-)',
+  'fraction-multiplication': 'Fracciones (×)',
+  'fraction-division': 'Fracciones (÷)',
+  'decimal-addition': 'Decimales (+)',
+  'decimal-subtraction': 'Decimales (-)',
+  'decimal-multiplication': 'Decimales (×)',
+  'decimal-division': 'Decimales (÷)',
+  mixed: 'Operaciones mixtas',
+  power: 'Potencias',
+  percentage: 'Porcentajes',
+  estimation: 'Estimación',
+  factorization: 'Factorización',
+} as const;
 
 export function DetailedStats() {
   const { state } = useGame();
   const { stats } = state;
-  
-  const weeklyData = getWeeklyProgressData(stats);
-  const weakestOp = getWeakestOperation(stats);
-  
-  const operationLabels = {
-    addition: 'Sumas',
-    subtraction: 'Restas', 
-    multiplication: 'Multiplicaciones',
-    division: 'Divisiones',
-    'fraction-addition': 'Fracciones (+)',
-    'fraction-subtraction': 'Fracciones (-)',
-    mixed: 'Operaciones mixtas'
-  };
+
+  const weeklyData = useMemo(() => getWeeklyProgressData(stats), [stats]);
+  const weakestOp = useMemo(() => getWeakestOperation(stats), [stats]);
   const formatOperationLabel = (operation: string) =>
     operationLabels[operation as keyof typeof operationLabels] ?? operation;
-  
+
   const difficultyLabels = {
     easy: 'Fácil',
     medium: 'Medio',

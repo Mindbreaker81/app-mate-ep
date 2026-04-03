@@ -4,6 +4,7 @@ import { OPERATION_KEYS } from '../types';
 import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats, normalizeStats } from '../utils/statsUtils';
 import { getDifficulty } from '../utils/problemGenerator';
 import { recordSyncAnomaly } from './instrumentationService';
+import { logger } from '../utils/logger';
 
 type DbAttemptRow = {
   operation: string;
@@ -21,7 +22,7 @@ export async function fetchUserStats(userId: string): Promise<DetailedStats | nu
     .order('created_at', { ascending: true });
 
   if (error) {
-    console.error('[statsService] Error al cargar estadísticas:', error);
+    logger.error('[statsService] Error al cargar estadísticas:', error);
     recordSyncAnomaly('supabase-fetch-error', {
       message: error.message,
       code: error.code,

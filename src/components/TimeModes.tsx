@@ -18,7 +18,8 @@ export function TimeModes() {
           <button
             key={mode.mode}
             onClick={() => setTimeMode(mode.mode)}
-            className={`p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+            aria-pressed={state.timeMode === mode.mode}
+            className={`p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500 ${
               state.timeMode === mode.mode
                 ? 'border-green-500 bg-green-50 shadow-md'
                 : 'border-gray-200 bg-gray-50 hover:border-green-300 hover:bg-green-25'

@@ -26,7 +26,10 @@ export function normalizeStats(stats?: Partial<DetailedStats> | null): DetailedS
       hard: { total: 0, correct: 0 },
     },
     sessionHistory: stats?.sessionHistory
-      ? stats.sessionHistory.map((record) => ({ ...record }))
+      ? stats.sessionHistory.map((record) => ({
+          ...record,
+          date: record.date instanceof Date ? new Date(record.date) : new Date(record.date),
+        }))
       : [],
   };
 
@@ -187,13 +190,12 @@ export function addSessionRecord(
     ...sessionData,
   };
 
-  stats.sessionHistory.push(record);
+  const sessionHistory = [...stats.sessionHistory, record].slice(-30);
 
-  if (stats.sessionHistory.length > 30) {
-    stats.sessionHistory = stats.sessionHistory.slice(-30);
-  }
-
-  return stats;
+  return {
+    ...stats,
+    sessionHistory,
+  };
 }
 
 export function getAccuracyPercentage(correct: number, total: number): number {

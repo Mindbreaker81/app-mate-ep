@@ -1,19 +1,25 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { generateProblem, calculateResponseTime, getDifficulty } from '../problemGenerator';
 import { LEVELS } from '../gameConfig';
-import type { Problem, MixedProblem } from '../../types';
+import type { Problem } from '../../types';
+import { evaluateMathTokens } from '../expressionUtils';
+import {
+  isEstimationProblem,
+  isFactorizationProblem,
+  isFractionProblem,
+  isMixedProblem,
+  isPowerProblem,
+  isPromptProblem,
+} from '../problemUtils';
 
-type NumericProblem = Extract<Problem, { operation: 'addition' | 'subtraction' | 'multiplication' | 'division' }>;
-type FractionProblem = Extract<Problem, { operation: 'fraction-addition' | 'fraction-subtraction' }>;
+type BinaryNumericProblem = Extract<Problem, { num1: number; num2: number; answer: number }>;
 
-const isNumericProblem = (problem: Problem): problem is NumericProblem =>
-  problem.operation === 'addition' ||
-  problem.operation === 'subtraction' ||
-  problem.operation === 'multiplication' ||
-  problem.operation === 'division';
-const isFractionProblem = (problem: Problem): problem is FractionProblem =>
-  problem.operation === 'fraction-addition' || problem.operation === 'fraction-subtraction';
-const isMixedProblem = (problem: Problem): problem is MixedProblem => problem.operation === 'mixed';
+const isBinaryNumericProblem = (problem: Problem): problem is BinaryNumericProblem =>
+  'num1' in problem &&
+  'num2' in problem &&
+  typeof problem.num1 === 'number' &&
+  typeof problem.num2 === 'number' &&
+  typeof problem.answer === 'number';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -27,7 +33,7 @@ describe('problemGenerator', () => {
       expect(problem).toHaveProperty('operation');
       expect(problem).toHaveProperty('explanation');
 
-      if (isNumericProblem(problem)) {
+      if (isBinaryNumericProblem(problem)) {
         expect(typeof problem.num1).toBe('number');
         expect(typeof problem.num2).toBe('number');
         expect(typeof problem.answer).toBe('number');
@@ -43,6 +49,19 @@ describe('problemGenerator', () => {
         expect(problem.tokens.length).toBeGreaterThan(0);
         expect(typeof problem.answer).toBe('number');
         expect(problem.expression).toMatch(/[×÷]/);
+      } else if (isPowerProblem(problem)) {
+        expect(typeof problem.base).toBe('number');
+        expect(problem.exponent === 2 || problem.exponent === 3).toBe(true);
+        expect(typeof problem.answer).toBe('number');
+      } else if (isEstimationProblem(problem)) {
+        expect(problem.options.length).toBe(4);
+        expect(problem.options).toContain(problem.answer);
+      } else if (isFactorizationProblem(problem)) {
+        expect(typeof problem.target).toBe('number');
+        expect(typeof problem.answer).toBe('string');
+      } else if (isPromptProblem(problem)) {
+        expect(typeof problem.prompt).toBe('string');
+        expect(typeof problem.answer).toBe('number');
       } else {
         expect.fail('Generated problem has unexpected shape');
       }
@@ -54,15 +73,14 @@ describe('problemGenerator', () => {
       if (!isMixedProblem(problem)) {
         expect.fail('Expected mixed problem');
       }
-      const expressionJs = problem.expression.replace(/×/g, '*').replace(/÷/g, '/');
-      const computed = Function(`return ${expressionJs}`)();
+      const computed = evaluateMathTokens(problem.tokens);
       expect(computed).toBe(problem.answer);
       expect(problem.tokens.length).toBeGreaterThan(0);
     });
 
     it('should generate addition problems correctly', () => {
       const problem = generateProblem(1, 'addition');
-      if (!isNumericProblem(problem)) {
+      if (!isBinaryNumericProblem(problem)) {
         expect.fail('Addition problem should be numeric');
       }
       expect(problem.operation).toBe('addition');
@@ -72,7 +90,7 @@ describe('problemGenerator', () => {
 
     it('should generate subtraction problems with positive results', () => {
       const problem = generateProblem(1, 'subtraction');
-      if (!isNumericProblem(problem)) {
+      if (!isBinaryNumericProblem(problem)) {
         expect.fail('Subtraction problem should be numeric');
       }
       expect(problem.operation).toBe('subtraction');
@@ -83,7 +101,7 @@ describe('problemGenerator', () => {
 
     it('should generate multiplication problems correctly', () => {
       const problem = generateProblem(1, 'multiplication');
-      if (!isNumericProblem(problem)) {
+      if (!isBinaryNumericProblem(problem)) {
         expect.fail('Multiplication problem should be numeric');
       }
       expect(problem.operation).toBe('multiplication');
@@ -93,7 +111,7 @@ describe('problemGenerator', () => {
 
     it('should generate division problems with exact results', () => {
       const problem = generateProblem(1, 'division');
-      if (!isNumericProblem(problem)) {
+      if (!isBinaryNumericProblem(problem)) {
         expect.fail('Division problem should be numeric');
       }
       expect(problem.operation).toBe('division');
@@ -108,7 +126,7 @@ describe('problemGenerator', () => {
       const l1Max = LEVELS.find(l => l.id === 1)!.maxNumber;
       const l4Max = LEVELS.find(l => l.id === 4)!.maxNumber;
 
-      if (!isNumericProblem(level1Problem) || !isNumericProblem(level4Problem)) {
+      if (!isBinaryNumericProblem(level1Problem) || !isBinaryNumericProblem(level4Problem)) {
         expect.fail('Addition problems should be numeric');
       }
 

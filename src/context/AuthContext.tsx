@@ -10,6 +10,7 @@ import {
   isValidUsername,
   normalizeUsername,
 } from '../utils/authHelpers';
+import { logger } from '../utils/logger';
 
 interface SignInPayload {
   username: string;
@@ -40,7 +41,7 @@ async function upsertProfile(payload: { id: string; username: string; avatar: st
     .upsert({ id: payload.id, username: payload.username, avatar: payload.avatar }, { onConflict: 'id' });
 
   if (error) {
-    console.error('Supabase profile upsert error:', error);
+    logger.error('Supabase profile upsert error:', error);
     throw error;
   }
 }
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (profileError) {
-      console.error('[AuthContext] Error al buscar perfil:', profileError);
+      logger.error('[AuthContext] Error al buscar perfil:', profileError);
       setError(profileError.message);
       return null;
     }
@@ -77,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
       
       if (retryError) {
-        console.error('[AuthContext] Error en reintento:', retryError);
+        logger.error('[AuthContext] Error en reintento:', retryError);
       } else {
         const userProfile = retryData ?? null;
         setProfile(userProfile);
@@ -136,15 +137,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (raceResult.error) {
           if (raceResult.error.message === 'getSession timeout') {
-            console.warn(`Supabase getSession tardó más de ${SESSION_TIMEOUT_MS}ms. Continuando sin sesión.`);
+            logger.warn(`Supabase getSession tardó más de ${SESSION_TIMEOUT_MS}ms. Continuando sin sesión.`);
           } else {
-            console.error('Supabase getSession error:', raceResult.error);
+            logger.error('Supabase getSession error:', raceResult.error);
           }
         }
 
         await resolveSession(raceResult.data.session ?? null);
       } catch (initError) {
-        console.error('Supabase getSession arrojó una excepción:', initError);
+        logger.error('Supabase getSession arrojó una excepción:', initError);
         await resolveSession(null);
       } finally {
         if (isMounted) {
@@ -168,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.debug('AuthProvider estado → loading:', loading, 'session:', session?.user?.id ?? null);
+      logger.debug('AuthProvider estado → loading:', loading, 'session:', session?.user?.id ?? null);
     }
   }, [loading, session]);
 
@@ -244,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (signUpError || !data.user) {
         if (signUpError) {
-          console.error('Supabase signUp error:', signUpError);
+          logger.error('Supabase signUp error:', signUpError);
         }
         const message = signUpError?.message ?? '';
         if (message.includes('already registered')) {
@@ -267,7 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!resolvedSession) {
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password: pin });
         if (signInError) {
-          console.error('Supabase signIn after signUp error:', signInError);
+          logger.error('Supabase signIn after signUp error:', signInError);
         } else {
           resolvedSession = signInData.session ?? null;
         }
@@ -303,7 +304,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('[AuthContext] Error en signOut:', error);
+      logger.error('[AuthContext] Error en signOut:', error);
     }
     
     setSession(null);

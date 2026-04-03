@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '../utils/logger';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -11,7 +12,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   if (import.meta.env.PROD && import.meta.env.MODE !== 'test') {
     throw new Error(message);
   }
-  console.warn(`${message} Using fallback credentials for local usage.`);
+  logger.warn(`${message} Using fallback credentials for local usage.`);
 }
 
 export const supabase = createClient(supabaseUrl ?? fallbackUrl, supabaseAnonKey ?? fallbackAnonKey, {

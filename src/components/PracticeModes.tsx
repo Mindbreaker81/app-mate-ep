@@ -1,8 +1,9 @@
 import { useGame } from '../context/GameContext';
-import { PRACTICE_MODES } from '../utils/practiceConfig';
+import { getPracticeModesForGrade } from '../utils/practiceConfig';
 
 export function PracticeModes() {
   const { state, setPracticeMode } = useGame();
+  const practiceModes = getPracticeModesForGrade(state.grade);
   
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -14,11 +15,12 @@ export function PracticeModes() {
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {PRACTICE_MODES.map((mode) => (
+        {practiceModes.map((mode) => (
           <button
             key={mode.mode}
             onClick={() => setPracticeMode(mode.mode)}
-            className={`p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+            aria-pressed={state.practiceMode === mode.mode}
+            className={`p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
               state.practiceMode === mode.mode
                 ? 'border-blue-500 bg-blue-50 shadow-md'
                 : 'border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-blue-25'

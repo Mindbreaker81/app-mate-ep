@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 type TelemetrySeverity = 'info' | 'warn' | 'error';
 
 export type TelemetryEventType =
@@ -59,14 +61,13 @@ const generateId = () =>
     : `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 
 const logToConsole = (severity: TelemetrySeverity, message: string, meta?: Record<string, unknown>) => {
-  if (typeof console === 'undefined') return;
   const payload = meta ? { ...meta } : undefined;
-  if (severity === 'error' && console.error) {
-    console.error(`[Pitagoritas] ${message}`, payload);
-  } else if (severity === 'warn' && console.warn) {
-    console.warn(`[Pitagoritas] ${message}`, payload);
-  } else if (console.info) {
-    console.info(`[Pitagoritas] ${message}`, payload);
+  if (severity === 'error') {
+    logger.error(`[Pitagoritas] ${message}`, payload);
+  } else if (severity === 'warn') {
+    logger.warn(`[Pitagoritas] ${message}`, payload);
+  } else {
+    logger.info(`[Pitagoritas] ${message}`, payload);
   }
 };
 

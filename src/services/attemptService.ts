@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 import type { AttemptPayload, LegacySnapshot, PendingAttempt } from '../types';
 import { recordSyncAnomaly } from './instrumentationService';
+import { logger } from '../utils/logger';
 
 const QUEUE_KEY_PREFIX = 'pitagoritas:attemptQueue:';
 const MIGRATION_KEY_PREFIX = 'pitagoritas:migrated:';
@@ -8,6 +9,8 @@ const LAST_SYNC_KEY_PREFIX = 'pitagoritas:lastSync:';
 const MIGRATION_LIMIT = 120;
 
 const memoryQueues = new Map<string, PendingAttempt[]>();
+const flushingUsers = new Set<string>();
+const pendingFlushUsers = new Set<string>();
 
 const cloneQueue = (queue: PendingAttempt[]): PendingAttempt[] => JSON.parse(JSON.stringify(queue)) as PendingAttempt[];
 
@@ -65,11 +68,12 @@ async function sendAttempt(userId: string, attempt: PendingAttempt): Promise<voi
   }
 }
 
-export async function flushQueue(userId: string): Promise<void> {
-  let queue = getQueue(userId);
+async function drainQueue(userId: string): Promise<void> {
+  const queue = getQueue(userId);
   if (queue.length === 0) return;
 
   const remaining: PendingAttempt[] = [];
+  const snapshotIds = new Set(queue.map((attempt) => attempt.id));
 
   for (let index = 0; index < queue.length; index++) {
     const pending = queue[index];
@@ -87,17 +91,37 @@ export async function flushQueue(userId: string): Promise<void> {
       if (index + 1 < queue.length) {
         remaining.push(...queue.slice(index + 1));
       }
-      saveQueue(userId, remaining);
-      return;
+      break;
     }
   }
 
-  if (remaining.length === 0) {
+  const newlyQueued = getQueue(userId).filter((attempt) => !snapshotIds.has(attempt.id));
+  const nextQueue = [...remaining, ...newlyQueued];
+
+  if (nextQueue.length === 0) {
     setLastSync(userId, new Date().toISOString());
   }
 
-  saveQueue(userId, remaining);
-  queue = remaining;
+  saveQueue(userId, nextQueue);
+}
+
+export async function flushQueue(userId: string): Promise<void> {
+  if (flushingUsers.has(userId)) {
+    pendingFlushUsers.add(userId);
+    return;
+  }
+
+  flushingUsers.add(userId);
+
+  try {
+    do {
+      pendingFlushUsers.delete(userId);
+      await drainQueue(userId);
+    } while (pendingFlushUsers.has(userId) && getQueue(userId).length > 0);
+  } finally {
+    flushingUsers.delete(userId);
+    pendingFlushUsers.delete(userId);
+  }
 }
 
 function enqueue(userId: string, attempt: AttemptPayload): void {
@@ -122,13 +146,13 @@ export async function recordAttemptDirect(userId: string, attempt: AttemptPayloa
     });
 
     if (error) {
-      console.error('[attemptService] Error al guardar intento:', error);
+      logger.error('[attemptService] Error al guardar intento:', error);
       // Si falla, usar el sistema de cola como fallback
       enqueue(userId, attempt);
       void flushQueue(userId);
     }
   } catch (error) {
-    console.error('[attemptService] Excepción al guardar intento:', error);
+    logger.error('[attemptService] Excepción al guardar intento:', error);
     // Si falla, usar el sistema de cola como fallback
     enqueue(userId, attempt);
     void flushQueue(userId);
@@ -192,3 +216,26 @@ export async function migrateLegacyData(userId: string, snapshot: LegacySnapshot
 
   window.localStorage.setItem(migrationKey, 'true');
 }
+
+export const __testing = {
+  reset() {
+    memoryQueues.clear();
+    flushingUsers.clear();
+    pendingFlushUsers.clear();
+
+    if (!hasWindow) {
+      return;
+    }
+
+    const keysToRemove = Object.keys(window.localStorage).filter(
+      (key) =>
+        key.startsWith(QUEUE_KEY_PREFIX) ||
+        key.startsWith(MIGRATION_KEY_PREFIX) ||
+        key.startsWith(LAST_SYNC_KEY_PREFIX),
+    );
+
+    keysToRemove.forEach((key) => {
+      window.localStorage.removeItem(key);
+    });
+  },
+};

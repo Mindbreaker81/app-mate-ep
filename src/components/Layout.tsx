@@ -31,7 +31,7 @@ export function Layout({ children }: LayoutProps) {
             ¡Sumas puntos, restas dudas y multiplicas diversión!
           </p>
           <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-6">
-            Practica matemáticas de 4º de Primaria de forma divertida
+            Practica matemáticas de 4.º y 5.º de Primaria de forma divertida
           </p>
 
           {/* Botones de acción */}

@@ -3,6 +3,7 @@ import type {
   GameState,
   GameAction,
   Fraction,
+  GradeId,
   PracticeMode,
   TimeMode,
   Problem,
@@ -12,94 +13,100 @@ import type {
   DetailedStats,
 } from '../types';
 import { generateProblem, getDifficulty } from '../utils/problemGenerator';
-import { LEVELS, ACHIEVEMENTS } from '../utils/gameConfig';
+import { LEVELS, ACHIEVEMENTS, getGradeConfig } from '../utils/gameConfig';
 import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats, normalizeStats } from '../utils/statsUtils';
-import { TIME_MODES } from '../utils/timeConfig';
+import { getTimeModeConfig } from '../utils/timeConfig';
 import { useAuth } from './AuthContext';
 import { recordAttemptDirect, flushQueue, migrateLegacyData } from '../services/attemptService';
 import { fetchUserStats } from '../services/statsService';
-
-const loadStats = (): DetailedStats => {
-  if (typeof localStorage === 'undefined') {
-    return initializeStats();
-  }
-  try {
-    const stored = localStorage.getItem('stats');
-    if (stored) {
-      return normalizeStats(JSON.parse(stored));
-    }
-  } catch (error) {
-    console.warn('No se pudieron cargar estadísticas almacenadas:', error);
-  }
-  return initializeStats();
-};
-
-const initialState: GameState = {
-  currentProblem: null,
-  userAnswer: '',
-  isCorrect: null,
-  score: 0,
-  maxScore: parseInt(localStorage.getItem('maxScore') || '0'),
-  level: 1,
-  achievements: JSON.parse(localStorage.getItem('achievements') || '[]'),
-  streak: 0,
-  bestStreak: parseInt(localStorage.getItem('bestStreak') || '0'),
-  totalExercises: parseInt(localStorage.getItem('totalExercises') || '0'),
-  correctExercises: parseInt(localStorage.getItem('correctExercises') || '0'),
-  stats: loadStats(),
-  practiceMode: 'all',
-  timeMode: 'no-limit',
-  timeRemaining: 0,
-  isTimerActive: false
-};
-
-function simplifyFraction(frac: Fraction): Fraction {
-  const numerator = Math.abs(frac.numerator);
-  const denominator = Math.abs(frac.denominator);
-  if (denominator === 0) return { numerator: 0, denominator: 1 };
-  function gcd(a: number, b: number): number {
-    a = Math.abs(a);
-    b = Math.abs(b);
-    if (b === 0) return a;
-    return gcd(b, a % b);
-  }
-  const divisor = gcd(numerator, denominator);
-  return {
-    numerator: numerator / divisor,
-    denominator: denominator / divisor,
-  };
-}
-
-function fractionEquals(a: Fraction, b: Fraction): boolean {
-  const sa = simplifyFraction(a);
-  const sb = simplifyFraction(b);
-  return sa.numerator === sb.numerator && sa.denominator === sb.denominator;
-}
-
-type FractionAnswerProblem = Extract<Problem, { answer: Fraction }>;
-
-function isFractionProblem(problem: Problem | null): problem is FractionAnswerProblem {
-  return (
-    !!problem &&
-    typeof problem === 'object' &&
-    typeof (problem as FractionAnswerProblem).answer === 'object' &&
-    (problem as FractionAnswerProblem).answer !== null &&
-    'numerator' in (problem as FractionAnswerProblem).answer &&
-    'denominator' in (problem as FractionAnswerProblem).answer
-  );
-}
+import { simplifyFraction, fractionEquals } from '../utils/fractionUtils';
+import { logger } from '../utils/logger';
+import { numbersEqual } from '../utils/mathUtils';
+import { isFactorizationProblem, isFractionProblem, normalizeFactorizationAnswer } from '../utils/problemUtils';
 
 type CheckAnswerPayload = Extract<GameAction, { type: 'CHECK_ANSWER' }>['payload'];
 
+const STORAGE_KEYS = {
+  maxScore: 'maxScore',
+  achievements: 'achievements',
+  bestStreak: 'bestStreak',
+  totalExercises: 'totalExercises',
+  correctExercises: 'correctExercises',
+  stats: 'stats',
+  grade: 'grade',
+} as const;
+
+const hasWindow = typeof window !== 'undefined';
+
+function readStoredNumber(key: string, fallback = 0): number {
+  if (!hasWindow) {
+    return fallback;
+  }
+
+  const value = window.localStorage.getItem(key);
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+function readStoredJson<T>(key: string, fallback: T): T {
+  if (!hasWindow) {
+    return fallback;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(key);
+    return stored ? (JSON.parse(stored) as T) : fallback;
+  } catch (error) {
+    logger.warn(`No se pudo leer ${key} desde localStorage.`, error);
+    return fallback;
+  }
+}
+
+function readStoredGrade(): GradeId {
+  if (!hasWindow) {
+    return '4t';
+  }
+
+  const stored = window.localStorage.getItem(STORAGE_KEYS.grade);
+  return stored === '5e' ? '5e' : '4t';
+}
+
+const loadStats = (): DetailedStats => normalizeStats(readStoredJson(STORAGE_KEYS.stats, initializeStats()));
+
 function getModeSeconds(mode: TimeMode): number {
-  if (mode === 'no-limit') return 0;
-  return TIME_MODES.find(t => t.mode === mode)?.seconds ?? 0;
+  return getTimeModeConfig(mode).seconds;
 }
 
 function calculateTimeSpent(timeMode: TimeMode, timeRemaining: number): number {
   const totalSeconds = getModeSeconds(timeMode);
   if (!totalSeconds) return 0;
   return Math.max(0, totalSeconds - timeRemaining);
+}
+
+function parseNumericAnswer(answer: string | Fraction): number | null {
+  if (typeof answer === 'number') {
+    return answer;
+  }
+
+  if (typeof answer !== 'string') {
+    return null;
+  }
+
+  const normalized = answer.trim().replace(',', '.');
+  if (!normalized) {
+    return null;
+  }
+
+  const parsed = Number.parseFloat(normalized);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function hasAnswerValue(answer: string | Fraction): boolean {
+  if (typeof answer === 'string') {
+    return answer.trim().length > 0;
+  }
+
+  return true;
 }
 
 function buildCheckAnswerPayload(params: {
@@ -119,7 +126,12 @@ function buildCheckAnswerPayload(params: {
   let normalizedAnswer: SerializedAnswer = null;
   let isCorrect = false;
 
-  if (isFractionProblem(problem)) {
+  if (isFactorizationProblem(problem)) {
+    if (typeof rawUserAnswer === 'string') {
+      normalizedAnswer = normalizeFactorizationAnswer(rawUserAnswer);
+      isCorrect = normalizedAnswer === problem.answer;
+    }
+  } else if (isFractionProblem(problem)) {
     if (typeof rawUserAnswer === 'object') {
       normalizedAnswer = simplifyFraction(rawUserAnswer);
       isCorrect = fractionEquals(problem.answer, rawUserAnswer);
@@ -127,6 +139,7 @@ function buildCheckAnswerPayload(params: {
       const [numeratorStr, denominatorStr] = rawUserAnswer.split('/');
       const numerator = Number.parseInt(numeratorStr, 10);
       const denominator = Number.parseInt(denominatorStr, 10);
+
       if (!Number.isNaN(numerator) && !Number.isNaN(denominator) && denominator !== 0) {
         const parsedFraction = simplifyFraction({ numerator, denominator });
         normalizedAnswer = parsedFraction;
@@ -134,15 +147,10 @@ function buildCheckAnswerPayload(params: {
       }
     }
   } else {
-    const numericAnswer =
-      typeof rawUserAnswer === 'string'
-        ? Number.parseFloat(rawUserAnswer)
-        : typeof rawUserAnswer === 'number'
-        ? rawUserAnswer
-        : Number.NaN;
-    if (!Number.isNaN(numericAnswer)) {
+    const numericAnswer = parseNumericAnswer(rawUserAnswer);
+    if (numericAnswer !== null) {
       normalizedAnswer = numericAnswer;
-      isCorrect = numericAnswer === problem.answer;
+      isCorrect = numbersEqual(numericAnswer, problem.answer);
     }
   }
 
@@ -159,13 +167,9 @@ function buildCheckAnswerPayload(params: {
 }
 
 function buildAttemptPayload(level: number, practiceMode: PracticeMode, payload: CheckAnswerPayload): AttemptPayload {
-  const problemIsFraction = isFractionProblem(payload.problem);
-  let correctAnswer: SerializedAnswer;
-  if (problemIsFraction) {
-    correctAnswer = simplifyFraction(payload.problem.answer as Fraction);
-  } else {
-    correctAnswer = payload.problem.answer;
-  }
+  const correctAnswer: SerializedAnswer = isFractionProblem(payload.problem)
+    ? simplifyFraction(payload.problem.answer)
+    : payload.problem.answer;
 
   return {
     operation: payload.problem.operation,
@@ -179,6 +183,38 @@ function buildAttemptPayload(level: number, practiceMode: PracticeMode, payload:
   };
 }
 
+const initialState: GameState = {
+  currentProblem: null,
+  userAnswer: '',
+  isCorrect: null,
+  score: 0,
+  maxScore: readStoredNumber(STORAGE_KEYS.maxScore),
+  level: 1,
+  grade: readStoredGrade(),
+  achievements: readStoredJson(STORAGE_KEYS.achievements, []),
+  streak: 0,
+  bestStreak: readStoredNumber(STORAGE_KEYS.bestStreak),
+  totalExercises: readStoredNumber(STORAGE_KEYS.totalExercises),
+  correctExercises: readStoredNumber(STORAGE_KEYS.correctExercises),
+  stats: loadStats(),
+  practiceMode: 'all',
+  timeMode: 'no-limit',
+  timeRemaining: 0,
+  isTimerActive: false,
+};
+
+function createProblemForState(state: Pick<GameState, 'level' | 'practiceMode' | 'grade'>): Problem {
+  return generateProblem(state.level, state.practiceMode, state.grade);
+}
+
+function getResetTimerState(timeMode: TimeMode): Pick<GameState, 'timeRemaining' | 'isTimerActive'> {
+  const seconds = getModeSeconds(timeMode);
+  return {
+    timeRemaining: seconds,
+    isTimerActive: timeMode !== 'no-limit',
+  };
+}
+
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'SET_PROBLEM':
@@ -186,15 +222,15 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         currentProblem: action.payload,
         userAnswer: '',
-        isCorrect: null
+        isCorrect: null,
       };
-      
+
     case 'SET_ANSWER':
       return {
         ...state,
-        userAnswer: action.payload
+        userAnswer: action.payload,
       };
-      
+
     case 'CHECK_ANSWER': {
       const { isCorrect, timeSpent, difficulty, problem } = action.payload;
       if (!state.currentProblem) return state;
@@ -205,18 +241,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const newBestStreak = Math.max(newStreak, state.bestStreak);
       const newTotalExercises = state.totalExercises + 1;
       const newCorrectExercises = isCorrect ? state.correctExercises + 1 : state.correctExercises;
-      
-      // Actualizar estadísticas (las funciones son inmutables, retornan nuevos objetos)
+
       let newStats = state.stats;
       newStats = updateWeeklyProgress(newStats, isCorrect, timeSpent);
       newStats = updateOperationStats(newStats, problem.operation, isCorrect, timeSpent, difficulty);
       newStats = updateDifficultyStats(newStats, difficulty, isCorrect);
-      
-      // Verificar logros
+
       const newAchievements = [...state.achievements];
-      const unlockedAchievements = ACHIEVEMENTS.filter(achievement => {
-        if (newAchievements.some(a => a.id === achievement.id)) return false;
-        
+      const unlockedAchievements = ACHIEVEMENTS.filter((achievement) => {
+        if (newAchievements.some((item) => item.id === achievement.id)) return false;
+
         switch (achievement.id) {
           case 'first_correct':
             return isCorrect && newCorrectExercises === 1;
@@ -240,18 +274,18 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             return false;
         }
       });
-      
-      unlockedAchievements.forEach(achievement => {
+
+      unlockedAchievements.forEach((achievement) => {
         newAchievements.push({
           ...achievement,
           unlocked: true,
-          unlockedAt: new Date()
+          unlockedAt: new Date(),
         });
       });
-      
-      // Verificar desbloqueo de niveles
-      const newLevel = LEVELS.find(level => level.minScore <= newScore && level.id > state.level)?.id || state.level;
-      
+
+      const newLevel =
+        [...LEVELS].reverse().find((level) => level.minScore <= newScore)?.id ?? state.level;
+
       return {
         ...state,
         isCorrect,
@@ -264,104 +298,113 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         totalExercises: newTotalExercises,
         correctExercises: newCorrectExercises,
         stats: newStats,
-        isTimerActive: false
+        isTimerActive: false,
       };
     }
-    
-    case 'NEXT_PROBLEM': {
-      const newProblem = generateProblem(state.level, state.practiceMode);
+
+    case 'NEXT_PROBLEM':
       return {
         ...state,
-        currentProblem: newProblem,
+        currentProblem: createProblemForState(state),
         userAnswer: '',
         isCorrect: null,
-        timeRemaining: state.timeMode !== 'no-limit' ? TIME_MODES.find(t => t.mode === state.timeMode)?.seconds || 0 : 0,
-        isTimerActive: state.timeMode !== 'no-limit'
+        ...getResetTimerState(state.timeMode),
       };
-    }
-    
-    case 'RESET_GAME': {
-      const newProblem = generateProblem(state.level, state.practiceMode);
+
+    case 'RESET_GAME':
       return {
         ...state,
         score: 0,
         streak: 0,
-        currentProblem: newProblem,
+        currentProblem: createProblemForState(state),
         userAnswer: '',
         isCorrect: null,
-        timeRemaining: state.timeMode !== 'no-limit' ? TIME_MODES.find(t => t.mode === state.timeMode)?.seconds || 0 : 0,
-        isTimerActive: state.timeMode !== 'no-limit'
+        ...getResetTimerState(state.timeMode),
       };
-    }
-    
+
     case 'UNLOCK_ACHIEVEMENT':
       return {
         ...state,
-        achievements: [...state.achievements, action.payload]
+        achievements: [...state.achievements, action.payload],
       };
-      
+
     case 'UPDATE_STREAK':
       return {
         ...state,
-        streak: action.payload
+        streak: action.payload,
       };
-      
+
     case 'UPDATE_STATS':
       return {
         ...state,
-        stats: { ...state.stats, ...action.payload }
+        stats: { ...state.stats, ...action.payload },
       };
 
     case 'SET_STATS':
       return {
         ...state,
-        stats: action.payload
+        stats: action.payload,
       };
-      
-    case 'SET_PRACTICE_MODE': {
-      const newProblem = generateProblem(state.level, action.payload);
+
+    case 'SET_GRADE': {
+      const nextPracticeMode = getGradeConfig(action.payload).availablePracticeModes.includes(state.practiceMode)
+        ? state.practiceMode
+        : 'all';
+
       return {
         ...state,
-        practiceMode: action.payload,
-        currentProblem: newProblem,
+        grade: action.payload,
+        practiceMode: nextPracticeMode,
+        currentProblem: generateProblem(state.level, nextPracticeMode, action.payload),
         userAnswer: '',
         isCorrect: null,
-        timeRemaining: state.timeMode !== 'no-limit' ? TIME_MODES.find(t => t.mode === state.timeMode)?.seconds || 0 : 0,
-        isTimerActive: state.timeMode !== 'no-limit'
+        ...getResetTimerState(state.timeMode),
       };
     }
-    
-    case 'SET_TIME_MODE': {
-      const newProblem = generateProblem(state.level, state.practiceMode);
+
+    case 'SET_PRACTICE_MODE': {
+      const nextPracticeMode = getGradeConfig(state.grade).availablePracticeModes.includes(action.payload)
+        ? action.payload
+        : 'all';
+
+      return {
+        ...state,
+        practiceMode: nextPracticeMode,
+        currentProblem: generateProblem(state.level, nextPracticeMode, state.grade),
+        userAnswer: '',
+        isCorrect: null,
+        ...getResetTimerState(state.timeMode),
+      };
+    }
+
+    case 'SET_TIME_MODE':
       return {
         ...state,
         timeMode: action.payload,
-        currentProblem: newProblem,
+        currentProblem: createProblemForState(state),
         userAnswer: '',
         isCorrect: null,
-        timeRemaining: action.payload !== 'no-limit' ? TIME_MODES.find(t => t.mode === action.payload)?.seconds || 0 : 0,
-        isTimerActive: action.payload !== 'no-limit'
+        ...getResetTimerState(action.payload),
       };
-    }
-    
+
     case 'UPDATE_TIMER':
       return {
         ...state,
-        timeRemaining: action.payload
+        timeRemaining: action.payload,
       };
-      
+
     case 'START_TIMER':
       return {
         ...state,
-        isTimerActive: true
+        isTimerActive: true,
       };
-      
+
     case 'STOP_TIMER':
       return {
         ...state,
-        isTimerActive: false
+        isTimerActive: false,
       };
-      
+
     default:
       return state;
   }
@@ -374,6 +417,7 @@ interface GameContextType {
   nextProblem: () => void;
   resetGame: () => void;
   setAnswer: (answer: string | Fraction) => void;
+  setGrade: (grade: GradeId) => void;
   setPracticeMode: (mode: PracticeMode) => void;
   setTimeMode: (mode: TimeMode) => void;
 }
@@ -384,7 +428,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
   const sessionUserId = session?.user?.id ?? null;
   const [state, dispatch] = useReducer(gameReducer, initialState);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkAnswerRef = useRef<(overrideAnswer?: string | Fraction) => void>(() => undefined);
+  const currentProblemRef = useRef<GameState['currentProblem']>(state.currentProblem);
+  const userAnswerRef = useRef<GameState['userAnswer']>(state.userAnswer);
   const syncedRef = useRef(false);
   const legacySnapshotRef = useRef<LegacySnapshot | null>(null);
 
@@ -398,21 +445,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const checkAnswer = useCallback(
     (overrideAnswer?: string | Fraction) => {
-    if (!state.currentProblem) return;
-    const evaluation = buildCheckAnswerPayload({
-      currentProblem: state.currentProblem,
+      if (!state.currentProblem) return;
+
+      const evaluation = buildCheckAnswerPayload({
+        currentProblem: state.currentProblem,
         userAnswer: overrideAnswer ?? state.userAnswer,
-      level: state.level,
-      timeMode: state.timeMode,
-      timeRemaining: state.timeRemaining,
-    });
-    dispatch({ type: 'CHECK_ANSWER', payload: evaluation });
-    
-    // Guardar intento inmediatamente en Supabase
-    if (sessionUserId) {
-      const attemptPayload = buildAttemptPayload(state.level, state.practiceMode, evaluation);
-      void recordAttemptDirect(sessionUserId, attemptPayload);
-    }
+        level: state.level,
+        timeMode: state.timeMode,
+        timeRemaining: state.timeRemaining,
+      });
+
+      dispatch({ type: 'CHECK_ANSWER', payload: evaluation });
+
+      if (sessionUserId) {
+        const attemptPayload = buildAttemptPayload(state.level, state.practiceMode, evaluation);
+        void recordAttemptDirect(sessionUserId, attemptPayload);
+      }
     },
     [
       state.currentProblem,
@@ -422,56 +470,88 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       state.timeMode,
       state.timeRemaining,
       sessionUserId,
-      dispatch,
     ],
   );
-  
-  // Efecto para manejar el timer
+
   useEffect(() => {
-    if (state.isTimerActive && state.timeRemaining > 0) {
-      timerRef.current = setInterval(() => {
-        dispatch({ type: 'UPDATE_TIMER', payload: state.timeRemaining - 1 });
-      }, 1000);
-    } else if (state.timeRemaining === 0 && state.isTimerActive) {
-      dispatch({ type: 'STOP_TIMER' });
-      if (state.userAnswer && state.currentProblem) {
-        checkAnswer(state.userAnswer);
-      }
+    checkAnswerRef.current = checkAnswer;
+  }, [checkAnswer]);
+
+  useEffect(() => {
+    currentProblemRef.current = state.currentProblem;
+    userAnswerRef.current = state.userAnswer;
+  }, [state.currentProblem, state.userAnswer]);
+
+  useEffect(() => {
+    if (!state.isTimerActive || state.timeRemaining <= 0) {
+      return undefined;
     }
+
+    timerRef.current = setTimeout(() => {
+      dispatch({ type: 'UPDATE_TIMER', payload: Math.max(0, state.timeRemaining - 1) });
+    }, 1000);
 
     return () => {
       if (timerRef.current) {
-        clearInterval(timerRef.current);
+        clearTimeout(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [state.isTimerActive, state.timeRemaining, state.userAnswer, state.currentProblem, checkAnswer]);
-  
-  // Efecto para guardar datos en localStorage
+  }, [state.isTimerActive, state.timeRemaining]);
+
   useEffect(() => {
-    localStorage.setItem('maxScore', state.maxScore.toString());
-    localStorage.setItem('bestStreak', state.bestStreak.toString());
-    localStorage.setItem('totalExercises', state.totalExercises.toString());
-    localStorage.setItem('correctExercises', state.correctExercises.toString());
-    localStorage.setItem('achievements', JSON.stringify(state.achievements));
-    localStorage.setItem('stats', JSON.stringify(state.stats));
-  }, [state.maxScore, state.bestStreak, state.totalExercises, state.correctExercises, state.achievements, state.stats]);
-  
-  // Efecto para generar problema inicial
+    if (!state.isTimerActive || state.timeRemaining !== 0) {
+      return;
+    }
+
+    dispatch({ type: 'STOP_TIMER' });
+
+    const latestAnswer = userAnswerRef.current;
+    if (currentProblemRef.current && hasAnswerValue(latestAnswer)) {
+      checkAnswerRef.current(latestAnswer);
+    }
+  }, [state.isTimerActive, state.timeRemaining]);
+
+  useEffect(() => {
+    if (!hasWindow) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      window.localStorage.setItem(STORAGE_KEYS.maxScore, state.maxScore.toString());
+      window.localStorage.setItem(STORAGE_KEYS.bestStreak, state.bestStreak.toString());
+      window.localStorage.setItem(STORAGE_KEYS.totalExercises, state.totalExercises.toString());
+      window.localStorage.setItem(STORAGE_KEYS.correctExercises, state.correctExercises.toString());
+      window.localStorage.setItem(STORAGE_KEYS.achievements, JSON.stringify(state.achievements));
+      window.localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(state.stats));
+      window.localStorage.setItem(STORAGE_KEYS.grade, state.grade);
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    state.maxScore,
+    state.bestStreak,
+    state.totalExercises,
+    state.correctExercises,
+    state.achievements,
+    state.stats,
+    state.grade,
+  ]);
+
   useEffect(() => {
     if (!state.currentProblem) {
-      dispatch({ type: 'SET_PROBLEM', payload: generateProblem(state.level, state.practiceMode) });
+      dispatch({ type: 'SET_PROBLEM', payload: generateProblem(state.level, state.practiceMode, state.grade) });
     }
-  }, [state.currentProblem, state.level, state.practiceMode]);
+  }, [state.currentProblem, state.level, state.practiceMode, state.grade]);
 
-  // Sincronización con Supabase SOLO al iniciar sesión (no durante la sesión activa)
   useEffect(() => {
     if (!sessionUserId) {
       syncedRef.current = false;
       return;
     }
 
-    // Si ya se sincronizó en esta sesión, no volver a hacerlo
     if (syncedRef.current) {
       return;
     }
@@ -481,44 +561,33 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const snapshot = legacySnapshotRef.current;
 
     const sync = async () => {
-      // 1. Migrar datos legacy si existen
       try {
         if (snapshot) {
           await migrateLegacyData(userId, snapshot);
         }
       } catch (error) {
-        console.warn('No se pudieron migrar los datos locales:', error);
+        logger.warn('No se pudieron migrar los datos locales.', error);
       }
 
-      // 2. Cargar estadísticas desde Supabase SOLO al iniciar sesión
-      // IMPORTANTE: Esperar un poco para asegurar que la sesión esté establecida en Supabase
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       try {
         const remoteStats = await fetchUserStats(userId);
         if (remoteStats) {
-          // SET_STATS reemplaza completamente las stats con las de Supabase
-          // Esto solo ocurre UNA VEZ al iniciar sesión
           dispatch({ type: 'SET_STATS', payload: remoteStats });
         }
       } catch (error) {
-        console.error('[GameContext] Error al obtener estadísticas remotas:', error);
+        logger.error('[GameContext] Error al obtener estadísticas remotas.', error);
       }
 
-      // 3. Sincronizar cola pendiente si hay
       await flushQueue(userId);
     };
 
     void sync();
   }, [sessionUserId]);
 
-  // Intentar enviar cola al recuperar conexión
   useEffect(() => {
-    if (!sessionUserId) {
-      return;
-    }
-
-    if (typeof window === 'undefined') {
+    if (!sessionUserId || !hasWindow) {
       return;
     }
 
@@ -532,27 +601,31 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('online', handleOnline);
     };
   }, [sessionUserId]);
-  
+
   const nextProblem = () => {
     dispatch({ type: 'NEXT_PROBLEM' });
   };
-  
+
   const resetGame = () => {
     dispatch({ type: 'RESET_GAME' });
   };
-  
+
   const setAnswer = (answer: string | Fraction) => {
     dispatch({ type: 'SET_ANSWER', payload: answer });
   };
-  
+
+  const setGrade = (grade: GradeId) => {
+    dispatch({ type: 'SET_GRADE', payload: grade });
+  };
+
   const setPracticeMode = (mode: PracticeMode) => {
     dispatch({ type: 'SET_PRACTICE_MODE', payload: mode });
   };
-  
+
   const setTimeMode = (mode: TimeMode) => {
     dispatch({ type: 'SET_TIME_MODE', payload: mode });
   };
-  
+
   const value: GameContextType = {
     state,
     dispatch,
@@ -560,15 +633,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     nextProblem,
     resetGame,
     setAnswer,
+    setGrade,
     setPracticeMode,
-    setTimeMode
+    setTimeMode,
   };
-  
-  return (
-    <GameContext.Provider value={value}>
-      {children}
-    </GameContext.Provider>
-  );
+
+  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }
 
 export function useGame() {
@@ -577,4 +647,4 @@ export function useGame() {
     throw new Error('useGame must be used within a GameProvider');
   }
   return context;
-} 
+}
