@@ -34,6 +34,20 @@ export interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 AuthContext.displayName = 'AuthContext';
+const SESSION_TIMEOUT_MS = 15000;
+
+function requiresEmailConfirmation(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('email not confirmed') ||
+    (normalized.includes('confirm') && normalized.includes('email')) ||
+    normalized.includes('email verification')
+  );
+}
+
+function getPendingConfirmationMessage(): string {
+  return 'Supabase está exigiendo confirmación por email. Para este flujo con usuario y PIN debes desactivar "Confirm email" en Auth > Providers > Email, o configurar correctamente Site URL y Redirect URLs si quieres mantener la confirmación.';
+}
 
 async function upsertProfile(payload: { id: string; username: string; avatar: string }): Promise<void> {
   const { error } = await supabase
@@ -45,8 +59,6 @@ async function upsertProfile(payload: { id: string; username: string; avatar: st
     throw error;
   }
 }
-
-const SESSION_TIMEOUT_MS = 15000; // Aumentado a 15 segundos para conexiones lentas
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -191,6 +203,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password: pin });
 
       if (signInError) {
+        if (requiresEmailConfirmation(signInError.message ?? '')) {
+          setError(getPendingConfirmationMessage());
+          return;
+        }
         setError('No pudimos iniciar sesión. Verifica tu usuario y PIN.');
         return;
       }
@@ -269,13 +285,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password: pin });
         if (signInError) {
           logger.error('Supabase signIn after signUp error:', signInError);
+          if (requiresEmailConfirmation(signInError.message ?? '')) {
+            setError(getPendingConfirmationMessage());
+            return;
+          }
         } else {
           resolvedSession = signInData.session ?? null;
         }
       }
 
       if (!resolvedSession?.user) {
-        setError('Cuenta creada. Revisa tu correo o intenta iniciar sesión manualmente.');
+        setError(getPendingConfirmationMessage());
         return;
       }
 
