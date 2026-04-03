@@ -5,6 +5,50 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [1.2.0] - 2026-04-03
+
+### Añadido
+- **Cobertura curricular ampliada a 5.º de primaria**
+  - Nuevos ejercicios con decimales
+  - Potencias (cuadrados y cubos)
+  - Fracciones con multiplicación y división
+  - Porcentajes y proporcionalidad básica
+  - Estimación y factorización
+
+- **Versión visible en la aplicación**
+  - La versión ahora se muestra en el header y el footer
+  - Enlace directo al changelog desde la interfaz
+
+### Cambiado
+- **Branding de autoría**
+  - El copyright de la app pasa a `mindbreaker81`
+  - Se añade referencia visible al usuario de GitHub `@mindbreaker81`
+
+- **Fuente única de versión**
+  - `package.json` pasa a ser la referencia principal de la versión mostrada en la web-app
+  - La versión renderizada en la UI se inyecta en build time para evitar duplicaciones manuales
+
+- **Experiencia de juego y accesibilidad**
+  - Mejoras en tabs, feedback accesible y visibilidad del estado de la app
+  - Ajustes de interfaz para mostrar mejor el estado actual y el progreso
+
+### Corregido
+- **Mensajes de autenticación en despliegue**
+  - Se aclara cuando Supabase bloquea login/registro por confirmación de email
+  - El mensaje guía a desactivar `Confirm email` o configurar `Site URL` y `Redirect URLs`
+
+- **Persistencia y robustez**
+  - Mejoras en timer, cola offline y sincronización local/remota
+  - Utilidades compartidas para fracciones, expresiones y validación de respuestas
+
+### Técnico
+- **Actualización reciente de dependencias**
+  - React y Vite actualizados para corregir vulnerabilidades conocidas
+  - Ajustes de tipados y tooling (`@types/node`, `@typescript-eslint`)
+
+- **Testing**
+  - Nuevos tests para expansión curricular, Home, Exercise, GameContext y cola de intentos
+
 ## [1.0.0] - 2025-10-26
 
 ### Añadido
