@@ -147,7 +147,56 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: 'Acierta al menos un ejercicio en cada bloque de 5.º',
     icon: '🗺️',
     unlocked: false
-  }
+  },
+  {
+    id: 'integer_master',
+    name: 'Maestro de Enteros',
+    description: 'Resuelve 10 ejercicios con enteros correctamente',
+    icon: '➖➕',
+    unlocked: false
+  },
+  {
+    id: 'equation_solver',
+    name: 'Cazador de Incógnitas',
+    description: 'Resuelve 10 ecuaciones correctamente',
+    icon: '𝑥',
+    unlocked: false
+  },
+  {
+    id: 'ratio_expert',
+    name: 'Experto en Proporciones',
+    description: 'Resuelve 10 ejercicios de razones correctamente',
+    icon: '⚖️',
+    unlocked: false
+  },
+  {
+    id: 'stats_complete',
+    name: 'Estadístico Completo',
+    description: 'Domina media, mediana, moda y rango',
+    icon: '📊',
+    unlocked: false
+  },
+  {
+    id: 'probability_lucky',
+    name: 'Suerte Calculada',
+    description: 'Resuelve 10 ejercicios de probabilidad correctamente',
+    icon: '🎲',
+    unlocked: false
+  },
+  {
+    id: 'circle_master',
+    name: 'Amigo del Círculo',
+    description: 'Resuelve 10 ejercicios de círculo correctamente',
+    icon: '⭕',
+    unlocked: false
+  },
+  {
+    id: 'sixth_grade_explorer',
+    name: 'Explorador 6.º',
+    description: 'Prueba todos los modos exclusivos de 6.º',
+    icon: '🎓',
+    unlocked: false
+  },
 ];
 
 const FOURTH_GRADE_OPERATIONS: Operation[] = [
@@ -196,7 +245,30 @@ const FIFTH_GRADE_OPERATIONS: Operation[] = [
   'round-decimal',
 ];
 
-export const GRADE_CONFIGS: Record<'4t' | '5e', GradeConfig> = {
+const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [
+  'integer-addition',
+  'integer-subtraction',
+  'integer-multiplication',
+  'integer-division',
+  'integer-compare',
+  'integer-order',
+  'simple-equation',
+  'ratio',
+  'proportion',
+  'median',
+  'mode',
+  'range',
+  'probability-simple',
+  'circle-area',
+  'circle-circumference',
+  'volume-rectangular-prism',
+  'triangle-angle-sum',
+  'scale-conversion',
+];
+
+const SIXTH_GRADE_OPERATIONS: Operation[] = [...FIFTH_GRADE_OPERATIONS, ...SIXTH_GRADE_ONLY_OPERATIONS];
+
+export const GRADE_CONFIGS: Record<'4t' | '5e' | '6e', GradeConfig> = {
   '4t': {
     id: '4t',
     name: '4.º de Primaria',
@@ -232,6 +304,40 @@ export const GRADE_CONFIGS: Record<'4t' | '5e', GradeConfig> = {
       'rounding',
     ],
   },
+  '6e': {
+    id: '6e',
+    name: '6.º de Primaria',
+    description: 'Enteros, ecuaciones, proporcionalidad, probabilidad y geometría avanzada.',
+    availableOperations: SIXTH_GRADE_OPERATIONS,
+    availablePracticeModes: [
+      'all',
+      'addition',
+      'subtraction',
+      'multiplication',
+      'division',
+      'fractions',
+      'mixed',
+      'decimals',
+      'powers',
+      'percentages',
+      'estimation',
+      'factorization',
+      'word-problems',
+      'comparison',
+      'conversions',
+      'number-theory',
+      'geometry',
+      'units',
+      'statistics',
+      'rounding',
+      'integers',
+      'equations',
+      'ratios',
+      'probability',
+      'geometry-advanced',
+      'scales',
+    ],
+  },
 };
 
 export const LEVELS: Level[] = [
@@ -249,7 +355,7 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 40,
     maxEstimationValue: 50,
     maxFactorizationNumber: 24,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
   {
     id: 2,
@@ -265,7 +371,7 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 60,
     maxEstimationValue: 80,
     maxFactorizationNumber: 30,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
   {
     id: 3,
@@ -281,7 +387,7 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 80,
     maxEstimationValue: 120,
     maxFactorizationNumber: 36,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
   {
     id: 4,
@@ -297,7 +403,7 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 100,
     maxEstimationValue: 200,
     maxFactorizationNumber: 48,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
   {
     id: 5,
@@ -313,7 +419,7 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 120,
     maxEstimationValue: 300,
     maxFactorizationNumber: 60,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
   {
     id: 6,
@@ -329,7 +435,7 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 150,
     maxEstimationValue: 450,
     maxFactorizationNumber: 72,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
   {
     id: 7,
@@ -345,7 +451,7 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 180,
     maxEstimationValue: 600,
     maxFactorizationNumber: 84,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
   {
     id: 8,
@@ -361,7 +467,7 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 220,
     maxEstimationValue: 900,
     maxFactorizationNumber: 96,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
   {
     id: 9,
@@ -377,7 +483,7 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 260,
     maxEstimationValue: 1200,
     maxFactorizationNumber: 108,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
   {
     id: 10,
@@ -393,11 +499,11 @@ export const LEVELS: Level[] = [
     maxPercentageBase: 320,
     maxEstimationValue: 1600,
     maxFactorizationNumber: 120,
-    operations: FIFTH_GRADE_OPERATIONS,
+    operations: SIXTH_GRADE_OPERATIONS,
   },
 ];
 
-export function getGradeConfig(grade: '4t' | '5e'): GradeConfig {
+export function getGradeConfig(grade: '4t' | '5e' | '6e'): GradeConfig {
   return GRADE_CONFIGS[grade];
 }
 

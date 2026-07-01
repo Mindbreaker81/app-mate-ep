@@ -5,6 +5,26 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [3.0.0] - 2026-07-01
+
+### Añadido
+- **Expansión curricular completa para 6.º de primaria (18 operaciones nuevas, 57 total)**
+  - Números enteros: suma, resta, multiplicación, división, comparar y ordenar
+  - Ecuaciones simples de un paso
+  - Razones y proporcionalidad
+  - Estadística ampliada: mediana, moda y rango (además de media)
+  - Probabilidad simple
+  - Geometría avanzada: área y longitud del círculo, volumen de prisma, suma de ángulos
+  - Escalas en planos
+- **6 modos de práctica nuevos** (`integers`, `equations`, `ratios`, `probability`, `geometry-advanced`, `scales`)
+- **7 logros nuevos** para contenido de 6.º
+- **Selector de curso ampliado** a 4.º, 5.º y 6.º
+- **Migración BD** `0005_validate_grade_6e.sql` documentada en `DATABASE_MIGRATION.md`
+
+### Cambiado
+- Modo estadística incluye mediana, moda y rango en 6.º
+- Help, README y TECHNICAL actualizados para v3.0
+
 ## [2.0.0] - 2026-07-01
 
 ### Añadido

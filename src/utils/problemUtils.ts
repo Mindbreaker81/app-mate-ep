@@ -1,6 +1,7 @@
 import type {
   AngleProblem,
   AngleType,
+  CircleProblem,
   CompareProblem,
   ComparisonOperator,
   ConversionProblem,
@@ -9,19 +10,31 @@ import type {
   FractionProblem,
   GcdLcmProblem,
   GeometryProblem,
+  IntegerArithmeticProblem,
+  IntegerCompareProblem,
+  IntegerOrderProblem,
   MeanProblem,
+  MedianProblem,
   MixedNumber,
   MixedNumberConvertProblem,
   MixedNumberProblem,
+  ModeProblem,
   Operation,
   OrderValuesProblem,
   PercentageProblem,
+  ProbabilityProblem,
   Problem,
+  RangeProblem,
+  RatioProblem,
   RemainderAnswer,
   RemainderProblem,
   RoundDecimalProblem,
+  ScaleProblem,
+  SimpleEquationProblem,
   SquareRootProblem,
+  TriangleAngleProblem,
   UnitConversionProblem,
+  VolumeProblem,
   WordProblem,
 } from '../types';
 import { formatFraction, fractionEquals, simplifyFraction } from './fractionUtils';
@@ -112,10 +125,83 @@ export function isRoundDecimalProblem(problem: Problem | null): problem is Round
   return !!problem && problem.operation === 'round-decimal';
 }
 
+export function isIntegerArithmeticProblem(problem: Problem | null): problem is IntegerArithmeticProblem {
+  return (
+    !!problem &&
+    (problem.operation === 'integer-addition' ||
+      problem.operation === 'integer-subtraction' ||
+      problem.operation === 'integer-multiplication' ||
+      problem.operation === 'integer-division')
+  );
+}
+
+export function isIntegerCompareProblem(problem: Problem | null): problem is IntegerCompareProblem {
+  return !!problem && problem.operation === 'integer-compare';
+}
+
+export function isIntegerOrderProblem(problem: Problem | null): problem is IntegerOrderProblem {
+  return !!problem && problem.operation === 'integer-order';
+}
+
+export function isSimpleEquationProblem(problem: Problem | null): problem is SimpleEquationProblem {
+  return !!problem && problem.operation === 'simple-equation';
+}
+
+export function isRatioProblem(problem: Problem | null): problem is RatioProblem {
+  return !!problem && (problem.operation === 'ratio' || problem.operation === 'proportion');
+}
+
+export function isMedianProblem(problem: Problem | null): problem is MedianProblem {
+  return !!problem && problem.operation === 'median';
+}
+
+export function isModeProblem(problem: Problem | null): problem is ModeProblem {
+  return !!problem && problem.operation === 'mode';
+}
+
+export function isRangeProblem(problem: Problem | null): problem is RangeProblem {
+  return !!problem && problem.operation === 'range';
+}
+
+export function isProbabilityProblem(problem: Problem | null): problem is ProbabilityProblem {
+  return !!problem && problem.operation === 'probability-simple';
+}
+
+export function isCircleProblem(problem: Problem | null): problem is CircleProblem {
+  return !!problem && (problem.operation === 'circle-area' || problem.operation === 'circle-circumference');
+}
+
+export function isVolumeProblem(problem: Problem | null): problem is VolumeProblem {
+  return !!problem && problem.operation === 'volume-rectangular-prism';
+}
+
+export function isTriangleAngleProblem(problem: Problem | null): problem is TriangleAngleProblem {
+  return !!problem && problem.operation === 'triangle-angle-sum';
+}
+
+export function isScaleProblem(problem: Problem | null): problem is ScaleProblem {
+  return !!problem && problem.operation === 'scale-conversion';
+}
+
 export function isMultipleChoiceProblem(
   problem: Problem | null,
-): problem is Extract<Problem, { operation: 'estimation' }> | CompareProblem | OrderValuesProblem | AngleProblem {
-  return isEstimationProblem(problem) || isCompareProblem(problem) || isOrderValuesProblem(problem) || isAngleProblem(problem);
+): problem is
+  | Extract<Problem, { operation: 'estimation' }>
+  | CompareProblem
+  | OrderValuesProblem
+  | AngleProblem
+  | IntegerCompareProblem
+  | IntegerOrderProblem
+  | ProbabilityProblem {
+  return (
+    isEstimationProblem(problem) ||
+    isCompareProblem(problem) ||
+    isOrderValuesProblem(problem) ||
+    isAngleProblem(problem) ||
+    isIntegerCompareProblem(problem) ||
+    isIntegerOrderProblem(problem) ||
+    isProbabilityProblem(problem)
+  );
 }
 
 export function isPromptProblem(
@@ -126,22 +212,40 @@ export function isPromptProblem(
   | GcdLcmProblem
   | WordProblem
   | MeanProblem
+  | MedianProblem
+  | ModeProblem
+  | RangeProblem
   | GeometryProblem
   | UnitConversionProblem
   | RoundDecimalProblem
   | MixedNumberConvertProblem
-  | ConversionProblem {
+  | ConversionProblem
+  | SimpleEquationProblem
+  | RatioProblem
+  | CircleProblem
+  | VolumeProblem
+  | TriangleAngleProblem
+  | ScaleProblem {
   return (
     isPercentageProblem(problem) ||
     isFactorizationProblem(problem) ||
     isGcdLcmProblem(problem) ||
     isWordProblem(problem) ||
     isMeanProblem(problem) ||
+    isMedianProblem(problem) ||
+    isModeProblem(problem) ||
+    isRangeProblem(problem) ||
     isGeometryNumericProblem(problem) ||
     isUnitConversionProblem(problem) ||
     isRoundDecimalProblem(problem) ||
     isMixedNumberConvertProblem(problem) ||
-    isConversionProblem(problem)
+    isConversionProblem(problem) ||
+    isSimpleEquationProblem(problem) ||
+    isRatioProblem(problem) ||
+    isCircleProblem(problem) ||
+    isVolumeProblem(problem) ||
+    isTriangleAngleProblem(problem) ||
+    isScaleProblem(problem)
   );
 }
 
@@ -155,8 +259,13 @@ export function allowsDecimalAnswer(problem: Problem): boolean {
     problem.operation === 'percentage' ||
     problem.operation === 'fraction-to-decimal' ||
     problem.operation === 'mean' ||
+    problem.operation === 'median' ||
     problem.operation === 'round-decimal' ||
-    problem.operation === 'unit-conversion'
+    problem.operation === 'unit-conversion' ||
+    problem.operation === 'probability-simple' ||
+    problem.operation === 'circle-area' ||
+    problem.operation === 'circle-circumference' ||
+    problem.operation === 'scale-conversion'
   );
 }
 
@@ -362,6 +471,19 @@ export function answersMatch(problem: Problem, userValue: string | Fraction | Mi
 
   if (isAngleProblem(problem)) {
     return userValue === problem.answer;
+  }
+
+  if (isIntegerCompareProblem(problem)) {
+    return userValue === problem.answer;
+  }
+
+  if (isIntegerOrderProblem(problem)) {
+    return userValue === problem.answer;
+  }
+
+  if (isProbabilityProblem(problem)) {
+    const numeric = typeof userValue === 'string' ? Number.parseFloat(userValue.replace(',', '.')) : null;
+    return numeric !== null && numbersEqual(numeric, problem.answer);
   }
 
   if (isEstimationProblem(problem)) {

@@ -52,7 +52,7 @@ pitagoritas/
 │   │   └── supabaseClient.ts # Cliente de Supabase
 │   ├── utils/              # Utilidades
 │   ├── utils/              # Utilidades
-│   │   ├── generators/         # Generadores modulares de problemas (v2)
+│   │   ├── generators/         # Generadores modulares de problemas (v2/v3)
 │   │   ├── problemGenerator.ts # Reexport del barrel generators/
 │   │   ├── achievementEngine.ts
 │   │   ├── statsUtils.ts
@@ -70,7 +70,9 @@ pitagoritas/
 │   └── migrations/        # Migraciones SQL versionadas
 │       ├── 0001_create_profiles_attempts.sql
 │       ├── 0002_auto_create_profile_trigger.sql
-│       └── 0003_reset_users_and_fix_rls.sql
+│       ├── 0003_reset_users_and_fix_rls.sql
+│       ├── 0004_add_grade_to_attempts.sql
+│       └── 0005_validate_grade_6e.sql
 ├── public/                # Archivos estáticos
 │   └── logo.png
 ├── .env.local            # Variables de entorno (no versionado)
@@ -486,5 +488,21 @@ onClick={async (e) => {
 
 ---
 
-**Última actualización:** 2025-10-26
-**Versión:** 1.0.0
+## Currículo por curso (v3.0)
+
+| Curso | ID | Operaciones | Modos práctica |
+|-------|-----|-------------|----------------|
+| 4.º | `4t` | 7 | 8 |
+| 5.º | `5e` | 39 | 20 |
+| 6.º | `6e` | 57 | 26 |
+
+**Generadores 6.º:** `integers.ts`, `equations.ts`, `ratios.ts`, `probability.ts`, `geometryAdvanced.ts`, `scales.ts` (+ `statistics.ts` ampliado).
+
+**Logros:** 28 total (21 de v2.0 + 7 de v3.0).
+
+Ver `docs/PLAN_6E_PRIMARIA.md` para el diseño detallado de 6.º.
+
+---
+
+**Última actualización:** 2026-07-01
+**Versión:** 3.0.0

@@ -80,7 +80,9 @@ function readStoredGrade(): GradeId {
   }
 
   const stored = window.localStorage.getItem(STORAGE_KEYS.grade);
-  return stored === '5e' ? '5e' : '4t';
+  if (stored === '6e') return '6e';
+  if (stored === '5e') return '5e';
+  return '4t';
 }
 
 function readStoredLevelMode(): 'auto' | 'manual' {

@@ -13,7 +13,8 @@ type TabType = 'exercise' | 'stats' | 'achievements' | 'practice' | 'time';
 export function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('exercise');
   const { state, resetGame, setGrade } = useGame();
-  const gradeOptions = ['4t', '5e'] as const;
+  const gradeOptions = ['4t', '5e', '6e'] as const;
+  const gradeLabel = state.grade === '4t' ? '4.º' : state.grade === '5e' ? '5.º' : '6.º';
 
   const tabs = [
     { id: 'exercise', label: '🧮 Ejercicio', icon: '🧮' },
@@ -63,9 +64,9 @@ export function Home() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-800">Curso actual</h2>
-            <p className="text-gray-600">Cambia entre 4.º y 5.º para adaptar los ejercicios al currículo.</p>
+            <p className="text-gray-600">Cambia entre 4.º, 5.º y 6.º para adaptar los ejercicios al currículo.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Selector de curso">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="group" aria-label="Selector de curso">
             {gradeOptions.map((grade) => {
               const config = getGradeConfig(grade);
               const isSelected = state.grade === grade;
@@ -145,7 +146,7 @@ export function Home() {
             <div className="text-sm text-gray-600">Nivel</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-indigo-600">{state.grade === '4t' ? '4.º' : '5.º'}</div>
+            <div className="text-2xl font-bold text-indigo-600">{gradeLabel}</div>
             <div className="text-sm text-gray-600">Curso</div>
           </div>
           <div>

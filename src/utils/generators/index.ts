@@ -43,7 +43,17 @@ import { generatePercentageProblem } from './percentages';
 import { generatePowerProblem, generateSquareRootProblem } from './powers';
 import { generateRoundDecimal } from './rounding';
 import { pickRandom, type LevelConfig } from './shared';
-import { generateMeanProblem } from './statistics';
+import { generateSimpleEquation } from './equations';
+import { generateGeometryAdvancedProblem } from './geometryAdvanced';
+import {
+  generateIntegerCompare,
+  generateIntegerOrder,
+  generateIntegerProblem,
+} from './integers';
+import { generateProbabilityProblem } from './probability';
+import { generateProportionProblem, generateRatioProblem } from './ratios';
+import { generateScaleConversion } from './scales';
+import { generateStatisticsProblem } from './statistics';
 import { generateUnitConversion } from './units';
 import { generateWordProblem } from './wordProblems';
 
@@ -87,6 +97,24 @@ export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   'angle-type': 0.5,
   'unit-conversion': 1,
   'round-decimal': 1,
+  'integer-addition': 1,
+  'integer-subtraction': 1,
+  'integer-multiplication': 1,
+  'integer-division': 1,
+  'integer-compare': 0.8,
+  'integer-order': 0.8,
+  'simple-equation': 0.8,
+  ratio: 0.8,
+  proportion: 0.8,
+  median: 0.8,
+  mode: 0.8,
+  range: 0.8,
+  'probability-simple': 0.6,
+  'circle-area': 0.7,
+  'circle-circumference': 0.7,
+  'volume-rectangular-prism': 0.7,
+  'triangle-angle-sum': 0.7,
+  'scale-conversion': 0.7,
 };
 
 const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
@@ -119,8 +147,26 @@ const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
   'number-theory': ['factorization', 'gcd', 'lcm'],
   geometry: ['perimeter-rectangle', 'perimeter-square', 'area-rectangle', 'area-triangle', 'angle-type'],
   units: ['unit-conversion'],
-  statistics: ['mean'],
+  statistics: ['mean', 'median', 'mode', 'range'],
   rounding: ['round-decimal'],
+  integers: [
+    'integer-addition',
+    'integer-subtraction',
+    'integer-multiplication',
+    'integer-division',
+    'integer-compare',
+    'integer-order',
+  ],
+  equations: ['simple-equation'],
+  ratios: ['ratio', 'proportion'],
+  probability: ['probability-simple'],
+  'geometry-advanced': [
+    'circle-area',
+    'circle-circumference',
+    'volume-rectangular-prism',
+    'triangle-angle-sum',
+  ],
+  scales: ['scale-conversion'],
 };
 
 function pickWeightedOperation(operations: Operation[]): Operation {
@@ -219,7 +265,13 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
     case 'word-problem':
       return generateWordProblem(levelConfig);
     case 'mean':
-      return generateMeanProblem(levelConfig);
+      return generateStatisticsProblem(levelConfig, 'mean');
+    case 'median':
+      return generateStatisticsProblem(levelConfig, 'median');
+    case 'mode':
+      return generateStatisticsProblem(levelConfig, 'mode');
+    case 'range':
+      return generateStatisticsProblem(levelConfig, 'range');
     case 'perimeter-rectangle':
       return generatePerimeterRectangle(levelConfig);
     case 'perimeter-square':
@@ -234,6 +286,33 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
       return generateUnitConversion(levelConfig);
     case 'round-decimal':
       return generateRoundDecimal(levelConfig);
+    case 'integer-addition':
+      return generateIntegerProblem(levelConfig, 'integer-addition');
+    case 'integer-subtraction':
+      return generateIntegerProblem(levelConfig, 'integer-subtraction');
+    case 'integer-multiplication':
+      return generateIntegerProblem(levelConfig, 'integer-multiplication');
+    case 'integer-division':
+      return generateIntegerProblem(levelConfig, 'integer-division');
+    case 'integer-compare':
+      return generateIntegerCompare(levelConfig);
+    case 'integer-order':
+      return generateIntegerOrder(levelConfig);
+    case 'simple-equation':
+      return generateSimpleEquation(levelConfig);
+    case 'ratio':
+      return generateRatioProblem(levelConfig);
+    case 'proportion':
+      return generateProportionProblem(levelConfig);
+    case 'probability-simple':
+      return generateProbabilityProblem(levelConfig);
+    case 'circle-area':
+    case 'circle-circumference':
+    case 'volume-rectangular-prism':
+    case 'triangle-angle-sum':
+      return generateGeometryAdvancedProblem(levelConfig, operation);
+    case 'scale-conversion':
+      return generateScaleConversion(levelConfig);
     default: {
       const exhaustive: never = operation;
       throw new Error(`Operación no soportada: ${exhaustive}`);
@@ -287,7 +366,19 @@ export function getDifficulty(level: number, operation: Operation): 'easy' | 'me
     operation === 'unit-conversion' ||
     operation === 'round-decimal' ||
     operation === 'fraction-to-decimal' ||
-    operation === 'decimal-to-fraction'
+    operation === 'decimal-to-fraction' ||
+    operation.startsWith('integer-') ||
+    operation === 'simple-equation' ||
+    operation === 'ratio' ||
+    operation === 'proportion' ||
+    operation === 'median' ||
+    operation === 'mode' ||
+    operation === 'range' ||
+    operation === 'probability-simple' ||
+    operation.startsWith('circle-') ||
+    operation === 'volume-rectangular-prism' ||
+    operation === 'triangle-angle-sum' ||
+    operation === 'scale-conversion'
   ) {
     return level >= 4 ? 'hard' : 'medium';
   }

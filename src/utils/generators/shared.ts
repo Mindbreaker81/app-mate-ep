@@ -31,7 +31,18 @@ export function resolveLevelLimits(config: LevelConfig) {
     maxGeometrySide: config.maxGeometrySide ?? Math.min(config.maxNumber, 60),
     maxUnitValue: config.maxUnitValue ?? Math.min(config.maxNumber, 100),
     meanDataPoints: config.meanDataPoints ?? Math.min(5, Math.max(3, 2 + Math.floor(config.id / 3))),
+    maxIntegerAbsolute: config.maxIntegerAbsolute ?? Math.min(20 + config.id * 8, 100),
+    maxCircleRadius: config.maxCircleRadius ?? Math.min(5 + config.id * 2, 20),
+    maxEquationValue: config.maxEquationValue ?? Math.min(15 + config.id * 10, 200),
   };
+}
+
+export function getPiValue(level: number): number {
+  return level >= 6 ? 3.1416 : 3.14;
+}
+
+export function formatInteger(value: number): string {
+  return value < 0 ? `(${value})` : String(value);
 }
 
 export function roundToNearestTen(value: number): number {

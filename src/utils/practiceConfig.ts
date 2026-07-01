@@ -132,7 +132,7 @@ export const PRACTICE_MODES: PracticeModeConfig[] = [
     mode: 'statistics',
     label: 'Estadística',
     icon: '📊',
-    description: 'Calcula medias aritméticas',
+    description: 'Media, mediana, moda y rango',
     category: 'application',
   },
   {
@@ -142,6 +142,48 @@ export const PRACTICE_MODES: PracticeModeConfig[] = [
     description: 'Redondea números decimales',
     category: 'application',
   },
+  {
+    mode: 'integers',
+    label: 'Números Enteros',
+    icon: '➖➕',
+    description: 'Opera con enteros positivos y negativos',
+    category: 'sixth-grade-core',
+  },
+  {
+    mode: 'equations',
+    label: 'Ecuaciones',
+    icon: '𝑥',
+    description: 'Encuentra el valor de la incógnita',
+    category: 'sixth-grade-core',
+  },
+  {
+    mode: 'ratios',
+    label: 'Razones y Proporciones',
+    icon: '⚖️',
+    description: 'Razones, tablas y proporcionalidad',
+    category: 'sixth-grade-core',
+  },
+  {
+    mode: 'probability',
+    label: 'Probabilidad',
+    icon: '🎲',
+    description: 'Probabilidad simple con dados, monedas y urnas',
+    category: 'sixth-grade-applied',
+  },
+  {
+    mode: 'geometry-advanced',
+    label: 'Geometría Avanzada',
+    icon: '⭕',
+    description: 'Círculo, volumen y ángulos de triángulos',
+    category: 'sixth-grade-applied',
+  },
+  {
+    mode: 'scales',
+    label: 'Escalas',
+    icon: '🗺️',
+    description: 'Conversiones con escalas en planos',
+    category: 'sixth-grade-applied',
+  },
 ];
 
 export const PRACTICE_MODE_CATEGORIES: Record<PracticeModeCategory, string> = {
@@ -149,6 +191,8 @@ export const PRACTICE_MODE_CATEGORIES: Record<PracticeModeCategory, string> = {
   'fractions-decimals': 'Fracciones y decimales',
   advanced: '5.º avanzado',
   application: 'Aplicación y contexto',
+  'sixth-grade-core': '6.º núcleo',
+  'sixth-grade-applied': '6.º aplicación',
 };
 
 export function getPracticeModesForGrade(grade: GradeId): PracticeModeConfig[] {
@@ -167,6 +211,8 @@ export function groupPracticeModesByCategory(modes: PracticeModeConfig[]): Recor
     'fractions-decimals': [],
     advanced: [],
     application: [],
+    'sixth-grade-core': [],
+    'sixth-grade-applied': [],
   };
 
   modes.forEach((mode) => {

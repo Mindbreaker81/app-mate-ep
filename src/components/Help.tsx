@@ -16,7 +16,7 @@ export const Help: React.FC<HelpProps> = ({ onClose }) => (
     <h2 className="text-2xl font-bold mb-4 text-blue-700">¿Cómo se usa Pitagoritas?</h2>
     <ul className="list-disc pl-6 space-y-2 text-gray-700 text-lg mb-6">
       <li>
-        <b>Curso:</b> Elige 4.º o 5.º de Primaria. Cada curso tiene operaciones y modos de práctica adaptados.
+        <b>Curso:</b> Elige 4.º, 5.º o 6.º de Primaria. Cada curso tiene operaciones y modos de práctica adaptados.
       </li>
       <li>
         <b>Modos de práctica:</b> Puedes practicar todas las operaciones o enfocarte en sumas, fracciones, problemas verbales, geometría, etc.
@@ -29,6 +29,9 @@ export const Help: React.FC<HelpProps> = ({ onClose }) => (
       </li>
       <li>
         <b>5.º de Primaria incluye:</b> decimales, fracciones avanzadas, potencias, raíces, porcentajes, estimación, MCD/MCM, problemas con enunciado, geometría, unidades y media aritmética.
+      </li>
+      <li>
+        <b>6.º de Primaria incluye:</b> enteros negativos, ecuaciones simples, razones y proporciones, mediana/moda/rango, probabilidad, círculo y volumen, escalas y todo el contenido de 5.º.
       </li>
       <li>
         <b>Estadísticas y logros:</b> Consulta tu progreso y desbloquea medallas al practicar diferentes áreas.

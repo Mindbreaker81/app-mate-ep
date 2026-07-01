@@ -11,6 +11,26 @@ const GEOMETRY_OPS: Operation[] = [
   'angle-type',
 ];
 const NUMBER_THEORY_OPS: Operation[] = ['factorization', 'gcd', 'lcm'];
+const INTEGER_OPS: Operation[] = [
+  'integer-addition',
+  'integer-subtraction',
+  'integer-multiplication',
+  'integer-division',
+  'integer-compare',
+  'integer-order',
+];
+const RATIO_OPS: Operation[] = ['ratio', 'proportion'];
+const STATS_EXTENDED_OPS: Operation[] = ['mean', 'median', 'mode', 'range'];
+const CIRCLE_OPS: Operation[] = ['circle-area', 'circle-circumference'];
+const SIXTH_GRADE_EXCLUSIVE_MODES: Operation[] = [
+  'integer-addition',
+  'simple-equation',
+  'ratio',
+  'median',
+  'probability-simple',
+  'circle-area',
+  'scale-conversion',
+];
 
 function countCorrect(stats: DetailedStats, operations: Operation[]): number {
   return operations.reduce((total, operation) => total + (stats.operationStats[operation]?.correct ?? 0), 0);
@@ -76,6 +96,20 @@ export function evaluateAchievements(params: {
       return params.timedCorrectExercises >= 10;
     case 'all_modes_explorer':
       return hasExploredAllFifthGradeModes(stats);
+    case 'integer_master':
+      return countCorrect(stats, INTEGER_OPS) >= 10;
+    case 'equation_solver':
+      return stats.operationStats['simple-equation'].correct >= 10;
+    case 'ratio_expert':
+      return countCorrect(stats, RATIO_OPS) >= 10;
+    case 'stats_complete':
+      return hasCorrectInEachMode(stats, STATS_EXTENDED_OPS);
+    case 'probability_lucky':
+      return stats.operationStats['probability-simple'].correct >= 10;
+    case 'circle_master':
+      return countCorrect(stats, CIRCLE_OPS) >= 10;
+    case 'sixth_grade_explorer':
+      return hasCorrectInEachMode(stats, SIXTH_GRADE_EXCLUSIVE_MODES);
     default:
       return false;
   }

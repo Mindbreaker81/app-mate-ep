@@ -38,10 +38,28 @@ export const OPERATION_KEYS = [
   'angle-type',
   'unit-conversion',
   'round-decimal',
+  'integer-addition',
+  'integer-subtraction',
+  'integer-multiplication',
+  'integer-division',
+  'integer-compare',
+  'integer-order',
+  'simple-equation',
+  'ratio',
+  'proportion',
+  'median',
+  'mode',
+  'range',
+  'probability-simple',
+  'circle-area',
+  'circle-circumference',
+  'volume-rectangular-prism',
+  'triangle-angle-sum',
+  'scale-conversion',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
-export type GradeId = '4t' | '5e';
+export type GradeId = '4t' | '5e' | '6e';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type ComparisonOperator = '<' | '>' | '=';
 export type AngleType = 'agudo' | 'recto' | 'obtuso';
@@ -245,6 +263,107 @@ export interface RoundDecimalProblem {
   explanation: string;
 }
 
+export interface IntegerArithmeticProblem {
+  display: string;
+  num1: number;
+  num2: number;
+  operation: 'integer-addition' | 'integer-subtraction' | 'integer-multiplication' | 'integer-division';
+  answer: number;
+  explanation: string;
+}
+
+export interface IntegerCompareProblem {
+  prompt: string;
+  operation: 'integer-compare';
+  answer: ComparisonOperator;
+  explanation: string;
+}
+
+export interface IntegerOrderProblem {
+  prompt: string;
+  values: string[];
+  options: string[];
+  operation: 'integer-order';
+  answer: string;
+  explanation: string;
+}
+
+export interface SimpleEquationProblem {
+  prompt: string;
+  operation: 'simple-equation';
+  answer: number;
+  explanation: string;
+}
+
+export interface RatioProblem {
+  prompt: string;
+  operation: 'ratio' | 'proportion';
+  answer: number;
+  explanation: string;
+}
+
+export interface MedianProblem {
+  prompt: string;
+  values: number[];
+  operation: 'median';
+  answer: number;
+  explanation: string;
+}
+
+export interface ModeProblem {
+  prompt: string;
+  values: number[];
+  operation: 'mode';
+  answer: number;
+  explanation: string;
+}
+
+export interface RangeProblem {
+  prompt: string;
+  values: number[];
+  operation: 'range';
+  answer: number;
+  explanation: string;
+}
+
+export interface ProbabilityProblem {
+  prompt: string;
+  options: number[];
+  operation: 'probability-simple';
+  answer: number;
+  explanation: string;
+}
+
+export interface CircleProblem {
+  prompt: string;
+  radius: number;
+  piValue: number;
+  operation: 'circle-area' | 'circle-circumference';
+  answer: number;
+  explanation: string;
+}
+
+export interface VolumeProblem {
+  prompt: string;
+  operation: 'volume-rectangular-prism';
+  answer: number;
+  explanation: string;
+}
+
+export interface TriangleAngleProblem {
+  prompt: string;
+  operation: 'triangle-angle-sum';
+  answer: number;
+  explanation: string;
+}
+
+export interface ScaleProblem {
+  prompt: string;
+  operation: 'scale-conversion';
+  answer: number;
+  explanation: string;
+}
+
 export type Problem =
   | NumericProblem
   | RemainderProblem
@@ -266,7 +385,20 @@ export type Problem =
   | GeometryProblem
   | AngleProblem
   | UnitConversionProblem
-  | RoundDecimalProblem;
+  | RoundDecimalProblem
+  | IntegerArithmeticProblem
+  | IntegerCompareProblem
+  | IntegerOrderProblem
+  | SimpleEquationProblem
+  | RatioProblem
+  | MedianProblem
+  | ModeProblem
+  | RangeProblem
+  | ProbabilityProblem
+  | CircleProblem
+  | VolumeProblem
+  | TriangleAngleProblem
+  | ScaleProblem;
 
 export interface Achievement {
   id: string;
@@ -296,6 +428,9 @@ export interface Level {
   maxGeometrySide?: number;
   maxUnitValue?: number;
   meanDataPoints?: number;
+  maxIntegerAbsolute?: number;
+  maxCircleRadius?: number;
+  maxEquationValue?: number;
   unlocked?: boolean;
 }
 
@@ -432,7 +567,13 @@ export type PracticeMode =
   | 'geometry'
   | 'units'
   | 'statistics'
-  | 'rounding';
+  | 'rounding'
+  | 'integers'
+  | 'equations'
+  | 'ratios'
+  | 'probability'
+  | 'geometry-advanced'
+  | 'scales';
 
 export interface PracticeModeConfig {
   mode: PracticeMode;
@@ -446,7 +587,9 @@ export type PracticeModeCategory =
   | 'basic'
   | 'fractions-decimals'
   | 'advanced'
-  | 'application';
+  | 'application'
+  | 'sixth-grade-core'
+  | 'sixth-grade-applied';
 
 export type TimeMode = 'no-limit' | '30s' | '1min' | '2min';
 

@@ -19,6 +19,7 @@ describe('v2 curriculum generators', () => {
   it('generates word problems', () => {
     const problem = generateProblem(5, 'word-problems', '5e');
     expect(isWordProblem(problem)).toBe(true);
+    if (!isWordProblem(problem)) return;
     expect(problem.prompt.length).toBeGreaterThan(10);
   });
 

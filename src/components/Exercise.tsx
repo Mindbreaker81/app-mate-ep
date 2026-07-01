@@ -15,12 +15,16 @@ import {
   isEstimationProblem,
   isFactorizationProblem,
   isFractionProblem,
+  isIntegerArithmeticProblem,
+  isIntegerCompareProblem,
+  isIntegerOrderProblem,
   isMixedNumberConvertProblem,
   isMixedNumberProblem,
   isMixedProblem,
   isMultipleChoiceProblem,
   isOrderValuesProblem,
   isPowerProblem,
+  isProbabilityProblem,
   isPromptProblem,
   isRemainderProblem,
   isSquareRootProblem,
@@ -141,6 +145,14 @@ export function Exercise() {
         return '×';
       case 'division':
       case 'decimal-division':
+        return '÷';
+      case 'integer-addition':
+        return '+';
+      case 'integer-subtraction':
+        return '-';
+      case 'integer-multiplication':
+        return '×';
+      case 'integer-division':
         return '÷';
       case 'mixed':
         return '…';
@@ -274,6 +286,35 @@ export function Exercise() {
                 />
               </div>
             </div>
+          ) : isIntegerCompareProblem(currentProblem) ? (
+            renderMultipleChoice(currentProblem.prompt, [
+              { key: 'lt', label: compareOperatorLabel('<'), value: '<' },
+              { key: 'gt', label: compareOperatorLabel('>'), value: '>' },
+            ])
+          ) : isIntegerOrderProblem(currentProblem) ? (
+            renderMultipleChoice(
+              `${currentProblem.prompt} (${currentProblem.values.join(', ')})`,
+              currentProblem.options.map((option, index) => ({ key: `${index}`, label: option, value: option })),
+            )
+          ) : isIntegerArithmeticProblem(currentProblem) ? (
+            <div className="space-y-4">
+              <div className="text-3xl font-semibold text-gray-800">{currentProblem.display}</div>
+              <PromptInput
+                userAnswer={userAnswer}
+                setAnswer={setAnswer}
+                disabled={isCorrect !== null}
+                setValidationError={setValidationError}
+              />
+            </div>
+          ) : isProbabilityProblem(currentProblem) ? (
+            renderMultipleChoice(
+              currentProblem.prompt,
+              currentProblem.options.map((option) => ({
+                key: String(option),
+                label: formatMathNumber(option),
+                value: String(option),
+              })),
+            )
           ) : isCompareProblem(currentProblem) ? (
             renderMultipleChoice(currentProblem.prompt, [
               { key: 'lt', label: compareOperatorLabel('<'), value: '<' },

@@ -4,7 +4,7 @@
 
 # 🧮 Pitagoritas - ¡Sumas puntos, restas dudas y multiplicas diversión!
 
-Una aplicación web interactiva para que niños de **4.º y 5.º de Primaria** practiquen matemáticas de forma divertida. Con sistema de autenticación, persistencia en la nube y seguimiento de progreso personalizado.
+Una aplicación web interactiva para que niños de **4.º, 5.º y 6.º de Primaria** practiquen matemáticas de forma divertida. Con sistema de autenticación, persistencia en la nube y seguimiento de progreso personalizado.
 
 **Stack:** React 19 • TypeScript • Vite • Tailwind CSS • Supabase
 
@@ -19,16 +19,17 @@ Una aplicación web interactiva para que niños de **4.º y 5.º de Primaria** p
 - **Persistencia en la nube**: Datos guardados en Supabase con seguridad RLS
 
 ### 📝 Ejercicios y Operaciones
-- **39 tipos de operaciones** en 5.º de Primaria (17 en 4.º)
+- **57 tipos de operaciones** en 6.º de Primaria (39 en 5.º, 7 en 4.º)
 - **4.º:** suma, resta, multiplicación, división, fracciones (+/−) y operaciones mixtas
 - **5.º:** decimales, fracciones (×/÷), mixtas, potencias, raíces, porcentajes, estimación, factorización, MCD/MCM, problemas verbales, geometría, medidas, estadística y más
-- **20 modos de práctica** agrupados por categorías
+- **6.º:** enteros negativos, ecuaciones, razones, probabilidad, círculo/volumen, escalas y todo el contenido de 5.º
+- **26 modos de práctica** agrupados por categorías
 - **10 niveles progresivos** con selector manual opcional
 - **Validación robusta**: Fracciones deben estar simplificadas
 - **Explicaciones paso a paso**: Solución detallada cuando fallas
 
 ### 🎮 Gamificación
-- **Sistema de logros**: 21 medallas desbloqueables
+- **Sistema de logros**: 28 medallas desbloqueables
 - **Rachas**: Seguimiento de respuestas correctas consecutivas
 - **Puntuación máxima**: Record personal guardado
 - **Modos de práctica**: Enf
@@ -44,7 +45,7 @@ Una aplicación web interactiva para que niños de **4.º y 5.º de Primaria** p
 
 ### 🎨 UX y Diseño
 - **Diseño responsivo**: Perfecto en móviles y tablets
-- **Interfaz intuitiva**: Pensada para niños de 4.º y 5.º de Primaria
+- **Interfaz intuitiva**: Pensada para niños de 4.º a 6.º de Primaria
 - **Feedback visual claro**: Sin animaciones que bloqueen la pantalla
 - **Sección de ayuda**: Instrucciones accesibles desde el header
 
@@ -104,6 +105,7 @@ Una aplicación web interactiva para que niños de **4.º y 5.º de Primaria** p
    supabase/migrations/0001_create_profiles_attempts.sql
    supabase/migrations/0002_auto_create_profile_trigger.sql
    supabase/migrations/0004_add_grade_to_attempts.sql  # v2.0 — ver DATABASE_MIGRATION.md
+   supabase/migrations/0005_validate_grade_6e.sql      # v3.0 — curso 6.º
    ```
    
    O con Supabase CLI:
