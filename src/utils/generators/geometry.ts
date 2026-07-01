@@ -54,8 +54,8 @@ export function generateAreaTriangle(levelConfig: LevelConfig): GeometryProblem 
   };
 }
 
-export function generateAngleType(_levelConfig: LevelConfig): AngleProblem {
-  const template = randomInt(0, 2);
+export function generateAngleType(levelConfig: LevelConfig): AngleProblem {
+  const template = randomInt(0, levelConfig.id >= 4 ? 2 : 1);
   let degrees: number;
   let answer: (typeof ANGLE_TYPES)[number];
 

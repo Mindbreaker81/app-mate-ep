@@ -60,8 +60,8 @@ const templates: WordTemplate[] = [
       explanation: `Paso 1: ${a} - ${b} = ${answer}.`,
     };
   },
-  (_config) => {
-    const price = randomInt(2, 8);
+  (config) => {
+    const price = randomInt(2, Math.min(config.maxNumberMult, 10));
     const count = randomInt(2, 5);
     const bill = price * count + randomInt(1, 5);
     const answer = bill - price * count;
@@ -72,9 +72,9 @@ const templates: WordTemplate[] = [
       explanation: `Paso 1: ${count} × ${price} = ${price * count}.\nPaso 2: ${bill} - ${price * count} = ${answer} €.`,
     };
   },
-  (_config) => {
-    const speed = randomInt(2, 8);
-    const hours = randomInt(2, 5);
+  (config) => {
+    const speed = randomInt(2, Math.min(config.maxNumberMult, 10));
+    const hours = randomInt(2, Math.min(config.maxNumberDiv, 6));
     const answer = speed * hours;
     return {
       prompt: `Un coche va a ${speed} km/h durante ${hours} horas. ¿Cuántos km recorre?`,
@@ -106,9 +106,9 @@ const templates: WordTemplate[] = [
       explanation: `Paso 1: ${total} ÷ ${divisor} = ${quotient} resto ${remainder}. Cada uno recibe ${quotient}.`,
     };
   },
-  (_config) => {
-    const q1 = randomInt(2, 5);
-    const price = randomInt(2, 8);
+  (config) => {
+    const q1 = randomInt(2, Math.min(config.maxNumberDiv, 5));
+    const price = randomInt(2, Math.min(config.maxNumberMult, 10));
     const q2 = q1 + randomInt(1, 4);
     const answer = q2 * price;
     return {

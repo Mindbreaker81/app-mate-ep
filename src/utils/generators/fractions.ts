@@ -191,8 +191,12 @@ export function generateMixedNumberConvert(levelConfig: LevelConfig): MixedNumbe
   };
 }
 
-export function generateFractionToDecimal(_levelConfig: LevelConfig): ConversionProblem {
-  const denominator = EXACT_DECIMAL_DENOMINATORS[randomInt(0, EXACT_DECIMAL_DENOMINATORS.length - 1)];
+export function generateFractionToDecimal(levelConfig: LevelConfig): ConversionProblem {
+  const maxIndex = Math.min(
+    EXACT_DECIMAL_DENOMINATORS.length - 1,
+    Math.max(2, Math.floor(levelConfig.maxDenominator / 4)),
+  );
+  const denominator = EXACT_DECIMAL_DENOMINATORS[randomInt(0, maxIndex)];
   const numerator = randomInt(1, denominator - 1);
   const fraction = simplifyFraction({ numerator, denominator });
   const answer = roundToPrecision(fraction.numerator / fraction.denominator, 3);
@@ -204,8 +208,8 @@ export function generateFractionToDecimal(_levelConfig: LevelConfig): Conversion
   };
 }
 
-export function generateDecimalToFraction(_levelConfig: LevelConfig): ConversionProblem {
-  const denominator = pickExactDenominator();
+export function generateDecimalToFraction(levelConfig: LevelConfig): ConversionProblem {
+  const denominator = pickExactDenominator(Math.min(levelConfig.maxDenominator, 100));
   const numerator = randomInt(1, denominator - 1);
   const decimal = roundToPrecision(numerator / denominator, 2);
   const answer = simplifyFraction({ numerator, denominator });
@@ -217,6 +221,7 @@ export function generateDecimalToFraction(_levelConfig: LevelConfig): Conversion
   };
 }
 
-function pickExactDenominator(): number {
-  return EXACT_DECIMAL_DENOMINATORS[randomInt(0, EXACT_DECIMAL_DENOMINATORS.length - 1)];
+function pickExactDenominator(maxDenominator = 100): number {
+  const options = EXACT_DECIMAL_DENOMINATORS.filter((value) => value <= maxDenominator);
+  return options[randomInt(0, Math.max(0, options.length - 1))];
 }
