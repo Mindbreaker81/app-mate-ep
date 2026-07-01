@@ -3,28 +3,64 @@ export const OPERATION_KEYS = [
   'subtraction',
   'multiplication',
   'division',
+  'division-remainder',
   'fraction-addition',
   'fraction-subtraction',
   'fraction-multiplication',
   'fraction-division',
+  'mixed-number-addition',
+  'mixed-number-subtraction',
+  'mixed-number-convert',
+  'fraction-to-decimal',
+  'decimal-to-fraction',
+  'compare-fractions',
+  'compare-decimals',
+  'compare-fraction-decimal',
+  'order-values',
   'decimal-addition',
   'decimal-subtraction',
   'decimal-multiplication',
   'decimal-division',
   'mixed',
   'power',
+  'square-root',
   'percentage',
   'estimation',
   'factorization',
+  'gcd',
+  'lcm',
+  'word-problem',
+  'mean',
+  'perimeter-rectangle',
+  'perimeter-square',
+  'area-rectangle',
+  'area-triangle',
+  'angle-type',
+  'unit-conversion',
+  'round-decimal',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
 export type GradeId = '4t' | '5e';
 export type Difficulty = 'easy' | 'medium' | 'hard';
+export type ComparisonOperator = '<' | '>' | '=';
+export type AngleType = 'agudo' | 'recto' | 'obtuso';
+export type LevelMode = 'auto' | 'manual';
 
 export type Fraction = {
   numerator: number;
   denominator: number;
+};
+
+export type MixedNumber = {
+  whole: number;
+  numerator: number;
+  denominator: number;
+};
+
+export type RemainderAnswer = {
+  quotient: number;
+  remainder: number;
 };
 
 export type NumericOperation =
@@ -32,6 +68,7 @@ export type NumericOperation =
   | 'subtraction'
   | 'multiplication'
   | 'division'
+  | 'division-remainder'
   | 'decimal-addition'
   | 'decimal-subtraction'
   | 'decimal-multiplication'
@@ -46,8 +83,16 @@ export type FractionOperation =
 export interface NumericProblem {
   num1: number;
   num2: number;
-  operation: NumericOperation;
+  operation: Exclude<NumericOperation, 'division-remainder'>;
   answer: number;
+  explanation: string;
+}
+
+export interface RemainderProblem {
+  num1: number;
+  num2: number;
+  operation: 'division-remainder';
+  answer: RemainderAnswer;
   explanation: string;
 }
 
@@ -56,6 +101,44 @@ export interface FractionProblem {
   num2: Fraction;
   operation: FractionOperation;
   answer: Fraction;
+  explanation: string;
+}
+
+export interface MixedNumberProblem {
+  num1: MixedNumber;
+  num2: MixedNumber;
+  operation: 'mixed-number-addition' | 'mixed-number-subtraction';
+  answer: MixedNumber;
+  explanation: string;
+}
+
+export interface MixedNumberConvertProblem {
+  prompt: string;
+  operation: 'mixed-number-convert';
+  answer: MixedNumber | Fraction;
+  explanation: string;
+}
+
+export interface ConversionProblem {
+  prompt: string;
+  operation: 'fraction-to-decimal' | 'decimal-to-fraction';
+  answer: number | Fraction;
+  explanation: string;
+}
+
+export interface CompareProblem {
+  prompt: string;
+  operation: 'compare-fractions' | 'compare-decimals' | 'compare-fraction-decimal';
+  answer: ComparisonOperator;
+  explanation: string;
+}
+
+export interface OrderValuesProblem {
+  prompt: string;
+  values: string[];
+  options: string[];
+  operation: 'order-values';
+  answer: string;
   explanation: string;
 }
 
@@ -73,6 +156,13 @@ export interface PowerProblem {
   base: number;
   exponent: 2 | 3;
   operation: 'power';
+  answer: number;
+  explanation: string;
+}
+
+export interface SquareRootProblem {
+  radicand: number;
+  operation: 'square-root';
   answer: number;
   explanation: string;
 }
@@ -99,14 +189,84 @@ export interface FactorizationProblem {
   explanation: string;
 }
 
+export interface GcdLcmProblem {
+  prompt: string;
+  num1: number;
+  num2: number;
+  operation: 'gcd' | 'lcm';
+  answer: number;
+  explanation: string;
+}
+
+export interface WordProblem {
+  prompt: string;
+  operation: 'word-problem';
+  answer: number;
+  explanation: string;
+}
+
+export interface MeanProblem {
+  prompt: string;
+  values: number[];
+  operation: 'mean';
+  answer: number;
+  explanation: string;
+}
+
+export interface GeometryProblem {
+  prompt: string;
+  operation: 'perimeter-rectangle' | 'perimeter-square' | 'area-rectangle' | 'area-triangle';
+  answer: number;
+  explanation: string;
+}
+
+export interface AngleProblem {
+  prompt: string;
+  degrees: number;
+  operation: 'angle-type';
+  answer: AngleType;
+  options: AngleType[];
+  explanation: string;
+}
+
+export interface UnitConversionProblem {
+  prompt: string;
+  operation: 'unit-conversion';
+  answer: number;
+  explanation: string;
+}
+
+export interface RoundDecimalProblem {
+  prompt: string;
+  value: number;
+  precision: 'tenth' | 'hundredth';
+  operation: 'round-decimal';
+  answer: number;
+  explanation: string;
+}
+
 export type Problem =
   | NumericProblem
+  | RemainderProblem
   | FractionProblem
+  | MixedNumberProblem
+  | MixedNumberConvertProblem
+  | ConversionProblem
+  | CompareProblem
+  | OrderValuesProblem
   | MixedProblem
   | PowerProblem
+  | SquareRootProblem
   | PercentageProblem
   | EstimationProblem
-  | FactorizationProblem;
+  | FactorizationProblem
+  | GcdLcmProblem
+  | WordProblem
+  | MeanProblem
+  | GeometryProblem
+  | AngleProblem
+  | UnitConversionProblem
+  | RoundDecimalProblem;
 
 export interface Achievement {
   id: string;
@@ -132,6 +292,10 @@ export interface Level {
   maxPercentageBase: number;
   maxEstimationValue: number;
   maxFactorizationNumber: number;
+  maxMixedFractionWhole?: number;
+  maxGeometrySide?: number;
+  maxUnitValue?: number;
+  meanDataPoints?: number;
   unlocked?: boolean;
 }
 
@@ -152,11 +316,13 @@ export interface UserProfile {
 
 export interface GameState {
   currentProblem: Problem | null;
-  userAnswer: string | Fraction;
+  userAnswer: string | Fraction | MixedNumber | RemainderAnswer;
   isCorrect: boolean | null;
   score: number;
   maxScore: number;
   level: number;
+  levelMode: LevelMode;
+  manualLevel: number;
   grade: GradeId;
   achievements: Achievement[];
   streak: number;
@@ -168,14 +334,22 @@ export interface GameState {
   timeMode: TimeMode;
   timeRemaining: number;
   isTimerActive: boolean;
+  timedCorrectExercises: number;
 }
 
-export type SerializedAnswer = number | string | Fraction | null;
+export type SerializedAnswer =
+  | number
+  | string
+  | Fraction
+  | MixedNumber
+  | RemainderAnswer
+  | null;
 
 export interface AttemptPayload {
   operation: Operation;
   level: number;
   practiceMode: PracticeMode;
+  grade: GradeId;
   isCorrect: boolean;
   timeSpent: number;
   userAnswer: SerializedAnswer;
@@ -194,6 +368,7 @@ export interface LegacySnapshot {
   correctExercises: number;
   level: number;
   practiceMode: PracticeMode;
+  grade?: GradeId;
 }
 
 export interface DetailedStats {
@@ -249,14 +424,29 @@ export type PracticeMode =
   | 'powers'
   | 'percentages'
   | 'estimation'
-  | 'factorization';
+  | 'factorization'
+  | 'word-problems'
+  | 'comparison'
+  | 'conversions'
+  | 'number-theory'
+  | 'geometry'
+  | 'units'
+  | 'statistics'
+  | 'rounding';
 
 export interface PracticeModeConfig {
   mode: PracticeMode;
   label: string;
   icon: string;
   description: string;
+  category?: PracticeModeCategory;
 }
+
+export type PracticeModeCategory =
+  | 'basic'
+  | 'fractions-decimals'
+  | 'advanced'
+  | 'application';
 
 export type TimeMode = 'no-limit' | '30s' | '1min' | '2min';
 
@@ -269,7 +459,7 @@ export interface TimeModeConfig {
 
 export type GameAction =
   | { type: 'SET_PROBLEM'; payload: Problem }
-  | { type: 'SET_ANSWER'; payload: string | Fraction }
+  | { type: 'SET_ANSWER'; payload: string | Fraction | MixedNumber | RemainderAnswer }
   | {
       type: 'CHECK_ANSWER';
       payload: {
@@ -289,6 +479,8 @@ export type GameAction =
   | { type: 'SET_GRADE'; payload: GradeId }
   | { type: 'SET_PRACTICE_MODE'; payload: PracticeMode }
   | { type: 'SET_TIME_MODE'; payload: TimeMode }
+  | { type: 'SET_LEVEL_MODE'; payload: LevelMode }
+  | { type: 'SET_MANUAL_LEVEL'; payload: number }
   | { type: 'UPDATE_TIMER'; payload: number }
   | { type: 'START_TIMER' }
   | { type: 'STOP_TIMER' };

@@ -63,6 +63,90 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: 'Resuelve 20 ejercicios sin fallar ninguno',
     icon: '💎',
     unlocked: false
+  },
+  {
+    id: 'fraction_master',
+    name: 'Maestro de Fracciones',
+    description: 'Resuelve 10 ejercicios de fracciones correctamente',
+    icon: '½',
+    unlocked: false
+  },
+  {
+    id: 'decimal_master',
+    name: 'Experto en Decimales',
+    description: 'Resuelve 10 ejercicios con decimales correctamente',
+    icon: '1.5',
+    unlocked: false
+  },
+  {
+    id: 'word_problem_solver',
+    name: 'Detective Matemático',
+    description: 'Resuelve 10 problemas verbales correctamente',
+    icon: '🔍',
+    unlocked: false
+  },
+  {
+    id: 'geometry_guru',
+    name: 'Gurú de la Geometría',
+    description: 'Resuelve 10 ejercicios de geometría correctamente',
+    icon: '📐',
+    unlocked: false
+  },
+  {
+    id: 'percentage_pro',
+    name: 'Pro de los Porcentajes',
+    description: 'Resuelve 10 ejercicios de porcentajes correctamente',
+    icon: '%',
+    unlocked: false
+  },
+  {
+    id: 'estimation_eye',
+    name: 'Ojo Clínico',
+    description: 'Resuelve 10 ejercicios de estimación correctamente',
+    icon: '≈',
+    unlocked: false
+  },
+  {
+    id: 'number_theory_fan',
+    name: 'Cazador de Primos',
+    description: 'Resuelve 10 ejercicios de teoría de números correctamente',
+    icon: '🧩',
+    unlocked: false
+  },
+  {
+    id: 'mixed_ops_hero',
+    name: 'Héroe de las Mixtas',
+    description: 'Resuelve 10 operaciones mixtas correctamente',
+    icon: '🔀',
+    unlocked: false
+  },
+  {
+    id: 'streak_25',
+    name: 'Imparable ×2.5',
+    description: 'Resuelve 25 ejercicios seguidos correctamente',
+    icon: '🚀',
+    unlocked: false
+  },
+  {
+    id: 'level_10',
+    name: 'Nivel Máximo',
+    description: 'Alcanza el nivel 10',
+    icon: '👑',
+    unlocked: false
+  },
+  {
+    id: 'speed_demon',
+    name: 'Relámpago',
+    description: 'Resuelve 10 ejercicios correctos con temporizador activo',
+    icon: '⏱️',
+    unlocked: false
+  },
+  {
+    id: 'all_modes_explorer',
+    name: 'Explorador Total',
+    description: 'Acierta al menos un ejercicio en cada bloque de 5.º',
+    icon: '🗺️',
+    unlocked: false
   }
 ];
 
@@ -78,16 +162,38 @@ const FOURTH_GRADE_OPERATIONS: Operation[] = [
 
 const FIFTH_GRADE_OPERATIONS: Operation[] = [
   ...FOURTH_GRADE_OPERATIONS,
+  'division-remainder',
   'fraction-multiplication',
   'fraction-division',
+  'mixed-number-addition',
+  'mixed-number-subtraction',
+  'mixed-number-convert',
+  'fraction-to-decimal',
+  'decimal-to-fraction',
+  'compare-fractions',
+  'compare-decimals',
+  'compare-fraction-decimal',
+  'order-values',
   'decimal-addition',
   'decimal-subtraction',
   'decimal-multiplication',
   'decimal-division',
   'power',
+  'square-root',
   'percentage',
   'estimation',
   'factorization',
+  'gcd',
+  'lcm',
+  'word-problem',
+  'mean',
+  'perimeter-rectangle',
+  'perimeter-square',
+  'area-rectangle',
+  'area-triangle',
+  'angle-type',
+  'unit-conversion',
+  'round-decimal',
 ];
 
 export const GRADE_CONFIGS: Record<'4t' | '5e', GradeConfig> = {
@@ -101,7 +207,7 @@ export const GRADE_CONFIGS: Record<'4t' | '5e', GradeConfig> = {
   '5e': {
     id: '5e',
     name: '5.º de Primaria',
-    description: 'Añade decimales, potencias, porcentajes, estimación y factorización.',
+    description: 'Decimales, fracciones avanzadas, problemas, geometría, medidas y más.',
     availableOperations: FIFTH_GRADE_OPERATIONS,
     availablePracticeModes: [
       'all',
@@ -116,6 +222,14 @@ export const GRADE_CONFIGS: Record<'4t' | '5e', GradeConfig> = {
       'percentages',
       'estimation',
       'factorization',
+      'word-problems',
+      'comparison',
+      'conversions',
+      'number-theory',
+      'geometry',
+      'units',
+      'statistics',
+      'rounding',
     ],
   },
 };

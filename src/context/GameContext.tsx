@@ -4,7 +4,10 @@ import type {
   GameAction,
   Fraction,
   GradeId,
+  LevelMode,
+  MixedNumber,
   PracticeMode,
+  RemainderAnswer,
   TimeMode,
   Problem,
   AttemptPayload,
@@ -19,10 +22,16 @@ import { getTimeModeConfig } from '../utils/timeConfig';
 import { useAuth } from './AuthContext';
 import { recordAttemptDirect, flushQueue, migrateLegacyData } from '../services/attemptService';
 import { fetchUserStats } from '../services/statsService';
-import { simplifyFraction, fractionEquals } from '../utils/fractionUtils';
+import { simplifyFraction } from '../utils/fractionUtils';
 import { logger } from '../utils/logger';
-import { numbersEqual } from '../utils/mathUtils';
-import { isFactorizationProblem, isFractionProblem, normalizeFactorizationAnswer } from '../utils/problemUtils';
+import { evaluateAchievements } from '../utils/achievementEngine';
+import {
+  answersMatch,
+  isFactorizationProblem,
+  isFractionProblem,
+  isMixedNumberProblem,
+  normalizeFactorizationAnswer,
+} from '../utils/problemUtils';
 
 type CheckAnswerPayload = Extract<GameAction, { type: 'CHECK_ANSWER' }>['payload'];
 
@@ -34,6 +43,9 @@ const STORAGE_KEYS = {
   correctExercises: 'correctExercises',
   stats: 'stats',
   grade: 'grade',
+  levelMode: 'levelMode',
+  manualLevel: 'manualLevel',
+  timedCorrectExercises: 'timedCorrectExercises',
 } as const;
 
 const hasWindow = typeof window !== 'undefined';
@@ -71,6 +83,24 @@ function readStoredGrade(): GradeId {
   return stored === '5e' ? '5e' : '4t';
 }
 
+function readStoredLevelMode(): 'auto' | 'manual' {
+  if (!hasWindow) {
+    return 'auto';
+  }
+  return window.localStorage.getItem(STORAGE_KEYS.levelMode) === 'manual' ? 'manual' : 'auto';
+}
+
+function readStoredManualLevel(): number {
+  if (!hasWindow) {
+    return 1;
+  }
+  const parsed = Number.parseInt(window.localStorage.getItem(STORAGE_KEYS.manualLevel) ?? '1', 10);
+  if (Number.isNaN(parsed)) {
+    return 1;
+  }
+  return Math.min(10, Math.max(1, parsed));
+}
+
 const loadStats = (): DetailedStats => normalizeStats(readStoredJson(STORAGE_KEYS.stats, initializeStats()));
 
 function getModeSeconds(mode: TimeMode): number {
@@ -101,12 +131,16 @@ function parseNumericAnswer(answer: string | Fraction): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
-function hasAnswerValue(answer: string | Fraction): boolean {
+function hasAnswerValue(answer: string | Fraction | MixedNumber | RemainderAnswer): boolean {
   if (typeof answer === 'string') {
     return answer.trim().length > 0;
   }
 
-  return true;
+  if ('quotient' in answer || 'whole' in answer || 'numerator' in answer) {
+    return true;
+  }
+
+  return false;
 }
 
 function buildCheckAnswerPayload(params: {
@@ -126,31 +160,30 @@ function buildCheckAnswerPayload(params: {
   let normalizedAnswer: SerializedAnswer = null;
   let isCorrect = false;
 
-  if (isFactorizationProblem(problem)) {
-    if (typeof rawUserAnswer === 'string') {
-      normalizedAnswer = normalizeFactorizationAnswer(rawUserAnswer);
-      isCorrect = normalizedAnswer === problem.answer;
+  if (isFactorizationProblem(problem) && typeof rawUserAnswer === 'string') {
+    normalizedAnswer = normalizeFactorizationAnswer(rawUserAnswer);
+    isCorrect = normalizedAnswer === problem.answer;
+  } else if (isFractionProblem(problem) && typeof rawUserAnswer === 'object' && 'numerator' in rawUserAnswer) {
+    normalizedAnswer = simplifyFraction(rawUserAnswer);
+    isCorrect = answersMatch(problem, rawUserAnswer);
+  } else if (typeof rawUserAnswer === 'string' && rawUserAnswer.includes('/') && isFractionProblem(problem)) {
+    const [numeratorStr, denominatorStr] = rawUserAnswer.split('/');
+    const numerator = Number.parseInt(numeratorStr, 10);
+    const denominator = Number.parseInt(denominatorStr, 10);
+    if (!Number.isNaN(numerator) && !Number.isNaN(denominator) && denominator !== 0) {
+      const parsedFraction = simplifyFraction({ numerator, denominator });
+      normalizedAnswer = parsedFraction;
+      isCorrect = answersMatch(problem, parsedFraction);
     }
-  } else if (isFractionProblem(problem)) {
-    if (typeof rawUserAnswer === 'object') {
-      normalizedAnswer = simplifyFraction(rawUserAnswer);
-      isCorrect = fractionEquals(problem.answer, rawUserAnswer);
-    } else if (typeof rawUserAnswer === 'string' && rawUserAnswer.includes('/')) {
-      const [numeratorStr, denominatorStr] = rawUserAnswer.split('/');
-      const numerator = Number.parseInt(numeratorStr, 10);
-      const denominator = Number.parseInt(denominatorStr, 10);
-
-      if (!Number.isNaN(numerator) && !Number.isNaN(denominator) && denominator !== 0) {
-        const parsedFraction = simplifyFraction({ numerator, denominator });
-        normalizedAnswer = parsedFraction;
-        isCorrect = fractionEquals(problem.answer, parsedFraction);
-      }
-    }
-  } else {
+  } else if (typeof rawUserAnswer === 'object' && rawUserAnswer !== null) {
+    normalizedAnswer = rawUserAnswer;
+    isCorrect = answersMatch(problem, rawUserAnswer);
+  } else if (typeof rawUserAnswer === 'string') {
+    normalizedAnswer = rawUserAnswer.trim();
+    isCorrect = answersMatch(problem, rawUserAnswer);
     const numericAnswer = parseNumericAnswer(rawUserAnswer);
-    if (numericAnswer !== null) {
+    if (numericAnswer !== null && getNumericLikeAnswer(problem) !== null) {
       normalizedAnswer = numericAnswer;
-      isCorrect = numbersEqual(numericAnswer, problem.answer);
     }
   }
 
@@ -166,21 +199,40 @@ function buildCheckAnswerPayload(params: {
   };
 }
 
-function buildAttemptPayload(level: number, practiceMode: PracticeMode, payload: CheckAnswerPayload): AttemptPayload {
+function getNumericLikeAnswer(problem: Problem): number | null {
+  if ('answer' in problem && typeof problem.answer === 'number') {
+    return problem.answer;
+  }
+  return null;
+}
+
+function buildAttemptPayload(
+  level: number,
+  practiceMode: PracticeMode,
+  grade: GradeId,
+  payload: CheckAnswerPayload,
+): AttemptPayload {
   const correctAnswer: SerializedAnswer = isFractionProblem(payload.problem)
     ? simplifyFraction(payload.problem.answer)
-    : payload.problem.answer;
+    : isMixedNumberProblem(payload.problem)
+      ? payload.problem.answer
+      : payload.problem.answer;
 
   return {
     operation: payload.problem.operation,
     level,
     practiceMode,
+    grade,
     isCorrect: payload.isCorrect,
     timeSpent: payload.timeSpent,
     userAnswer: payload.userAnswer,
     correctAnswer,
     createdAt: new Date().toISOString(),
   };
+}
+
+function getEffectiveLevel(state: Pick<GameState, 'level' | 'levelMode' | 'manualLevel'>): number {
+  return state.levelMode === 'manual' ? state.manualLevel : state.level;
 }
 
 const initialState: GameState = {
@@ -190,6 +242,8 @@ const initialState: GameState = {
   score: 0,
   maxScore: readStoredNumber(STORAGE_KEYS.maxScore),
   level: 1,
+  levelMode: readStoredLevelMode(),
+  manualLevel: readStoredManualLevel(),
   grade: readStoredGrade(),
   achievements: readStoredJson(STORAGE_KEYS.achievements, []),
   streak: 0,
@@ -201,10 +255,12 @@ const initialState: GameState = {
   timeMode: 'no-limit',
   timeRemaining: 0,
   isTimerActive: false,
+  timedCorrectExercises: readStoredNumber(STORAGE_KEYS.timedCorrectExercises),
 };
 
-function createProblemForState(state: Pick<GameState, 'level' | 'practiceMode' | 'grade'>): Problem {
-  return generateProblem(state.level, state.practiceMode, state.grade);
+function createProblemForState(state: Pick<GameState, 'level' | 'levelMode' | 'manualLevel' | 'practiceMode' | 'grade'>): Problem {
+  const effectiveLevel = getEffectiveLevel(state);
+  return generateProblem(effectiveLevel, state.practiceMode, state.grade);
 }
 
 function getResetTimerState(timeMode: TimeMode): Pick<GameState, 'timeRemaining' | 'isTimerActive'> {
@@ -248,31 +304,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       newStats = updateDifficultyStats(newStats, difficulty, isCorrect);
 
       const newAchievements = [...state.achievements];
+      const timedCorrectExercises =
+        isCorrect && state.timeMode !== 'no-limit'
+          ? state.timedCorrectExercises + 1
+          : state.timedCorrectExercises;
+
       const unlockedAchievements = ACHIEVEMENTS.filter((achievement) => {
         if (newAchievements.some((item) => item.id === achievement.id)) return false;
 
-        switch (achievement.id) {
-          case 'first_correct':
-            return isCorrect && newCorrectExercises === 1;
-          case 'addition_expert':
-            return newStats.operationStats.addition.correct >= 10;
-          case 'subtraction_expert':
-            return newStats.operationStats.subtraction.correct >= 10;
-          case 'multiplication_expert':
-            return newStats.operationStats.multiplication.correct >= 10;
-          case 'division_expert':
-            return newStats.operationStats.division.correct >= 10;
-          case 'streak_5':
-            return newStreak >= 5;
-          case 'streak_10':
-            return newStreak >= 10;
-          case 'score_50':
-            return newScore >= 50;
-          case 'perfect_20':
-            return newStreak >= 20;
-          default:
-            return false;
-        }
+        return evaluateAchievements({
+          achievement,
+          isCorrect,
+          newCorrectExercises,
+          newScore,
+          newStreak,
+          newLevel:
+            [...LEVELS].reverse().find((level) => level.minScore <= newScore)?.id ?? state.level,
+          stats: newStats,
+          timeMode: state.timeMode,
+          timedCorrectExercises,
+        });
       });
 
       unlockedAchievements.forEach((achievement) => {
@@ -299,6 +350,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         correctExercises: newCorrectExercises,
         stats: newStats,
         isTimerActive: false,
+        timedCorrectExercises,
       };
     }
 
@@ -355,7 +407,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         grade: action.payload,
         practiceMode: nextPracticeMode,
-        currentProblem: generateProblem(state.level, nextPracticeMode, action.payload),
+        currentProblem: generateProblem(getEffectiveLevel(state), nextPracticeMode, action.payload),
         userAnswer: '',
         isCorrect: null,
         ...getResetTimerState(state.timeMode),
@@ -370,7 +422,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         practiceMode: nextPracticeMode,
-        currentProblem: generateProblem(state.level, nextPracticeMode, state.grade),
+        currentProblem: generateProblem(getEffectiveLevel(state), nextPracticeMode, state.grade),
         userAnswer: '',
         isCorrect: null,
         ...getResetTimerState(state.timeMode),
@@ -385,6 +437,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         userAnswer: '',
         isCorrect: null,
         ...getResetTimerState(action.payload),
+      };
+
+    case 'SET_LEVEL_MODE':
+      return {
+        ...state,
+        levelMode: action.payload,
+        currentProblem: createProblemForState({ ...state, levelMode: action.payload }),
+        userAnswer: '',
+        isCorrect: null,
+        ...getResetTimerState(state.timeMode),
+      };
+
+    case 'SET_MANUAL_LEVEL':
+      return {
+        ...state,
+        manualLevel: action.payload,
+        currentProblem: createProblemForState({ ...state, manualLevel: action.payload }),
+        userAnswer: '',
+        isCorrect: null,
+        ...getResetTimerState(state.timeMode),
       };
 
     case 'UPDATE_TIMER':
@@ -413,13 +485,15 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 interface GameContextType {
   state: GameState;
   dispatch: React.Dispatch<GameAction>;
-  checkAnswer: (overrideAnswer?: string | Fraction) => void;
+  checkAnswer: (overrideAnswer?: string | Fraction | MixedNumber | RemainderAnswer) => void;
   nextProblem: () => void;
   resetGame: () => void;
-  setAnswer: (answer: string | Fraction) => void;
+  setAnswer: (answer: string | Fraction | MixedNumber | RemainderAnswer) => void;
   setGrade: (grade: GradeId) => void;
   setPracticeMode: (mode: PracticeMode) => void;
   setTimeMode: (mode: TimeMode) => void;
+  setLevelMode: (mode: LevelMode) => void;
+  setManualLevel: (level: number) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -429,7 +503,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const sessionUserId = session?.user?.id ?? null;
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const checkAnswerRef = useRef<(overrideAnswer?: string | Fraction) => void>(() => undefined);
+  const checkAnswerRef = useRef<(overrideAnswer?: string | Fraction | MixedNumber | RemainderAnswer) => void>(() => undefined);
   const currentProblemRef = useRef<GameState['currentProblem']>(state.currentProblem);
   const userAnswerRef = useRef<GameState['userAnswer']>(state.userAnswer);
   const syncedRef = useRef(false);
@@ -444,7 +518,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   };
 
   const checkAnswer = useCallback(
-    (overrideAnswer?: string | Fraction) => {
+    (overrideAnswer?: string | Fraction | MixedNumber | RemainderAnswer) => {
       if (!state.currentProblem) return;
 
       const evaluation = buildCheckAnswerPayload({
@@ -458,7 +532,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'CHECK_ANSWER', payload: evaluation });
 
       if (sessionUserId) {
-        const attemptPayload = buildAttemptPayload(state.level, state.practiceMode, evaluation);
+        const attemptPayload = buildAttemptPayload(
+          getEffectiveLevel(state),
+          state.practiceMode,
+          state.grade,
+          evaluation,
+        );
         void recordAttemptDirect(sessionUserId, attemptPayload);
       }
     },
@@ -525,6 +604,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       window.localStorage.setItem(STORAGE_KEYS.achievements, JSON.stringify(state.achievements));
       window.localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(state.stats));
       window.localStorage.setItem(STORAGE_KEYS.grade, state.grade);
+      window.localStorage.setItem(STORAGE_KEYS.levelMode, state.levelMode);
+      window.localStorage.setItem(STORAGE_KEYS.manualLevel, state.manualLevel.toString());
+      window.localStorage.setItem(STORAGE_KEYS.timedCorrectExercises, state.timedCorrectExercises.toString());
     }, 250);
 
     return () => {
@@ -538,13 +620,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     state.achievements,
     state.stats,
     state.grade,
+    state.levelMode,
+    state.manualLevel,
+    state.timedCorrectExercises,
   ]);
 
   useEffect(() => {
     if (!state.currentProblem) {
-      dispatch({ type: 'SET_PROBLEM', payload: generateProblem(state.level, state.practiceMode, state.grade) });
+      dispatch({ type: 'SET_PROBLEM', payload: generateProblem(getEffectiveLevel(state), state.practiceMode, state.grade) });
     }
-  }, [state.currentProblem, state.level, state.practiceMode, state.grade]);
+  }, [state.currentProblem, state.level, state.levelMode, state.manualLevel, state.practiceMode, state.grade]);
 
   useEffect(() => {
     if (!sessionUserId) {
@@ -610,7 +695,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RESET_GAME' });
   };
 
-  const setAnswer = (answer: string | Fraction) => {
+  const setAnswer = (answer: string | Fraction | MixedNumber | RemainderAnswer) => {
     dispatch({ type: 'SET_ANSWER', payload: answer });
   };
 
@@ -626,6 +711,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_TIME_MODE', payload: mode });
   };
 
+  const setLevelMode = (mode: LevelMode) => {
+    dispatch({ type: 'SET_LEVEL_MODE', payload: mode });
+  };
+
+  const setManualLevel = (level: number) => {
+    dispatch({ type: 'SET_MANUAL_LEVEL', payload: Math.min(10, Math.max(1, level)) });
+  };
+
   const value: GameContextType = {
     state,
     dispatch,
@@ -636,6 +729,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setGrade,
     setPracticeMode,
     setTimeMode,
+    setLevelMode,
+    setManualLevel,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

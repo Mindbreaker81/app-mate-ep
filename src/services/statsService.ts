@@ -47,7 +47,7 @@ export async function fetchUserStats(userId: string): Promise<DetailedStats | nu
       return;
     }
 
-    const difficulty = getDifficulty(attempt.level, attempt.operation);
+    const difficulty = getDifficulty(attempt.level, attempt.operation as OperationKey);
     // Las funciones son inmutables: retornan nuevos objetos
     stats = updateWeeklyProgress(stats, attempt.is_correct, attempt.time_spent);
     stats = updateOperationStats(stats, attempt.operation, attempt.is_correct, attempt.time_spent, difficulty);

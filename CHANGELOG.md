@@ -5,6 +5,32 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [2.0.0] - 2026-07-01
+
+### Añadido
+- **Expansión curricular completa para 5.º de primaria (39 operaciones)**
+  - Problemas verbales con enunciados variados
+  - Comparar y ordenar fracciones/decimales
+  - Fracciones mixtas y conversiones fracción ↔ decimal
+  - Divisiones con resto
+  - MCD y MCM (modo Teoría de números)
+  - Raíz cuadrada exacta
+  - Media aritmética
+  - Geometría: perímetros, áreas y tipos de ángulo
+  - Unidades de medida y redondeo decimal
+- **12 modos de práctica nuevos** agrupados por categorías (básico, fracciones/decimales, avanzado, aplicación)
+- **21 logros** (12 nuevos para contenido de 5.º)
+- **Selector de nivel manual** además del progreso automático por puntuación
+- **Pesos en modo "Todas"** para equilibrar la variedad de ejercicios
+- **Arquitectura modular** del generador en `src/utils/generators/`
+- **Migración BD** documentada en `DATABASE_MIGRATION.md` (columna `grade` en `attempts`)
+
+### Cambiado
+- Porcentajes ampliados (descuentos, aumentos, más valores)
+- Estimación ampliada (suma, resta, división además de multiplicación)
+- Operaciones mixtas: 12 plantillas (antes 6)
+- README, Help y TECHNICAL alineados con el contenido real
+
 ## [1.2.0] - 2026-04-03
 
 ### Añadido

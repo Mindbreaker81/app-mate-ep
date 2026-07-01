@@ -6,6 +6,7 @@ import {
   isFractionProblem,
   isPowerProblem,
   isPromptProblem,
+  isSquareRootProblem,
 } from '../problemUtils';
 
 type BinaryNumericProblem = Extract<
@@ -35,13 +36,16 @@ describe('5th grade curriculum expansion', () => {
     expect(Number.isFinite(problem.answer)).toBe(true);
   });
 
-  it('generates power problems with base and exponent', () => {
+  it('generates power or square-root problems in powers mode', () => {
     const problem = generateProblem(5, 'powers', '5e');
 
-    expect(isPowerProblem(problem)).toBe(true);
-    if (!isPowerProblem(problem)) return;
-
-    expect(problem.answer).toBe(problem.base ** problem.exponent);
+    expect(isPowerProblem(problem) || isSquareRootProblem(problem)).toBe(true);
+    if (isPowerProblem(problem)) {
+      expect(problem.answer).toBe(problem.base ** problem.exponent);
+    }
+    if (isSquareRootProblem(problem)) {
+      expect(problem.answer * problem.answer).toBe(problem.radicand);
+    }
   });
 
   it('generates percentage or proportionality prompts', () => {

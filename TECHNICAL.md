@@ -51,13 +51,16 @@ pitagoritas/
 │   ├── lib/
 │   │   └── supabaseClient.ts # Cliente de Supabase
 │   ├── utils/              # Utilidades
-│   │   ├── problemGenerator.ts # Generador de problemas
-│   │   ├── statsUtils.ts      # Funciones de estadísticas
-│   │   ├── authHelpers.ts     # Helpers de autenticación
-│   │   ├── gameConfig.ts      # Configuración de niveles/logros
-│   │   ├── timeConfig.ts      # Configuración de tiempos
-│   │   ├── practiceConfig.ts  # Configuración de modos
-│   │   └── fractions.ts       # Utilidades de fracciones
+│   ├── utils/              # Utilidades
+│   │   ├── generators/         # Generadores modulares de problemas (v2)
+│   │   ├── problemGenerator.ts # Reexport del barrel generators/
+│   │   ├── achievementEngine.ts
+│   │   ├── statsUtils.ts
+│   │   ├── authHelpers.ts
+│   │   ├── gameConfig.ts
+│   │   ├── timeConfig.ts
+│   │   ├── practiceConfig.ts
+│   │   └── fractionUtils.ts
 │   ├── types/              # Definiciones TypeScript
 │   │   └── index.ts       # Tipos principales
 │   ├── App.tsx            # Componente raíz
