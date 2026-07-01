@@ -51,11 +51,12 @@ function setLastSync(userId: string, iso: string): void {
 }
 
 async function sendAttempt(userId: string, attempt: PendingAttempt): Promise<void> {
-  const { error } = await supabase.from('attempts').insert({
+  const { error } =   await supabase.from('attempts').insert({
     user_id: userId,
     operation: attempt.operation,
     level: attempt.level,
     practice_mode: attempt.practiceMode,
+    grade: attempt.grade,
     is_correct: attempt.isCorrect,
     time_spent: attempt.timeSpent,
     user_answer: attempt.userAnswer,
@@ -133,12 +134,13 @@ function enqueue(userId: string, attempt: AttemptPayload): void {
 // Guardar intento directamente en Supabase (sin cola)
 export async function recordAttemptDirect(userId: string, attempt: AttemptPayload): Promise<void> {
   try {
-    const { error } = await supabase.from('attempts').insert({
-      user_id: userId,
-      operation: attempt.operation,
-      level: attempt.level,
-      practice_mode: attempt.practiceMode,
-      is_correct: attempt.isCorrect,
+    const { error } =   await supabase.from('attempts').insert({
+    user_id: userId,
+    operation: attempt.operation,
+    level: attempt.level,
+    practice_mode: attempt.practiceMode,
+    grade: attempt.grade,
+    is_correct: attempt.isCorrect,
       time_spent: attempt.timeSpent,
       user_answer: attempt.userAnswer,
       correct_answer: attempt.correctAnswer,
@@ -205,6 +207,7 @@ export async function migrateLegacyData(userId: string, snapshot: LegacySnapshot
         userAnswer: null,
         correctAnswer: null,
         createdAt: new Date().toISOString(),
+        grade: snapshot.grade ?? '4t',
       });
     }
   }

@@ -5,7 +5,7 @@ interface HelpProps {
 }
 
 export const Help: React.FC<HelpProps> = ({ onClose }) => (
-  <div className="bg-white rounded-lg shadow-lg p-8 relative animate-fade-in">
+  <div className="bg-white rounded-lg shadow-lg p-8 relative animate-fade-in max-h-[80vh] overflow-y-auto">
     <button
       className="absolute top-4 right-4 text-blue-600 hover:text-blue-800 text-lg font-bold"
       onClick={onClose}
@@ -16,45 +16,29 @@ export const Help: React.FC<HelpProps> = ({ onClose }) => (
     <h2 className="text-2xl font-bold mb-4 text-blue-700">¿Cómo se usa Pitagoritas?</h2>
     <ul className="list-disc pl-6 space-y-2 text-gray-700 text-lg mb-6">
       <li>
-        <b>Navegación:</b> Usa las pestañas o botones principales para cambiar entre modos de práctica, estadísticas, logros y más.
+        <b>Curso:</b> Elige 4.º, 5.º o 6.º de Primaria. Cada curso tiene operaciones y modos de práctica adaptados.
       </li>
       <li>
-        <b>Ejercicios:</b> Selecciona el modo (todas las operaciones, sumas, restas, etc.) y elige el tiempo si lo deseas. Escribe tu respuesta y pulsa <b>Enter</b> o el botón de enviar.
+        <b>Modos de práctica:</b> Puedes practicar todas las operaciones o enfocarte en sumas, fracciones, problemas verbales, geometría, etc.
       </li>
       <li>
-        <b>Botón &ldquo;Siguiente&rdquo;</b>: Aparece tras responder. Úsalo para pasar al siguiente ejercicio.
+        <b>Nivel:</b> Por defecto sube automáticamente con tu puntuación. También puedes elegir un nivel fijo en el panel de puntuación (modo manual).
       </li>
       <li>
-        <b>Colores del temporizador:</b> Verde (mucho tiempo), amarillo (tiempo medio), rojo (poco tiempo).
+        <b>Respuestas:</b> Fracciones deben estar simplificadas. En divisiones con resto escribe cociente y resto. En comparaciones elige una opción.
       </li>
       <li>
-        <b>Estadísticas:</b> Consulta tu progreso semanal, rendimiento por operación y dificultad, y tu tiempo promedio de respuesta.
+        <b>5.º de Primaria incluye:</b> decimales, fracciones avanzadas, potencias, raíces, porcentajes, estimación, MCD/MCM, problemas con enunciado, geometría, unidades y media aritmética.
       </li>
       <li>
-        <b>Logros:</b> Se desbloquean automáticamente al cumplir ciertos hitos, como tu primer acierto, rachas de respuestas correctas, o alcanzar una puntuación perfecta.
+        <b>6.º de Primaria incluye:</b> enteros negativos, ecuaciones simples, razones y proporciones, mediana/moda/rango, probabilidad, círculo y volumen, escalas y todo el contenido de 5.º.
       </li>
       <li>
-        <b>Progresión de niveles:</b> Supera ejercicios y mejora tu puntuación para desbloquear niveles más difíciles.
-      </li>
-      <li>
-        <b>Recomendaciones:</b> La app te sugiere en qué áreas practicar más, según tus resultados.
-      </li>
-      <li>
-        <b>Animaciones:</b> Cuando aciertas, verás confeti y estrellas como recompensa visual.
-      </li>
-      <li>
-        <b>Guardar progreso:</b> Todo tu avance y logros se guardan automáticamente en tu dispositivo.
-      </li>
-      <li>
-        <b>Niveles:</b> Ahora hay 10 niveles de dificultad. En todos los niveles puedes practicar sumas, restas, multiplicaciones, divisiones y fracciones. Lo que cambia al avanzar de nivel es el rango de números, el tamaño de los denominadores en fracciones y la complejidad de los ejercicios. Los niveles se desbloquean automáticamente al mejorar tu puntuación y progreso.
+        <b>Estadísticas y logros:</b> Consulta tu progreso y desbloquea medallas al practicar diferentes áreas.
       </li>
     </ul>
     <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded text-blue-800">
-      <b>Consejo:</b> ¡Practica todos los días para mejorar tus habilidades y desbloquear todos los logros!
+      <b>Consejo:</b> Usa modos específicos para reforzar lo que estás viendo en clase. El modo &ldquo;Todas&rdquo; mezcla todo con variedad equilibrada.
     </div>
   </div>
 );
-
-// Animación opcional en style.css:
-// .animate-fade-in { animation: fade-in 0.5s; }
-// @keyframes fade-in { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: none; } } 

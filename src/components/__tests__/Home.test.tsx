@@ -54,9 +54,11 @@ describe('Home', () => {
 
     const fourthGradeButton = screen.getByRole('button', { name: /4.º de primaria/i });
     const fifthGradeButton = screen.getByRole('button', { name: /5.º de primaria/i });
+    const sixthGradeButton = screen.getByRole('button', { name: /6.º de primaria/i });
 
     expect(fourthGradeButton).toHaveAttribute('aria-pressed', 'true');
     expect(fifthGradeButton).toHaveAttribute('aria-pressed', 'false');
+    expect(sixthGradeButton).toHaveAttribute('aria-pressed', 'false');
 
     fireEvent.click(fifthGradeButton);
 

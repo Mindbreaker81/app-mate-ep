@@ -18,6 +18,7 @@ const baseAttempt = {
   operation: 'addition' as const,
   level: 1,
   practiceMode: 'all' as const,
+  grade: '5e' as const,
   isCorrect: true,
   timeSpent: 2,
   userAnswer: 4,
