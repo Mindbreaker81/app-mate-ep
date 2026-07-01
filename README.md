@@ -333,7 +333,16 @@ Este proyecto es privado. Todos los derechos reservados.
 
 **Edmundo Rosales Mayor**
 
-Desarrollado para ayudar a niños de 4º de Primaria a practicar matemáticas de forma divertida.
+Desarrollado para ayudar a niños de Primaria a practicar matemáticas de forma divertida.
+
+## 🗺️ Roadmap
+
+| Versión | Curso | Documento |
+|---------|-------|-----------|
+| v2.0 (5.º) | Expansión curricular 39 operaciones | PR #6 / `CHANGELOG.md` |
+| **v3.0 (6.º)** | Enteros, ecuaciones, proporcionalidad, probabilidad… | **[docs/PLAN_6E_PRIMARIA.md](docs/PLAN_6E_PRIMARIA.md)** |
+
+El plan de 6.º incluye operaciones nuevas, PRs, migración BD, actualización de documentación y **checklist de verificación completa** antes del release.
 
 ---
 

@@ -481,6 +481,15 @@ onClick={async (e) => {
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [Vitest Documentation](https://vitest.dev/)
 
+## Roadmap curricular
+
+| Versión | Alcance | Documentación |
+|---------|---------|---------------|
+| v2.0 | 5.º Primaria (~39 operaciones) | `CHANGELOG.md`, rama `cursor/curriculum-expansion-v2-1dc6` |
+| v3.0 | 6.º Primaria (~57 operaciones) | [docs/PLAN_6E_PRIMARIA.md](docs/PLAN_6E_PRIMARIA.md) |
+
+El plan v3.0 describe generadores nuevos (`integers.ts`, `equations.ts`, …), migración BD `0005`, 9 PRs y checklist de verificación pre-release.
+
 ---
 
 **Última actualización:** 2025-10-26
