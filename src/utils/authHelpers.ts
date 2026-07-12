@@ -19,3 +19,8 @@ export function buildSyntheticEmail(username: string): string {
 export function isValidPin(pin: string): boolean {
   return /^\d{6}$/.test(pin);
 }
+
+/** Convierte el PIN de 6 dígitos en una contraseña compatible con políticas estrictas de Supabase Auth. */
+export function pinToAuthPassword(pin: string): string {
+  return `Pit${pin}!a`;
+}

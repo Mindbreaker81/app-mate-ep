@@ -4,6 +4,7 @@ import {
   isValidPin,
   isValidUsername,
   buildSyntheticEmail,
+  pinToAuthPassword,
   SYNTHETIC_EMAIL_DOMAIN,
 } from '../authHelpers';
 
@@ -28,5 +29,13 @@ describe('authHelpers', () => {
 
   it('builds synthetic email using configured domain', () => {
     expect(buildSyntheticEmail('usuario')).toBe(`usuario@${SYNTHETIC_EMAIL_DOMAIN}`);
+  });
+
+  it('wraps PIN into a Supabase-compatible auth password', () => {
+    expect(pinToAuthPassword('123456')).toBe('Pit123456!a');
+    expect(pinToAuthPassword('000000')).toMatch(/[a-z]/);
+    expect(pinToAuthPassword('000000')).toMatch(/[A-Z]/);
+    expect(pinToAuthPassword('000000')).toMatch(/\d/);
+    expect(pinToAuthPassword('000000')).toMatch(/[^a-zA-Z0-9]/);
   });
 });

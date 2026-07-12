@@ -9,6 +9,7 @@ import {
   isValidPin,
   isValidUsername,
   normalizeUsername,
+  pinToAuthPassword,
 } from '../utils/authHelpers';
 import { logger } from '../utils/logger';
 
@@ -47,6 +48,11 @@ function requiresEmailConfirmation(message: string): boolean {
 
 function getPendingConfirmationMessage(): string {
   return 'Supabase está exigiendo confirmación por email. Para este flujo con usuario y PIN debes desactivar "Confirm email" en Auth > Providers > Email, o configurar correctamente Site URL y Redirect URLs si quieres mantener la confirmación.';
+}
+
+function isInvalidCredentialsError(error: AuthError): boolean {
+  const normalized = error.message.toLowerCase();
+  return normalized.includes('invalid login credentials') || normalized.includes('invalid credentials');
 }
 
 async function upsertProfile(payload: { id: string; username: string; avatar: string }): Promise<void> {
@@ -200,10 +206,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const email = buildSyntheticEmail(sanitizedUsername);
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password: pin });
+      const authPassword = pinToAuthPassword(pin);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password: authPassword });
 
-      if (signInError) {
-        if (requiresEmailConfirmation(signInError.message ?? '')) {
+      let resolvedSignIn = { data, error: signInError };
+      if (signInError && isInvalidCredentialsError(signInError)) {
+        resolvedSignIn = await supabase.auth.signInWithPassword({ email, password: pin });
+      }
+
+      if (resolvedSignIn.error) {
+        if (requiresEmailConfirmation(resolvedSignIn.error.message ?? '')) {
           setError(getPendingConfirmationMessage());
           return;
         }
@@ -213,12 +225,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // IMPORTANTE: Establecer la sesión PRIMERO antes de buscar el perfil
       // Esto asegura que auth.uid() esté disponible para las políticas RLS
-      setSession(data.session ?? null);
+      setSession(resolvedSignIn.data.session ?? null);
       
       // Esperar un poco para que la sesión se propague
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      const userId = data.user?.id ?? data.session?.user.id ?? '';
+      const userId = resolvedSignIn.data.user?.id ?? resolvedSignIn.data.session?.user.id ?? '';
       const existingProfile = await fetchProfile(userId);
       
       if (!existingProfile) {
@@ -246,10 +258,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const email = buildSyntheticEmail(sanitizedUsername);
+      const authPassword = pinToAuthPassword(pin);
 
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
-        password: pin,
+        password: authPassword,
         options: {
           emailRedirectTo: window.location.origin,
           data: {
@@ -266,8 +279,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const message = signUpError?.message ?? '';
         if (message.includes('already registered')) {
           setError('Ese nombre de usuario ya está en uso. Elige otro.');
-        } else if (message.includes('password')) {
-          setError('El PIN no cumple con los requisitos de seguridad. Usa 6 dígitos.');
+        } else if (message.includes('password') || signUpError?.code === 'weak_password') {
+          setError('El PIN no cumple con los requisitos de seguridad de Supabase. Contacta soporte.');
         } else if (message.includes('retry') || message.includes('security purposes')) {
           setError('Hiciste demasiados intentos seguidos. Espera unos segundos antes de intentarlo de nuevo.');
         } else if (message.includes('Failed to fetch') || message.includes('abort') || message.includes('TypeError')) {
@@ -282,7 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       let resolvedSession = data.session ?? null;
       if (!resolvedSession) {
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password: pin });
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password: authPassword });
         if (signInError) {
           logger.error('Supabase signIn after signUp error:', signInError);
           if (requiresEmailConfirmation(signInError.message ?? '')) {

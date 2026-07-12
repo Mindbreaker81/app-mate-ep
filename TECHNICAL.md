@@ -186,7 +186,8 @@ $$;
    - Usuario ingresa: `username`, `PIN` (6 dígitos), `avatar` (emoji)
    - Se valida username (3-15 caracteres, solo alfanuméricos)
    - Se valida PIN (exactamente 6 dígitos)
-   - Se construye email sintético: `username@gmail.com` (configurable con `VITE_SUPABASE_EMAIL_DOMAIN`)
+   - Se construye email sintético: `username@pitagoritas-mail.com` (configurable con `VITE_SUPABASE_EMAIL_DOMAIN`)
+   - El PIN se transforma internamente a contraseña de Supabase (`pinToAuthPassword`) para cumplir políticas estrictas de Auth
    - Se crea usuario en Supabase Auth
    - El trigger `handle_new_user` crea automáticamente el perfil
 
@@ -214,6 +215,7 @@ buildSyntheticEmail(username: string): string
 isValidUsername(username: string): boolean  // 3-15 chars, alfanuméricos
 isValidPin(pin: string): boolean            // 6 dígitos exactos
 normalizeUsername(username: string): string // lowercase + trim
+pinToAuthPassword(pin: string): string     // envuelve el PIN para Supabase Auth
 ```
 
 ## Sistema de Persistencia
