@@ -26,6 +26,8 @@ const homeMocks = vi.hoisted(() => ({
     timeRemaining: 0,
     isTimerActive: false,
     recentAchievement: null,
+    daily: null,
+    practiceDays: [],
   },
 }));
 

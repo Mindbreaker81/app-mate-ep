@@ -43,10 +43,10 @@ describe('gameStateService', () => {
     expect(await loadGameState('uuid-1')).toBeNull();
   });
 
-  it('devuelve null si hay error (sin lanzar)', async () => {
+  it('lanza si hay error (para no confundir fallo de red con primera sesión)', async () => {
     supabaseState.maybeSingle.mockResolvedValue({ data: null, error: { message: 'boom' } });
 
-    expect(await loadGameState('uuid-1')).toBeNull();
+    await expect(loadGameState('uuid-1')).rejects.toThrow('boom');
   });
 
   it('guarda con upsert', async () => {

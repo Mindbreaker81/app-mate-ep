@@ -38,6 +38,8 @@ function Probe() {
   return (
     <div>
       <div data-testid="recent">{state.recentAchievement?.id ?? 'none'}</div>
+      <div data-testid="daily">{state.daily ? `${state.daily.date}:${state.daily.count}` : 'none'}</div>
+      <div data-testid="practice-days">{state.practiceDays.join(',')}</div>
       <button type="button" onClick={() => checkAnswer('4')}>
         responder bien
       </button>
@@ -88,5 +90,24 @@ describe('GameContext — logro recién desbloqueado', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /siguiente/i }));
     expect(screen.getByTestId('recent')).toHaveTextContent('none');
+  });
+
+  it('cada respuesta suma a la meta diaria y registra el día de práctica', () => {
+    renderProvider();
+
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+      today.getDate(),
+    ).padStart(2, '0')}`;
+
+    expect(screen.getByTestId('daily')).toHaveTextContent('none');
+
+    fireEvent.click(screen.getByRole('button', { name: /responder bien/i }));
+    expect(screen.getByTestId('daily')).toHaveTextContent(`${todayKey}:1`);
+    expect(screen.getByTestId('practice-days')).toHaveTextContent(todayKey);
+
+    fireEvent.click(screen.getByRole('button', { name: /siguiente/i }));
+    fireEvent.click(screen.getByRole('button', { name: /responder bien/i }));
+    expect(screen.getByTestId('daily')).toHaveTextContent(`${todayKey}:2`);
   });
 });

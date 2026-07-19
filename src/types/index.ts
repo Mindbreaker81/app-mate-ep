@@ -472,6 +472,10 @@ export interface GameState {
   timedCorrectExercises: number;
   /** Logro desbloqueado en la última respuesta, para mostrarlo como toast. */
   recentAchievement: Achievement | null;
+  /** Ejercicios hechos hoy (meta diaria). */
+  daily: DailyProgress | null;
+  /** Días (YYYY-MM-DD) con al menos un ejercicio, para la racha de días. */
+  practiceDays: string[];
 }
 
 export type SerializedAnswer =
@@ -602,6 +606,12 @@ export interface TimeModeConfig {
   description: string;
 }
 
+/** Contador de ejercicios del día (fecha local YYYY-MM-DD). */
+export interface DailyProgress {
+  date: string;
+  count: number;
+}
+
 /** Estado de juego que viaja a Supabase (tabla game_state) para seguir al usuario entre dispositivos. */
 export interface PersistedGameState {
   maxScore: number;
@@ -610,6 +620,8 @@ export interface PersistedGameState {
   correctExercises: number;
   timedCorrectExercises: number;
   achievements: Achievement[];
+  daily?: DailyProgress | null;
+  practiceDays?: string[];
 }
 
 export type GameAction =

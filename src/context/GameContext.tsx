@@ -27,6 +27,7 @@ import { loadGameState, saveGameState } from '../services/gameStateService';
 import { simplifyFraction } from '../utils/fractionUtils';
 import { logger } from '../utils/logger';
 import { evaluateAchievements } from '../utils/achievementEngine';
+import { updateDailyProgress, updatePracticeDays } from '../utils/dailyGoal';
 import {
   answersMatch,
   isFactorizationProblem,
@@ -247,6 +248,8 @@ export function toPersistedGameState(state: GameState): PersistedGameState {
     correctExercises: state.correctExercises,
     timedCorrectExercises: state.timedCorrectExercises,
     achievements: state.achievements,
+    daily: state.daily,
+    practiceDays: state.practiceDays,
   };
 }
 
@@ -272,6 +275,8 @@ const createInitialState = (): GameState => ({
   isTimerActive: false,
   timedCorrectExercises: readStoredNumber(STORAGE_KEYS.timedCorrectExercises),
   recentAchievement: null,
+  daily: null,
+  practiceDays: [],
 });
 
 function createProblemForState(state: Pick<GameState, 'level' | 'levelMode' | 'manualLevel' | 'practiceMode' | 'grade'>): Problem {
@@ -367,6 +372,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         isTimerActive: false,
         timedCorrectExercises,
         recentAchievement: enrichedUnlocked[0] ?? null,
+        daily: updateDailyProgress(state.daily, new Date()),
+        practiceDays: updatePracticeDays(state.practiceDays, new Date()),
       };
     }
 
@@ -486,6 +493,20 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           mergedAchievements.push(remote);
         }
       }
+      const remoteDaily = p.daily ?? null;
+      const mergedDaily = !state.daily
+        ? remoteDaily
+        : !remoteDaily
+          ? state.daily
+          : state.daily.date === remoteDaily.date
+            ? { date: state.daily.date, count: Math.max(state.daily.count, remoteDaily.count) }
+            : state.daily.date > remoteDaily.date
+              ? state.daily
+              : remoteDaily;
+      const mergedPracticeDays = [...new Set([...state.practiceDays, ...(p.practiceDays ?? [])])]
+        .sort()
+        .slice(-60);
+
       return {
         ...state,
         maxScore: Math.max(state.maxScore, p.maxScore ?? 0),
@@ -494,6 +515,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         correctExercises: Math.max(state.correctExercises, p.correctExercises ?? 0),
         timedCorrectExercises: Math.max(state.timedCorrectExercises, p.timedCorrectExercises ?? 0),
         achievements: mergedAchievements,
+        daily: mergedDaily,
+        practiceDays: mergedPracticeDays,
       };
     }
 
@@ -697,6 +720,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     state.correctExercises,
     state.timedCorrectExercises,
     state.achievements,
+    state.daily,
+    state.practiceDays,
   ]);
 
   useEffect(() => {
