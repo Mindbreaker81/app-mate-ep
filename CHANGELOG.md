@@ -5,6 +5,32 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [3.1.0] - 2026-07-19
+
+### Añadido
+- **Panel de administración** (un solo admin, login con email y contraseña):
+  lista de niños con avisos, detalle con desglose por curso y tipo de ejercicio,
+  avisos de refuerzo/fortaleza/inactividad, reseteo de PIN y cambio de contraseña
+- **Evolución semanal por niño** en el panel admin (precisión de las últimas 8 semanas)
+- **Exportación CSV de intentos** desde el panel admin (compatible Excel es-ES)
+- **PWA instalable** con actualización automática y caché offline
+- **Estado de juego por usuario en Supabase** (`game_state`): logros, récords y
+  meta diaria siguen al niño entre dispositivos y ya no se mezclan entre hermanos
+- **Meta diaria** de 10 ejercicios con barra de progreso y **racha de días** 🔥
+- **Práctica recomendada**: tarjeta «💪 Te toca entrenar» según los puntos débiles
+- **Botón ±** para respuestas negativas (enteros y ecuaciones eran irresolubles en móvil)
+- **Confeti al acertar** (ráfaga grande en rachas de 5) y **toast de logros**
+- **6 plantillas nuevas de problemas verbales**: dos pasos y datos distractores
+- Botón «¿Por qué?» para ver la explicación también al acertar
+- **Migración BD** `0007_game_state.sql` documentada en `DATABASE_MIGRATION.md`
+
+### Cambiado
+- En opción múltiple, tocar la opción envía la respuesta directamente
+- Enter pasa al siguiente ejercicio tras responder
+- «Reiniciar Juego» pide confirmación en dos pasos
+- Inputs de respuesta más grandes (táctil infantil)
+- El subtítulo ya incluye 6.º de Primaria
+
 ## [3.0.0] - 2026-07-01
 
 ### Añadido
