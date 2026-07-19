@@ -22,13 +22,23 @@ interface SignUpPayload extends SignInPayload {
   avatar: string;
 }
 
+interface AdminSignInPayload {
+  email: string;
+  password: string;
+}
+
+export type ChangePasswordResult = { ok: true } | { ok: false; error: string };
+
 export interface AuthContextValue {
   session: Session | null;
   profile: UserProfile | null;
+  isAdmin: boolean;
   loading: boolean;
   error: string | null;
   signIn: (payload: SignInPayload) => Promise<void>;
   signUp: (payload: SignUpPayload) => Promise<void>;
+  signInAdmin: (payload: AdminSignInPayload) => Promise<void>;
+  changePassword: (newPassword: string) => Promise<ChangePasswordResult>;
   signOut: () => Promise<void>;
   clearError: () => void;
 }
@@ -69,8 +79,23 @@ async function upsertProfile(payload: { id: string; username: string; avatar: st
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchIsAdmin = useCallback(async (userId: string): Promise<boolean> => {
+    const { data, error: adminError } = await supabase
+      .from('admin_users')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (adminError) {
+      logger.error('[AuthContext] Error al comprobar admin:', adminError);
+      return false;
+    }
+    return Boolean(data);
+  }, []);
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data, error: profileError } = await supabase
@@ -118,8 +143,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!isMounted) return;
       setSession(incomingSession);
       if (incomingSession?.user) {
-        await fetchProfile(incomingSession.user.id);
+        const admin = await fetchIsAdmin(incomingSession.user.id);
+        if (!isMounted) return;
+        setIsAdmin(admin);
+        if (admin) {
+          setProfile(null);
+        } else {
+          await fetchProfile(incomingSession.user.id);
+        }
       } else {
+        setIsAdmin(false);
         setProfile(null);
       }
     };
@@ -183,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       listener.subscription.unsubscribe();
     };
-  }, [clearError, fetchProfile]);
+  }, [clearError, fetchProfile, fetchIsAdmin]);
 
   useEffect(() => {
     if (import.meta.env.DEV) {
@@ -332,21 +365,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [clearError, fetchProfile]
   );
 
+  const signInAdmin = useCallback(
+    async ({ email, password }: AdminSignInPayload) => {
+      clearError();
+
+      const sanitizedEmail = email.trim().toLowerCase();
+      if (!sanitizedEmail || !password) {
+        setError('Introduce tu email y contraseña.');
+        return;
+      }
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: sanitizedEmail,
+        password,
+      });
+
+      if (signInError) {
+        setError('No pudimos iniciar sesión. Verifica tu email y contraseña.');
+        return;
+      }
+
+      const userId = data.user?.id ?? data.session?.user.id ?? '';
+      const admin = await fetchIsAdmin(userId);
+
+      if (!admin) {
+        await supabase.auth.signOut();
+        setSession(null);
+        setIsAdmin(false);
+        setError('Esta cuenta no tiene permisos de administrador.');
+        return;
+      }
+
+      setIsAdmin(true);
+      setProfile(null);
+      setSession(data.session ?? null);
+    },
+    [clearError, fetchIsAdmin]
+  );
+
+  const changePassword = useCallback(async (newPassword: string): Promise<ChangePasswordResult> => {
+    if (newPassword.length < 8) {
+      return { ok: false, error: 'La contraseña debe tener al menos 8 caracteres.' };
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    if (updateError) {
+      logger.error('[AuthContext] Error al cambiar contraseña:', updateError);
+      if (updateError.message.toLowerCase().includes('different from the old')) {
+        return { ok: false, error: 'La contraseña nueva debe ser distinta de la actual.' };
+      }
+      return { ok: false, error: 'No pudimos cambiar la contraseña. Intenta de nuevo.' };
+    }
+    return { ok: true };
+  }, []);
+
   const signOut = useCallback(async () => {
     clearError();
-    
+
     const { error } = await supabase.auth.signOut();
     if (error) {
       logger.error('[AuthContext] Error en signOut:', error);
     }
-    
+
     setSession(null);
     setProfile(null);
+    setIsAdmin(false);
   }, [clearError]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ session, profile, loading, error, signIn, signUp, signOut, clearError }),
-    [session, profile, loading, error, signIn, signUp, signOut, clearError]
+    () => ({ session, profile, isAdmin, loading, error, signIn, signUp, signInAdmin, changePassword, signOut, clearError }),
+    [session, profile, isAdmin, loading, error, signIn, signUp, signInAdmin, changePassword, signOut, clearError]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

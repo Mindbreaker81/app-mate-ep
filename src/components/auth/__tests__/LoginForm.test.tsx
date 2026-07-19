@@ -8,10 +8,13 @@ const renderWithAuth = (ui: React.ReactElement) => {
   const value: AuthContextValue = {
     session: null,
     profile: null,
+    isAdmin: false,
     loading: false,
     error: null,
     signIn,
     signUp: vi.fn(),
+    signInAdmin: vi.fn(),
+    changePassword: vi.fn(),
     signOut: vi.fn(),
     clearError: vi.fn(),
   };
