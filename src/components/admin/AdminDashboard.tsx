@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { listChildren, type ChildOverview } from '../../services/adminService';
+import { fetchAllAttempts, listChildren, type AttemptRecord, type ChildOverview } from '../../services/adminService';
 import { fetchUserStats } from '../../services/statsService';
 import type { DetailedStats } from '../../types';
+import { buildChildReport, type ChildReport } from '../../utils/childReport';
 import { StatsView } from '../StatsView';
 import { PinResetDialog } from './PinResetDialog';
 import { ChangePasswordForm } from './ChangePasswordForm';
+import { ChildReportView } from './ChildReportView';
 
 function formatDate(iso: string | null): string {
   if (!iso) return 'Sin actividad';
@@ -20,9 +22,22 @@ function accuracy(child: ChildOverview): number {
   return child.totalAttempts > 0 ? Math.round((child.correctAttempts / child.totalAttempts) * 100) : 0;
 }
 
+function advisoryBadges(report: ChildReport | undefined): string {
+  if (!report) return '';
+  const reinforce = report.advisories.filter((a) => a.kind === 'reinforce').length;
+  const strength = report.advisories.filter((a) => a.kind === 'strength').length;
+  const inactive = report.advisories.some((a) => a.kind === 'inactive');
+  const parts: string[] = [];
+  if (reinforce > 0) parts.push(`⚠️ ${reinforce}`);
+  if (strength > 0) parts.push(`🌟 ${strength}`);
+  if (inactive) parts.push('💤');
+  return parts.join(' ');
+}
+
 export function AdminDashboard() {
   const { signOut } = useAuth();
   const [children, setChildren] = useState<ChildOverview[] | null>(null);
+  const [attempts, setAttempts] = useState<AttemptRecord[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [selected, setSelected] = useState<ChildOverview | null>(null);
   const [selectedStats, setSelectedStats] = useState<DetailedStats | null>(null);
@@ -31,17 +46,33 @@ export function AdminDashboard() {
 
   const loadChildren = useCallback(async () => {
     setLoadError(false);
-    const result = await listChildren();
+    const [result, allAttempts] = await Promise.all([listChildren(), fetchAllAttempts()]);
     if (result === null) {
       setLoadError(true);
     } else {
       setChildren(result);
     }
+    setAttempts(allAttempts);
   }, []);
 
   useEffect(() => {
     void loadChildren();
   }, [loadChildren]);
+
+  const reports = useMemo(() => {
+    const map = new Map<string, ChildReport>();
+    if (!attempts) return map;
+    const byChild = new Map<string, AttemptRecord[]>();
+    for (const attempt of attempts) {
+      const list = byChild.get(attempt.userId) ?? [];
+      list.push(attempt);
+      byChild.set(attempt.userId, list);
+    }
+    for (const [childId, childAttempts] of byChild) {
+      map.set(childId, buildChildReport(childAttempts));
+    }
+    return map;
+  }, [attempts]);
 
   const openChild = async (child: ChildOverview) => {
     setSelected(child);
@@ -81,6 +112,7 @@ export function AdminDashboard() {
             <h2 className="text-2xl font-bold text-gray-800">
               {selected.avatar ?? '🙂'} {selected.username}
             </h2>
+            {reports.has(selected.id) && <ChildReportView report={reports.get(selected.id)!} />}
             {loadingStats && <p className="text-gray-600">Cargando estadísticas...</p>}
             {!loadingStats && selectedStats && (
               <StatsView
@@ -121,6 +153,7 @@ export function AdminDashboard() {
                       <th className="py-2 pr-4">Intentos</th>
                       <th className="py-2 pr-4">Aciertos</th>
                       <th className="py-2 pr-4">Última actividad</th>
+                      <th className="py-2 pr-4">Avisos</th>
                       <th className="py-2"></th>
                     </tr>
                   </thead>
@@ -140,6 +173,9 @@ export function AdminDashboard() {
                         <td className="py-3 pr-4">{child.totalAttempts}</td>
                         <td className="py-3 pr-4">{accuracy(child)}%</td>
                         <td className="py-3 pr-4">{formatDate(child.lastActivity)}</td>
+                        <td className="py-3 pr-4 whitespace-nowrap" title="⚠️ reforzar · 🌟 va muy bien · 💤 inactivo">
+                          {advisoryBadges(reports.get(child.id))}
+                        </td>
                         <td className="py-3 text-right">
                           <button
                             type="button"

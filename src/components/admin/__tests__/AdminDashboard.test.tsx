@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const adminServiceState = vi.hoisted(() => ({
   listChildren: vi.fn(),
   resetChildPin: vi.fn(),
+  fetchAllAttempts: vi.fn(),
 }));
 
 const statsServiceState = vi.hoisted(() => ({
@@ -13,6 +14,7 @@ const statsServiceState = vi.hoisted(() => ({
 vi.mock('../../../services/adminService', () => ({
   listChildren: adminServiceState.listChildren,
   resetChildPin: adminServiceState.resetChildPin,
+  fetchAllAttempts: adminServiceState.fetchAllAttempts,
 }));
 
 vi.mock('../../../services/statsService', () => ({
@@ -65,6 +67,7 @@ describe('AdminDashboard', () => {
     vi.clearAllMocks();
     adminServiceState.listChildren.mockResolvedValue([child]);
     adminServiceState.resetChildPin.mockResolvedValue({ ok: true });
+    adminServiceState.fetchAllAttempts.mockResolvedValue([]);
     statsServiceState.fetchUserStats.mockResolvedValue(null);
   });
 
@@ -121,6 +124,29 @@ describe('AdminDashboard', () => {
       expect(changePassword).toHaveBeenCalledWith('clave12345');
     });
     expect(await screen.findByText(/contraseña actualizada/i)).toBeInTheDocument();
+  });
+
+  it('muestra insignias de aviso en la lista y el informe en el detalle', async () => {
+    const badAttempts = Array.from({ length: 10 }, (_, i) => ({
+      userId: 'uuid-1',
+      operation: 'division',
+      grade: '5e',
+      isCorrect: i < 3,
+      timeSpent: 10,
+      createdAt: new Date().toISOString(),
+    }));
+    adminServiceState.fetchAllAttempts.mockResolvedValue(badAttempts);
+
+    renderDashboard();
+
+    // Insignia en la lista: 1 refuerzo
+    expect(await screen.findByText('⚠️ 1')).toBeInTheDocument();
+
+    // En el detalle: aviso completo y desglose por curso
+    fireEvent.click(screen.getByRole('button', { name: /nico/i }));
+    expect(await screen.findByText(/reforzar divisiones/i)).toBeInTheDocument();
+    expect(screen.getByText('5.º de Primaria')).toBeInTheDocument();
+    expect(screen.getByText('Divisiones')).toBeInTheDocument();
   });
 
   it('permite cerrar sesión', async () => {

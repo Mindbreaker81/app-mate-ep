@@ -1,26 +1,7 @@
 import { useMemo } from 'react';
 import type { DetailedStats } from '../types';
 import { getAccuracyPercentage, getWeakestOperation, getWeeklyProgressData } from '../utils/statsUtils';
-
-const operationLabels = {
-  addition: 'Sumas',
-  subtraction: 'Restas',
-  multiplication: 'Multiplicaciones',
-  division: 'Divisiones',
-  'fraction-addition': 'Fracciones (+)',
-  'fraction-subtraction': 'Fracciones (-)',
-  'fraction-multiplication': 'Fracciones (×)',
-  'fraction-division': 'Fracciones (÷)',
-  'decimal-addition': 'Decimales (+)',
-  'decimal-subtraction': 'Decimales (-)',
-  'decimal-multiplication': 'Decimales (×)',
-  'decimal-division': 'Decimales (÷)',
-  mixed: 'Operaciones mixtas',
-  power: 'Potencias',
-  percentage: 'Porcentajes',
-  estimation: 'Estimación',
-  factorization: 'Factorización',
-} as const;
+import { formatOperationLabel } from '../utils/operationLabels';
 
 interface StatsViewProps {
   stats: DetailedStats;
@@ -33,8 +14,6 @@ interface StatsViewProps {
 export function StatsView({ stats, correctExercises, totalExercises, streak }: StatsViewProps) {
   const weeklyData = useMemo(() => getWeeklyProgressData(stats), [stats]);
   const weakestOp = useMemo(() => getWeakestOperation(stats), [stats]);
-  const formatOperationLabel = (operation: string) =>
-    operationLabels[operation as keyof typeof operationLabels] ?? operation;
 
   const difficultyLabels = {
     easy: 'Fácil',

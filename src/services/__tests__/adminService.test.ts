@@ -2,16 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const supabaseState = vi.hoisted(() => {
   const rpc = vi.fn();
-  return { rpc };
+  const select = vi.fn();
+  const from = vi.fn(() => ({ select }));
+  return { rpc, from, select };
 });
 
 vi.mock('../../lib/supabaseClient', () => ({
   supabase: {
     rpc: supabaseState.rpc,
+    from: supabaseState.from,
   },
 }));
 
-import { listChildren, resetChildPin } from '../adminService';
+import { fetchAllAttempts, listChildren, resetChildPin } from '../adminService';
 
 describe('adminService', () => {
   beforeEach(() => {
@@ -55,6 +58,43 @@ describe('adminService', () => {
       supabaseState.rpc.mockResolvedValue({ data: null, error: { message: 'boom' } });
 
       expect(await listChildren()).toBeNull();
+    });
+  });
+
+  describe('fetchAllAttempts', () => {
+    it('mapea los intentos a camelCase', async () => {
+      supabaseState.select.mockResolvedValue({
+        data: [
+          {
+            user_id: 'uuid-1',
+            operation: 'division',
+            grade: '5e',
+            is_correct: false,
+            time_spent: 12,
+            created_at: '2026-07-18T10:00:00Z',
+          },
+        ],
+        error: null,
+      });
+
+      const result = await fetchAllAttempts();
+
+      expect(supabaseState.from).toHaveBeenCalledWith('attempts');
+      expect(result).toEqual([
+        {
+          userId: 'uuid-1',
+          operation: 'division',
+          grade: '5e',
+          isCorrect: false,
+          timeSpent: 12,
+          createdAt: '2026-07-18T10:00:00Z',
+        },
+      ]);
+    });
+
+    it('devuelve null si la consulta falla', async () => {
+      supabaseState.select.mockResolvedValue({ data: null, error: { message: 'boom' } });
+      expect(await fetchAllAttempts()).toBeNull();
     });
   });
 

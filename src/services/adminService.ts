@@ -22,6 +22,15 @@ type ChildRow = {
   last_activity: string | null;
 };
 
+export interface AttemptRecord {
+  userId: string;
+  operation: string;
+  grade: string;
+  isCorrect: boolean;
+  timeSpent: number;
+  createdAt: string;
+}
+
 export type ResetPinResult = { ok: true } | { ok: false; error: string };
 
 const RESET_PIN_ERRORS: Record<string, string> = {
@@ -46,6 +55,36 @@ export async function listChildren(): Promise<ChildOverview[] | null> {
     totalAttempts: Number(row.total_attempts),
     correctAttempts: Number(row.correct_attempts),
     lastActivity: row.last_activity,
+  }));
+}
+
+type AttemptRow = {
+  user_id: string;
+  operation: string;
+  grade: string;
+  is_correct: boolean;
+  time_spent: number;
+  created_at: string;
+};
+
+/** Todos los intentos de todos los niños (RLS: solo el admin obtiene filas). */
+export async function fetchAllAttempts(): Promise<AttemptRecord[] | null> {
+  const { data, error } = await supabase
+    .from('attempts')
+    .select('user_id, operation, grade, is_correct, time_spent, created_at');
+
+  if (error) {
+    logger.error('[adminService] Error al cargar intentos:', error);
+    return null;
+  }
+
+  return ((data ?? []) as AttemptRow[]).map((row) => ({
+    userId: row.user_id,
+    operation: row.operation,
+    grade: row.grade,
+    isCorrect: row.is_correct,
+    timeSpent: row.time_spent,
+    createdAt: row.created_at,
   }));
 }
 
