@@ -596,6 +596,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const persistedSnapshotRef = useRef<PersistedGameState>(toPersistedGameState(state));
   persistedSnapshotRef.current = toPersistedGameState(state);
 
+  const persistGameState = useCallback((userId: string) => {
+    const snapshot = persistedSnapshotRef.current;
+    if (hasWindow) {
+      window.localStorage.setItem(gameStateCacheKey(userId), JSON.stringify(snapshot));
+    }
+    void saveGameState(userId, snapshot);
+  }, []);
+
   const checkAnswer = useCallback(
     (overrideAnswer?: string | Fraction | MixedNumber | RemainderAnswer) => {
       if (!state.currentProblem) return;
@@ -717,11 +725,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     const userId = sessionUserId;
     const timeoutId = setTimeout(() => {
-      const snapshot = persistedSnapshotRef.current;
-      if (hasWindow) {
-        window.localStorage.setItem(gameStateCacheKey(userId), JSON.stringify(snapshot));
-      }
-      void saveGameState(userId, snapshot);
+      persistGameState(userId);
     }, 2000);
 
     return () => {
@@ -729,6 +733,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     };
   }, [
     sessionUserId,
+    persistGameState,
     state.maxScore,
     state.bestStreak,
     state.totalExercises,
@@ -804,15 +809,35 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
 
     const userId = sessionUserId;
+
+    // El guardado normal espera 2 s. Si el niño cierra la pestaña, apaga la
+    // tablet o cambia de app antes, ese último logro se perdería: al ocultarse
+    // la página escribimos ya. `visibilitychange` es el único evento fiable en
+    // móvil, donde `beforeunload` a menudo no llega.
+    const handleHide = () => {
+      if (document.visibilityState === 'hidden') {
+        persistGameState(userId);
+      }
+    };
+
+    const handlePageHide = () => {
+      persistGameState(userId);
+    };
+
+    document.addEventListener('visibilitychange', handleHide);
+    window.addEventListener('pagehide', handlePageHide);
+
     const handleOnline = () => {
       void flushQueue(userId);
     };
 
     window.addEventListener('online', handleOnline);
     return () => {
+      document.removeEventListener('visibilitychange', handleHide);
+      window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('online', handleOnline);
     };
-  }, [sessionUserId]);
+  }, [sessionUserId, persistGameState]);
 
   const nextProblem = () => {
     dispatch({ type: 'NEXT_PROBLEM' });

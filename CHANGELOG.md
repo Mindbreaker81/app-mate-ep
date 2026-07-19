@@ -5,6 +5,18 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [3.1.1] - 2026-07-19
+
+### Corregido
+- **Cambio de hora**: la evolución semanal salía vacía y la racha de días se
+  rompía al cruzar el cambio horario de primavera (fechas por calendario)
+- **Evolución semanal**: las barras altas se comprimían y falseaban la
+  proporción entre semanas (un 50 % se dibujaba al 66 % de un 100 %)
+- **Estado de juego**: sin red, el caché por usuario ya se usa como respaldo;
+  antes el niño heredaba el progreso guardado por otro niño del dispositivo
+- **Estado de juego**: se guarda al ocultar la pestaña, sin esperar al debounce
+  de 2 s, para no perder el último logro al cerrar o cambiar de app
+
 ## [3.1.0] - 2026-07-19
 
 ### Añadido

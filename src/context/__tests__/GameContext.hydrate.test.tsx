@@ -183,6 +183,43 @@ describe('GameContext hidratación desde Supabase', () => {
     expect(gameStateServiceState.saveGameState).not.toHaveBeenCalled();
   });
 
+  // El debounce de 2 s perdía el último logro si el niño cerraba la pestaña antes.
+  it('guarda de inmediato al ocultarse la pestaña, sin esperar al debounce', async () => {
+    gameStateServiceState.loadGameState.mockResolvedValue(remoteState);
+
+    renderWithSession();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('total')).toHaveTextContent('120');
+    });
+    gameStateServiceState.saveGameState.mockClear();
+
+    fireEvent.click(screen.getByRole('button', { name: /responder bien/i }));
+
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'hidden',
+    });
+    fireEvent(document, new Event('visibilitychange'));
+
+    // Muy por debajo de los 2000 ms del debounce.
+    await waitFor(
+      () => {
+        expect(gameStateServiceState.saveGameState).toHaveBeenCalledWith(
+          'uuid-1',
+          expect.objectContaining({ totalExercises: 121 }),
+        );
+      },
+      { timeout: 300 },
+    );
+    expect(window.localStorage.getItem('pitagoritas:gameState:uuid-1')).toContain('121');
+
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'visible',
+    });
+  });
+
   it('en la fusión gana el máximo entre local y remoto', async () => {
     window.localStorage.setItem('maxScore', '150');
     gameStateServiceState.loadGameState.mockResolvedValue(remoteState);
