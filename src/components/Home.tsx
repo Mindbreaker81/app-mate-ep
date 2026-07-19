@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AchievementToast } from './AchievementToast';
 import { Exercise } from './Exercise';
 import { ScoreBoard } from './ScoreBoard';
 import { Achievements } from './Achievements';
@@ -60,6 +61,7 @@ export function Home() {
   
   return (
     <div className="space-y-6">
+      <AchievementToast achievement={state.recentAchievement} />
       <div className="bg-white rounded-lg shadow-lg p-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>

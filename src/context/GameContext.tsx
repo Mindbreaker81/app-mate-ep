@@ -271,6 +271,7 @@ const createInitialState = (): GameState => ({
   timeRemaining: 0,
   isTimerActive: false,
   timedCorrectExercises: readStoredNumber(STORAGE_KEYS.timedCorrectExercises),
+  recentAchievement: null,
 });
 
 function createProblemForState(state: Pick<GameState, 'level' | 'levelMode' | 'manualLevel' | 'practiceMode' | 'grade'>): Problem {
@@ -341,13 +342,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         });
       });
 
-      unlockedAchievements.forEach((achievement) => {
-        newAchievements.push({
-          ...achievement,
-          unlocked: true,
-          unlockedAt: new Date(),
-        });
-      });
+      const enrichedUnlocked = unlockedAchievements.map((achievement) => ({
+        ...achievement,
+        unlocked: true,
+        unlockedAt: new Date(),
+      }));
+      newAchievements.push(...enrichedUnlocked);
 
       const newLevel =
         [...LEVELS].reverse().find((level) => level.minScore <= newScore)?.id ?? state.level;
@@ -366,6 +366,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         stats: newStats,
         isTimerActive: false,
         timedCorrectExercises,
+        recentAchievement: enrichedUnlocked[0] ?? null,
       };
     }
 
@@ -375,6 +376,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentProblem: createProblemForState(state),
         userAnswer: '',
         isCorrect: null,
+        recentAchievement: null,
         ...getResetTimerState(state.timeMode),
       };
 
@@ -386,6 +388,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentProblem: createProblemForState(state),
         userAnswer: '',
         isCorrect: null,
+        recentAchievement: null,
         ...getResetTimerState(state.timeMode),
       };
 

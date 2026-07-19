@@ -32,6 +32,7 @@ import {
   normalizeFactorizationAnswer,
 } from '../utils/problemUtils';
 import { formatMathNumber } from '../utils/mathUtils';
+import { celebrate } from '../utils/celebration';
 
 export function Exercise() {
   const { state, checkAnswer, nextProblem, setAnswer } = useGame();
@@ -44,6 +45,7 @@ export function Exercise() {
   const [remainderAnswer, setRemainderAnswer] = React.useState({ quotient: '', remainder: '' });
   const [validationError, setValidationError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showExplanation, setShowExplanation] = React.useState(false);
 
   useEffect(() => {
     setFracAnswer({ numerator: '', denominator: '' });
@@ -51,13 +53,33 @@ export function Exercise() {
     setRemainderAnswer({ quotient: '', remainder: '' });
     setValidationError(null);
     setIsSubmitting(false);
+    setShowExplanation(false);
   }, [currentProblem]);
 
   useEffect(() => {
     if (isCorrect !== null) {
       setIsSubmitting(false);
     }
-  }, [isCorrect]);
+    if (isCorrect === true) {
+      celebrate(state.streak);
+    }
+  }, [isCorrect, state.streak]);
+
+  useEffect(() => {
+    if (isCorrect === null) {
+      return undefined;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        nextProblem();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isCorrect, nextProblem]);
 
   const maxTime = timeMode !== 'no-limit' ? getTimeModeConfig(timeMode).seconds || 60 : 60;
 
@@ -186,6 +208,7 @@ export function Exercise() {
               onClick={() => {
                 setValidationError(null);
                 setAnswer(option.value);
+                submitAnswer(option.value);
               }}
               disabled={isCorrect !== null}
               className={`rounded-lg border-2 px-4 py-3 text-lg font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
@@ -447,21 +470,6 @@ export function Exercise() {
               {isSubmitting ? 'Comprobando...' : 'Enviar'}
             </button>
           )}
-          {isCorrect === null && isMultipleChoiceProblem(currentProblem) && (
-            <button
-              type="button"
-              onClick={() => {
-                if (typeof userAnswer === 'string' && userAnswer.trim()) {
-                  submitAnswer(userAnswer);
-                } else {
-                  setValidationError('Elige una opción antes de enviar.');
-                }
-              }}
-              className="px-6 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-700 transition-colors text-lg"
-            >
-              {isSubmitting ? 'Comprobando...' : 'Enviar'}
-            </button>
-          )}
           {isCorrect !== null && (
             <button
               type="button"
@@ -476,14 +484,25 @@ export function Exercise() {
         {isCorrect === true && (
           <div className="mt-6 text-green-700 font-bold text-xl text-center" role="status" aria-live="polite">
             ¡Correcto!
+            <div className="mt-3">
+              {showExplanation ? (
+                <ExplanationBox explanation={currentProblem.explanation} />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowExplanation(true)}
+                  className="text-sm font-semibold text-blue-600 underline hover:text-blue-800"
+                >
+                  ¿Por qué?
+                </button>
+              )}
+            </div>
           </div>
         )}
         {isCorrect === false && (
           <div className="mt-6 text-red-700 font-bold text-xl text-center" role="status" aria-live="polite">
             Incorrecto. La respuesta correcta es: {formatProblemAnswer(currentProblem)}
-            <pre className="bg-gray-100 rounded p-3 mt-4 text-left text-base whitespace-pre-wrap">
-              {currentProblem.explanation}
-            </pre>
+            <ExplanationBox explanation={currentProblem.explanation} />
           </div>
         )}
 
@@ -496,6 +515,14 @@ export function Exercise() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ExplanationBox({ explanation }: { explanation: string }) {
+  return (
+    <pre className="bg-gray-100 rounded p-3 mt-4 text-left text-base whitespace-pre-wrap font-sans font-normal text-gray-800">
+      {explanation}
+    </pre>
   );
 }
 

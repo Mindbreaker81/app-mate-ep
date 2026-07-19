@@ -470,6 +470,8 @@ export interface GameState {
   timeRemaining: number;
   isTimerActive: boolean;
   timedCorrectExercises: number;
+  /** Logro desbloqueado en la última respuesta, para mostrarlo como toast. */
+  recentAchievement: Achievement | null;
 }
 
 export type SerializedAnswer =
