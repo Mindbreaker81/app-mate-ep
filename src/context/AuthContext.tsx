@@ -141,17 +141,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const resolveSession = async (incomingSession: Session | null) => {
       if (!isMounted) return;
-      setSession(incomingSession);
       if (incomingSession?.user) {
+        // Resolver isAdmin ANTES de exponer la sesión: si no, la UI muestra
+        // el juego al admin durante la ventana en que isAdmin aún es false.
         const admin = await fetchIsAdmin(incomingSession.user.id);
         if (!isMounted) return;
         setIsAdmin(admin);
+        setSession(incomingSession);
         if (admin) {
           setProfile(null);
         } else {
           await fetchProfile(incomingSession.user.id);
         }
       } else {
+        setSession(null);
         setIsAdmin(false);
         setProfile(null);
       }
