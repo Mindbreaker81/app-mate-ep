@@ -26,7 +26,7 @@ export function ChildTrendView({ trend }: { trend: WeeklyBucket[] }) {
       <div
         role="img"
         aria-label={`Precisión por semana: ${summary}`}
-        className="flex items-end gap-2 h-36"
+        className="flex items-end gap-2 h-44"
       >
         {trend.map((bucket) => {
           const label = formatWeekLabel(bucket.weekStart);
@@ -39,14 +39,23 @@ export function ChildTrendView({ trend }: { trend: WeeklyBucket[] }) {
               key={bucket.weekStart}
               data-week={bucket.weekStart}
               title={title}
-              className="flex-1 flex flex-col items-center justify-end gap-1 h-full min-w-0"
+              className="flex-1 flex flex-col h-full min-w-0"
             >
-              {hasData && <span className="text-xs font-semibold text-gray-700">{bucket.accuracy}%</span>}
-              <div
-                className={`w-full max-w-8 rounded-t ${hasData ? 'bg-blue-500' : 'bg-gray-200'}`}
-                style={{ height: hasData ? `${Math.max(4, bucket.accuracy!)}%` : '4px' }}
-              />
-              <span className="text-[10px] text-gray-500 whitespace-nowrap">{label}</span>
+              <span className="h-4 text-xs leading-4 font-semibold text-gray-700 text-center">
+                {hasData ? `${bucket.accuracy}%` : ''}
+              </span>
+              {/* La barra vive en su propia pista: si compartiera el flex con los
+                  rótulos, estos le robarían altura y las barras altas se
+                  comprimirían, rompiendo la proporción entre semanas. */}
+              <div className="flex-1 min-h-0 flex items-end justify-center">
+                <div
+                  className={`w-full max-w-8 rounded-t ${hasData ? 'bg-blue-500' : 'bg-gray-200'}`}
+                  style={hasData ? { height: `${Math.max(2, bucket.accuracy!)}%` } : { height: '4px' }}
+                />
+              </div>
+              <span className="h-4 text-[10px] leading-4 text-gray-500 text-center whitespace-nowrap">
+                {label}
+              </span>
             </div>
           );
         })}

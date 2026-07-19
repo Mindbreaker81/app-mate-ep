@@ -53,6 +53,21 @@ const STORAGE_KEYS = {
 
 const hasWindow = typeof window !== 'undefined';
 
+/** Caché del estado de juego separado por usuario (las demás claves son compartidas). */
+const gameStateCacheKey = (userId: string) => `pitagoritas:gameState:${userId}`;
+
+function readCachedGameState(userId: string): PersistedGameState | null {
+  if (!hasWindow) {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(gameStateCacheKey(userId));
+    return raw ? (JSON.parse(raw) as PersistedGameState) : null;
+  } catch {
+    return null;
+  }
+}
+
 function readStoredNumber(key: string, fallback = 0): number {
   if (!hasWindow) {
     return fallback;
@@ -704,7 +719,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const timeoutId = setTimeout(() => {
       const snapshot = persistedSnapshotRef.current;
       if (hasWindow) {
-        window.localStorage.setItem(`pitagoritas:gameState:${userId}`, JSON.stringify(snapshot));
+        window.localStorage.setItem(gameStateCacheKey(userId), JSON.stringify(snapshot));
       }
       void saveGameState(userId, snapshot);
     }, 2000);
@@ -768,6 +783,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         logger.error('[GameContext] Error al sincronizar el estado de juego.', error);
+        // Sin red, el caché por usuario es la única fuente fiable: las claves
+        // sueltas de localStorage son compartidas por todos los niños del
+        // dispositivo y le darían a este el progreso de su hermano.
+        const cached = readCachedGameState(userId);
+        if (cached) {
+          dispatch({ type: 'HYDRATE_PERSISTED', payload: cached });
+        }
       }
 
       await flushQueue(userId);

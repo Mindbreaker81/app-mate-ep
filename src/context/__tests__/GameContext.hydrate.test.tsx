@@ -154,6 +154,35 @@ describe('GameContext hidratación desde Supabase', () => {
     );
   });
 
+  // Sin esto, un fallo de red deja al niño con las claves de localStorage
+  // compartidas del dispositivo, que son las del hermano que jugó antes.
+  it('si falla la carga remota, recupera su propio caché por usuario', async () => {
+    gameStateServiceState.loadGameState.mockRejectedValue(new Error('sin red'));
+    window.localStorage.setItem(
+      'pitagoritas:gameState:uuid-1',
+      JSON.stringify({ ...remoteState, maxScore: 55, bestStreak: 12 }),
+    );
+
+    renderWithSession();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('best-streak')).toHaveTextContent('12');
+    });
+    expect(screen.getByTestId('max-score')).toHaveTextContent('55');
+    expect(screen.getByTestId('achievements')).toHaveTextContent('streak_5');
+  });
+
+  it('no siembra el remoto cuando la carga falla', async () => {
+    gameStateServiceState.loadGameState.mockRejectedValue(new Error('sin red'));
+
+    renderWithSession();
+
+    await waitFor(() => {
+      expect(gameStateServiceState.loadGameState).toHaveBeenCalled();
+    });
+    expect(gameStateServiceState.saveGameState).not.toHaveBeenCalled();
+  });
+
   it('en la fusión gana el máximo entre local y remoto', async () => {
     window.localStorage.setItem('maxScore', '150');
     gameStateServiceState.loadGameState.mockResolvedValue(remoteState);
