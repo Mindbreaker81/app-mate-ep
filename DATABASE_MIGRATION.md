@@ -1,6 +1,41 @@
 # Migración de base de datos — Pitagoritas
 
-Este documento describe los cambios de base de datos necesarios para las expansiones curriculares v2.0 y v3.0.
+Este documento describe los cambios de base de datos necesarios para las expansiones curriculares v2.0 y v3.0, y el usuario administrador (v3.1).
+
+## v3.1 — Usuario administrador único
+
+### Resumen
+
+Añade la tabla `admin_users` (limitada a una sola fila), la función `is_admin()`,
+políticas RLS de solo lectura para que el admin vea todos los perfiles e intentos,
+y los RPC `admin_reset_pin` (resetea el PIN de un niño) y `admin_list_children`
+(resumen de avance por niño).
+
+### Archivo de migración
+
+`supabase/migrations/0006_admin_user.sql`
+
+### Cómo aplicarla
+
+1. Ejecuta el contenido de `0006_admin_user.sql` en el SQL Editor del Dashboard
+   (o con `psql` usando la connection string del Session pooler).
+2. Crea el usuario admin: Authentication → Users → **Add user** (email real,
+   contraseña fuerte, marca **Auto Confirm User**).
+3. Regístralo como admin:
+
+```sql
+insert into public.admin_users (user_id)
+select id from auth.users where email = 'EMAIL_DEL_ADMIN';
+```
+
+### Verificación
+
+```sql
+select u.email from public.admin_users a join auth.users u on u.id = a.user_id;
+```
+
+Debe devolver exactamente una fila con el email del admin. Después, en la app:
+botón "Admin" → login con email y contraseña → panel con la lista de niños.
 
 ## v3.0 — Validación de curso 6.º (`6e`)
 
