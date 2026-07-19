@@ -149,6 +149,53 @@ describe('AdminDashboard', () => {
     expect(screen.getByText('Divisiones')).toBeInTheDocument();
   });
 
+  it('muestra la evolución semanal en el detalle del niño', async () => {
+    const badAttempts = Array.from({ length: 10 }, (_, i) => ({
+      userId: 'uuid-1',
+      operation: 'division',
+      grade: '5e',
+      isCorrect: i < 3,
+      timeSpent: 10,
+      createdAt: new Date().toISOString(),
+    }));
+    adminServiceState.fetchAllAttempts.mockResolvedValue(badAttempts);
+
+    renderDashboard();
+
+    fireEvent.click(await screen.findByRole('button', { name: /nico/i }));
+
+    expect(await screen.findByText(/evolución/i)).toBeInTheDocument();
+  });
+
+  it('exporta CSV con los intentos cargados', async () => {
+    const attempts = [
+      {
+        userId: 'uuid-1',
+        operation: 'division',
+        grade: '5e',
+        isCorrect: true,
+        timeSpent: 12,
+        createdAt: '2026-07-18T10:00:00Z',
+      },
+    ];
+    adminServiceState.fetchAllAttempts.mockResolvedValue(attempts);
+
+    const createObjectURL = vi.fn<(blob: Blob) => string>(() => 'blob:fake');
+    const revokeObjectURL = vi.fn();
+    Object.assign(URL, { createObjectURL, revokeObjectURL });
+
+    renderDashboard();
+
+    const exportButton = await screen.findByRole('button', { name: /exportar csv/i });
+    await waitFor(() => expect(exportButton).toBeEnabled());
+
+    fireEvent.click(exportButton);
+
+    expect(createObjectURL).toHaveBeenCalled();
+    const blob = createObjectURL.mock.calls[0][0] as unknown as Blob;
+    expect(blob.type).toContain('text/csv');
+  });
+
   it('permite cerrar sesión', async () => {
     const { signOut } = renderDashboard();
 

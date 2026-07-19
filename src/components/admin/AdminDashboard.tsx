@@ -4,10 +4,13 @@ import { fetchAllAttempts, listChildren, type AttemptRecord, type ChildOverview 
 import { fetchUserStats } from '../../services/statsService';
 import type { DetailedStats } from '../../types';
 import { buildChildReport, type ChildReport } from '../../utils/childReport';
+import { attemptsToCsv } from '../../utils/attemptsCsv';
+import { buildWeeklyTrend } from '../../utils/weeklyTrend';
 import { StatsView } from '../StatsView';
 import { PinResetDialog } from './PinResetDialog';
 import { ChangePasswordForm } from './ChangePasswordForm';
 import { ChildReportView } from './ChildReportView';
+import { ChildTrendView } from './ChildTrendView';
 
 function formatDate(iso: string | null): string {
   if (!iso) return 'Sin actividad';
@@ -74,6 +77,18 @@ export function AdminDashboard() {
     return map;
   }, [attempts]);
 
+  const exportCsv = () => {
+    if (!attempts || !children) return;
+    const csv = attemptsToCsv(attempts, children);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pitagoritas-intentos-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const openChild = async (child: ChildOverview) => {
     setSelected(child);
     setSelectedStats(null);
@@ -113,6 +128,9 @@ export function AdminDashboard() {
               {selected.avatar ?? '🙂'} {selected.username}
             </h2>
             {reports.has(selected.id) && <ChildReportView report={reports.get(selected.id)!} />}
+            {attempts && (
+              <ChildTrendView trend={buildWeeklyTrend(attempts.filter((a) => a.userId === selected.id))} />
+            )}
             {loadingStats && <p className="text-gray-600">Cargando estadísticas...</p>}
             {!loadingStats && selectedStats && (
               <StatsView
@@ -127,7 +145,17 @@ export function AdminDashboard() {
           </section>
         ) : (
           <section className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
-            <h2 className="text-xl font-semibold text-gray-700">👧👦 Avance de los niños</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-semibold text-gray-700">👧👦 Avance de los niños</h2>
+              <button
+                type="button"
+                onClick={exportCsv}
+                disabled={!attempts || attempts.length === 0}
+                className="text-sm font-semibold px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                ⬇️ Exportar CSV
+              </button>
+            </div>
 
             {loadError && (
               <div className="text-sm text-red-600">
