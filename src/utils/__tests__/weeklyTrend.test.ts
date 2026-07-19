@@ -50,6 +50,26 @@ describe('buildWeeklyTrend', () => {
     expect(previous.accuracy).toBe(0);
   });
 
+  // El 29 de marzo de 2026 los relojes se adelantan una hora en España: restar
+  // 7×24 h desde el lunes local deja las semanas anteriores en domingo a las 23:00.
+  it('mantiene los lunes al cruzar el cambio de hora de primavera', () => {
+    const afterDst = new Date('2026-03-31T18:00:00');
+    const trend = buildWeeklyTrend([attempt('2026-03-24T17:00:00', true)], afterDst, 8);
+
+    expect(trend.map((b) => b.weekStart)).toEqual([
+      '2026-02-09',
+      '2026-02-16',
+      '2026-02-23',
+      '2026-03-02',
+      '2026-03-09',
+      '2026-03-16',
+      '2026-03-23',
+      '2026-03-30',
+    ]);
+    expect(trend[6].total).toBe(1);
+    expect(trend[6].accuracy).toBe(100);
+  });
+
   it('ignora intentos fuera de la ventana', () => {
     const trend = buildWeeklyTrend([attempt('2026-01-01T10:00:00Z', true)], now, 8);
 

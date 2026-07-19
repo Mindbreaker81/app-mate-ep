@@ -8,9 +8,9 @@
     "typecheck": "tsc --noEmit",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
-    "test": "cross-env TAILWIND_DISABLE_SOURCE_MAP=1 vitest",
-    "test:watch": "cross-env TAILWIND_DISABLE_SOURCE_MAP=1 vitest --watch",
-    "test:ui": "cross-env TAILWIND_DISABLE_SOURCE_MAP=1 vitest --ui",
+    "test": "cross-env TZ=Europe/Madrid TAILWIND_DISABLE_SOURCE_MAP=1 vitest",
+    "test:watch": "cross-env TZ=Europe/Madrid TAILWIND_DISABLE_SOURCE_MAP=1 vitest --watch",
+    "test:ui": "cross-env TZ=Europe/Madrid TAILWIND_DISABLE_SOURCE_MAP=1 vitest --ui",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },

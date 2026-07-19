@@ -54,6 +54,14 @@ describe('dailyGoal', () => {
     expect(computeDayStreak([], now)).toBe(0);
   });
 
+  // Consultada de madrugada tras el cambio de hora del 29 de marzo, restar 24 h
+  // se saltaba un día y rompía la racha.
+  it('no pierde la racha al cruzar el cambio de hora de primavera', () => {
+    const days = ['2026-03-27', '2026-03-28', '2026-03-29', '2026-03-30'];
+    expect(computeDayStreak(days, new Date(2026, 2, 30, 0, 30))).toBe(4);
+    expect(computeDayStreak(days, new Date(2026, 2, 30, 18, 0))).toBe(4);
+  });
+
   it('localDateKey usa la fecha local', () => {
     expect(localDateKey(new Date(2026, 6, 19, 23, 59))).toBe('2026-07-19');
     expect(localDateKey(new Date(2026, 0, 5, 0, 1))).toBe('2026-01-05');

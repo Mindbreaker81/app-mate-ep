@@ -1,9 +1,6 @@
 import type { ChildAttempt } from './childReport';
 import { localDateKey } from './dailyGoal';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-const WEEK_MS = 7 * DAY_MS;
-
 export interface WeeklyBucket {
   /** Lunes de la semana, fecha local YYYY-MM-DD. */
   weekStart: string;
@@ -14,10 +11,9 @@ export interface WeeklyBucket {
 }
 
 function mondayOf(date: Date): Date {
-  const result = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const day = result.getDay(); // 0 = domingo
+  const day = date.getDay(); // 0 = domingo
   const offset = day === 0 ? 6 : day - 1;
-  return new Date(result.getTime() - offset * DAY_MS);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() - offset);
 }
 
 /** Precisión por semana (lunes a domingo) de las últimas `weeks` semanas, la actual al final. */
@@ -25,7 +21,11 @@ export function buildWeeklyTrend(attempts: ChildAttempt[], now: Date = new Date(
   const currentMonday = mondayOf(now);
   const starts: Date[] = [];
   for (let i = weeks - 1; i >= 0; i--) {
-    starts.push(new Date(currentMonday.getTime() - i * WEEK_MS));
+    // Aritmética de calendario, no de milisegundos: al cruzar el cambio de hora
+    // restar 7×24 h dejaría la fecha en el domingo anterior a las 23:00.
+    starts.push(
+      new Date(currentMonday.getFullYear(), currentMonday.getMonth(), currentMonday.getDate() - i * 7),
+    );
   }
 
   const buckets = new Map<string, { total: number; correct: number }>();

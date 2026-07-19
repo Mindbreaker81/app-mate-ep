@@ -2,7 +2,6 @@ import type { DailyProgress } from '../types';
 
 export const DAILY_GOAL = 10;
 const MAX_PRACTICE_DAYS = 60;
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type { DailyProgress } from '../types';
 
@@ -37,14 +36,17 @@ export function computeDayStreak(days: string[], now: Date): number {
   }
 
   const daySet = new Set(days);
-  const today = localDateKey(now);
-  const yesterday = localDateKey(new Date(now.getTime() - DAY_MS));
+  // Aritmética de calendario, no de milisegundos: restar 24 h al cruzar el cambio
+  // de hora se salta un día y rompería la racha.
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const previousDay = (date: Date) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
 
   let cursor: Date;
-  if (daySet.has(today)) {
-    cursor = new Date(now.getTime());
-  } else if (daySet.has(yesterday)) {
-    cursor = new Date(now.getTime() - DAY_MS);
+  if (daySet.has(localDateKey(startOfToday))) {
+    cursor = startOfToday;
+  } else if (daySet.has(localDateKey(previousDay(startOfToday)))) {
+    cursor = previousDay(startOfToday);
   } else {
     return 0;
   }
@@ -52,7 +54,7 @@ export function computeDayStreak(days: string[], now: Date): number {
   let streak = 0;
   while (daySet.has(localDateKey(cursor))) {
     streak += 1;
-    cursor = new Date(cursor.getTime() - DAY_MS);
+    cursor = previousDay(cursor);
   }
   return streak;
 }
