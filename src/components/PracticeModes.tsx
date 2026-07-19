@@ -1,4 +1,5 @@
 import { useGame } from '../context/GameContext';
+import { RecommendedPractice } from './RecommendedPractice';
 import {
   getPracticeModesForGrade,
   groupPracticeModesByCategory,
@@ -14,6 +15,8 @@ export function PracticeModes() {
     <div className="bg-white rounded-lg shadow-lg p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">🎯 Modo de Práctica</h2>
       <p className="text-gray-600 mb-6">Elige qué operaciones quieres practicar específicamente</p>
+
+      <RecommendedPractice />
 
       {Object.entries(grouped).map(([category, modes]) => {
         if (modes.length === 0) {

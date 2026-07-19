@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import type { ChildAttempt } from '../utils/childReport';
 import type { DetailedStats, OperationKey } from '../types';
 import { OPERATION_KEYS } from '../types';
 import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats, normalizeStats } from '../utils/statsUtils';
@@ -13,6 +14,36 @@ type DbAttemptRow = {
   level: number;
   created_at: string;
 };
+
+type OwnAttemptRow = {
+  operation: string;
+  grade: string;
+  is_correct: boolean;
+  time_spent: number;
+  created_at: string;
+};
+
+/** Intentos propios del niño con curso, para construir su informe de puntos débiles. */
+export async function fetchOwnAttempts(userId: string): Promise<ChildAttempt[] | null> {
+  const { data, error } = await supabase
+    .from('attempts')
+    .select('operation, grade, is_correct, time_spent, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    logger.error('[statsService] Error al cargar intentos propios:', error);
+    return null;
+  }
+
+  return ((data ?? []) as OwnAttemptRow[]).map((row) => ({
+    operation: row.operation,
+    grade: row.grade,
+    isCorrect: row.is_correct,
+    timeSpent: row.time_spent,
+    createdAt: row.created_at,
+  }));
+}
 
 export async function fetchUserStats(userId: string): Promise<DetailedStats | null> {
   const { data, error } = await supabase

@@ -117,7 +117,7 @@ export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   'scale-conversion': 0.7,
 };
 
-const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
+export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
   all: [],
   addition: ['addition'],
   subtraction: ['subtraction'],

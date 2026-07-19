@@ -1,5 +1,6 @@
 import type { GradeId, PracticeMode, PracticeModeCategory, PracticeModeConfig } from '../types';
 import { getGradeConfig } from './gameConfig';
+import { OPERATION_MAP } from './generators';
 
 export const PRACTICE_MODES: PracticeModeConfig[] = [
   {
@@ -203,6 +204,23 @@ export function getPracticeModesForGrade(grade: GradeId): PracticeModeConfig[] {
 export function getPracticeModeConfig(mode: PracticeMode, grade?: GradeId): PracticeModeConfig {
   const configs = grade ? getPracticeModesForGrade(grade) : PRACTICE_MODES;
   return configs.find((config) => config.mode === mode) || PRACTICE_MODES[0];
+}
+
+let reverseOperationMap: Map<string, PracticeMode> | null = null;
+
+/** Modo de práctica que entrena una operación (inverso de OPERATION_MAP; el primer modo listado gana). */
+export function practiceModeForOperation(operation: string): PracticeMode | null {
+  if (!reverseOperationMap) {
+    reverseOperationMap = new Map();
+    for (const [mode, operations] of Object.entries(OPERATION_MAP) as [PracticeMode, string[]][]) {
+      for (const op of operations) {
+        if (!reverseOperationMap.has(op)) {
+          reverseOperationMap.set(op, mode);
+        }
+      }
+    }
+  }
+  return reverseOperationMap.get(operation) ?? null;
 }
 
 export function groupPracticeModesByCategory(modes: PracticeModeConfig[]): Record<PracticeModeCategory, PracticeModeConfig[]> {
