@@ -5,6 +5,7 @@ import { getPracticeModeConfig } from '../utils/practiceConfig';
 import type { Fraction, MixedNumber, RemainderAnswer } from '../types';
 import {
   allowsDecimalAnswer,
+  allowsNegativeAnswer,
   angleTypeLabel,
   compareOperatorLabel,
   formatMixedNumber,
@@ -304,6 +305,7 @@ export function Exercise() {
                 setAnswer={setAnswer}
                 disabled={isCorrect !== null}
                 setValidationError={setValidationError}
+                allowNegative
               />
             </div>
           ) : isProbabilityProblem(currentProblem) ? (
@@ -400,6 +402,7 @@ export function Exercise() {
                 setValidationError={setValidationError}
                 decimal={!isFactorizationProblem(currentProblem) && allowsDecimalAnswer(currentProblem)}
                 factorization={isFactorizationProblem(currentProblem)}
+                allowNegative={allowsNegativeAnswer(currentProblem)}
               />
             </div>
           ) : 'num1' in currentProblem && typeof currentProblem.num1 === 'number' ? (
@@ -604,6 +607,7 @@ function PromptInput({
   setValidationError,
   decimal = false,
   factorization = false,
+  allowNegative = false,
 }: {
   userAnswer: string | Fraction | MixedNumber | RemainderAnswer;
   setAnswer: (value: string) => void;
@@ -611,24 +615,43 @@ function PromptInput({
   setValidationError: (value: string | null) => void;
   decimal?: boolean;
   factorization?: boolean;
+  allowNegative?: boolean;
 }) {
+  const currentValue = typeof userAnswer === 'string' ? userAnswer : '';
+
+  const toggleSign = () => {
+    setValidationError(null);
+    setAnswer(currentValue.startsWith('-') ? currentValue.slice(1) : `-${currentValue}`);
+  };
+
   return (
     <div className="flex items-center justify-center gap-3">
       {!factorization && <span className="text-2xl text-blue-600">=</span>}
       <input
-        type={factorization || decimal ? 'text' : 'number'}
+        type={factorization || decimal || allowNegative ? 'text' : 'number'}
         inputMode={factorization ? undefined : decimal ? 'decimal' : 'numeric'}
-        step={factorization ? undefined : decimal ? 'any' : '1'}
+        step={factorization || allowNegative ? undefined : decimal ? 'any' : '1'}
         aria-label={factorization ? 'Factores primos' : 'Tu respuesta'}
         placeholder={factorization ? '2 x 2 x 3' : 'Tu respuesta'}
         className="w-full max-w-xs border-b-2 border-blue-400 text-center"
-        value={typeof userAnswer === 'string' ? userAnswer : ''}
+        value={currentValue}
         onChange={(e) => {
           setValidationError(null);
           setAnswer(e.target.value);
         }}
         disabled={disabled}
       />
+      {allowNegative && (
+        <button
+          type="button"
+          aria-label="Cambiar signo"
+          onClick={toggleSign}
+          disabled={disabled}
+          className="h-12 w-12 shrink-0 rounded-lg border-2 border-blue-400 text-xl font-bold text-blue-700 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 transition-colors"
+        >
+          ±
+        </button>
+      )}
     </div>
   );
 }

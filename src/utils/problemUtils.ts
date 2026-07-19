@@ -269,6 +269,19 @@ export function allowsDecimalAnswer(problem: Problem): boolean {
   );
 }
 
+const NEGATIVE_ANSWER_OPERATIONS = new Set([
+  'integer-addition',
+  'integer-subtraction',
+  'integer-multiplication',
+  'integer-division',
+  'simple-equation',
+]);
+
+/** Operaciones cuya respuesta puede ser negativa (necesitan botón ± en móvil). */
+export function allowsNegativeAnswer(problem: Problem): boolean {
+  return NEGATIVE_ANSWER_OPERATIONS.has(problem.operation);
+}
+
 export function parseFactorizationAnswer(value: string): number[] | null {
   const sanitized = value
     .trim()
