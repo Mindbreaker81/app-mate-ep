@@ -13,6 +13,7 @@ type TabType = 'exercise' | 'stats' | 'achievements' | 'practice' | 'time';
 
 export function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('exercise');
+  const [confirmingReset, setConfirmingReset] = useState(false);
   const { state, resetGame, setGrade } = useGame();
   const gradeOptions = ['4t', '5e', '6e'] as const;
   const gradeLabel = state.grade === '4t' ? '4.º' : state.grade === '5e' ? '5.º' : '6.º';
@@ -32,12 +33,36 @@ export function Home() {
           <div className="space-y-6">
             <Exercise />
             <div className="flex justify-center">
-              <button
-                onClick={resetGame}
-                className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 transition-colors"
-              >
-                🔄 Reiniciar Juego
-              </button>
+              {confirmingReset ? (
+                <div className="flex items-center gap-3 bg-white rounded-lg shadow px-4 py-3">
+                  <span className="font-semibold text-gray-700">¿Seguro? Se pierden puntos y racha.</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetGame();
+                      setConfirmingReset(false);
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Sí, reiniciar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingReset(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingReset(true)}
+                  className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 transition-colors"
+                >
+                  🔄 Reiniciar Juego
+                </button>
+              )}
             </div>
           </div>
         );

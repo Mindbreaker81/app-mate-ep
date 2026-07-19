@@ -293,8 +293,9 @@ export function Exercise() {
               <div className="flex items-center justify-center gap-2">
                 <input
                   type="number"
+                  inputMode="numeric"
                   aria-label="Cociente"
-                  className="w-16 border-b-2 border-blue-400 text-center"
+                  className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl"
                   value={remainderAnswer.quotient}
                   onChange={(e) => setRemainderAnswer((prev) => ({ ...prev, quotient: e.target.value }))}
                   disabled={isCorrect !== null}
@@ -302,8 +303,9 @@ export function Exercise() {
                 <span>resto</span>
                 <input
                   type="number"
+                  inputMode="numeric"
                   aria-label="Resto"
-                  className="w-16 border-b-2 border-blue-400 text-center"
+                  className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl"
                   value={remainderAnswer.remainder}
                   onChange={(e) => setRemainderAnswer((prev) => ({ ...prev, remainder: e.target.value }))}
                   disabled={isCorrect !== null}
@@ -541,7 +543,7 @@ function FractionInputs({
         type="number"
         inputMode="numeric"
         aria-label="Numerador"
-        className="w-14 border-b-2 border-blue-400 text-center mx-1"
+        className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl mx-1"
         placeholder="Num"
         value={value.numerator}
         onChange={(e) => onChange((prev) => ({ ...prev, numerator: e.target.value }))}
@@ -552,7 +554,7 @@ function FractionInputs({
         type="number"
         inputMode="numeric"
         aria-label="Denominador"
-        className="w-14 border-b-2 border-blue-400 text-center mx-1"
+        className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl mx-1"
         placeholder="Den"
         value={value.denominator}
         onChange={(e) => onChange((prev) => ({ ...prev, denominator: e.target.value }))}
@@ -575,8 +577,9 @@ function MixedNumberInputs({
     <div className="flex items-center justify-center gap-2">
       <input
         type="number"
+        inputMode="numeric"
         aria-label="Parte entera"
-        className="w-14 border-b-2 border-blue-400 text-center"
+        className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl"
         placeholder="Ent"
         value={value.whole}
         onChange={(e) => onChange((prev) => ({ ...prev, whole: e.target.value }))}
@@ -615,7 +618,7 @@ function NumericInput({
         inputMode="numeric"
         aria-label="Tu respuesta"
         placeholder="Tu respuesta"
-        className="w-24 border-b-2 border-blue-400 text-center"
+        className="h-12 w-32 rounded-lg border-2 border-blue-400 text-center text-2xl"
         value={typeof userAnswer === 'string' ? userAnswer : ''}
         onChange={(e) => {
           setValidationError(null);
@@ -660,7 +663,7 @@ function PromptInput({
         step={factorization || allowNegative ? undefined : decimal ? 'any' : '1'}
         aria-label={factorization ? 'Factores primos' : 'Tu respuesta'}
         placeholder={factorization ? '2 x 2 x 3' : 'Tu respuesta'}
-        className="w-full max-w-xs border-b-2 border-blue-400 text-center"
+        className="h-12 w-full max-w-xs rounded-lg border-2 border-blue-400 text-center text-2xl"
         value={currentValue}
         onChange={(e) => {
           setValidationError(null);
