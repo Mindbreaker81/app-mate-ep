@@ -600,6 +600,16 @@ export interface TimeModeConfig {
   description: string;
 }
 
+/** Estado de juego que viaja a Supabase (tabla game_state) para seguir al usuario entre dispositivos. */
+export interface PersistedGameState {
+  maxScore: number;
+  bestStreak: number;
+  totalExercises: number;
+  correctExercises: number;
+  timedCorrectExercises: number;
+  achievements: Achievement[];
+}
+
 export type GameAction =
   | { type: 'SET_PROBLEM'; payload: Problem }
   | { type: 'SET_ANSWER'; payload: string | Fraction | MixedNumber | RemainderAnswer }
@@ -626,4 +636,5 @@ export type GameAction =
   | { type: 'SET_MANUAL_LEVEL'; payload: number }
   | { type: 'UPDATE_TIMER'; payload: number }
   | { type: 'START_TIMER' }
-  | { type: 'STOP_TIMER' };
+  | { type: 'STOP_TIMER' }
+  | { type: 'HYDRATE_PERSISTED'; payload: PersistedGameState };

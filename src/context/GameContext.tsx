@@ -14,6 +14,7 @@ import type {
   SerializedAnswer,
   LegacySnapshot,
   DetailedStats,
+  PersistedGameState,
 } from '../types';
 import { generateProblem, getDifficulty } from '../utils/problemGenerator';
 import { LEVELS, ACHIEVEMENTS, getGradeConfig } from '../utils/gameConfig';
@@ -22,6 +23,7 @@ import { getTimeModeConfig } from '../utils/timeConfig';
 import { useAuth } from './AuthContext';
 import { recordAttemptDirect, flushQueue, migrateLegacyData } from '../services/attemptService';
 import { fetchUserStats } from '../services/statsService';
+import { loadGameState, saveGameState } from '../services/gameStateService';
 import { simplifyFraction } from '../utils/fractionUtils';
 import { logger } from '../utils/logger';
 import { evaluateAchievements } from '../utils/achievementEngine';
@@ -237,7 +239,18 @@ function getEffectiveLevel(state: Pick<GameState, 'level' | 'levelMode' | 'manua
   return state.levelMode === 'manual' ? state.manualLevel : state.level;
 }
 
-const initialState: GameState = {
+export function toPersistedGameState(state: GameState): PersistedGameState {
+  return {
+    maxScore: state.maxScore,
+    bestStreak: state.bestStreak,
+    totalExercises: state.totalExercises,
+    correctExercises: state.correctExercises,
+    timedCorrectExercises: state.timedCorrectExercises,
+    achievements: state.achievements,
+  };
+}
+
+const createInitialState = (): GameState => ({
   currentProblem: null,
   userAnswer: '',
   isCorrect: null,
@@ -258,7 +271,7 @@ const initialState: GameState = {
   timeRemaining: 0,
   isTimerActive: false,
   timedCorrectExercises: readStoredNumber(STORAGE_KEYS.timedCorrectExercises),
-};
+});
 
 function createProblemForState(state: Pick<GameState, 'level' | 'levelMode' | 'manualLevel' | 'practiceMode' | 'grade'>): Problem {
   const effectiveLevel = getEffectiveLevel(state);
@@ -461,6 +474,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...getResetTimerState(state.timeMode),
       };
 
+    case 'HYDRATE_PERSISTED': {
+      // Fusión conservadora: nunca perder progreso local aún no sincronizado.
+      const p = action.payload;
+      const mergedAchievements = [...state.achievements];
+      for (const remote of p.achievements ?? []) {
+        if (!mergedAchievements.some((a) => a.id === remote.id)) {
+          mergedAchievements.push(remote);
+        }
+      }
+      return {
+        ...state,
+        maxScore: Math.max(state.maxScore, p.maxScore ?? 0),
+        bestStreak: Math.max(state.bestStreak, p.bestStreak ?? 0),
+        totalExercises: Math.max(state.totalExercises, p.totalExercises ?? 0),
+        correctExercises: Math.max(state.correctExercises, p.correctExercises ?? 0),
+        timedCorrectExercises: Math.max(state.timedCorrectExercises, p.timedCorrectExercises ?? 0),
+        achievements: mergedAchievements,
+      };
+    }
+
     case 'UPDATE_TIMER':
       return {
         ...state,
@@ -503,7 +536,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
   const sessionUserId = session?.user?.id ?? null;
-  const [state, dispatch] = useReducer(gameReducer, initialState);
+  const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkAnswerRef = useRef<(overrideAnswer?: string | Fraction | MixedNumber | RemainderAnswer) => void>(() => undefined);
   const currentProblemRef = useRef<GameState['currentProblem']>(state.currentProblem);
@@ -518,6 +551,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     level: state.level,
     practiceMode: state.practiceMode,
   };
+
+  const persistedSnapshotRef = useRef<PersistedGameState>(toPersistedGameState(state));
+  persistedSnapshotRef.current = toPersistedGameState(state);
 
   const checkAnswer = useCallback(
     (overrideAnswer?: string | Fraction | MixedNumber | RemainderAnswer) => {
@@ -635,6 +671,33 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!sessionUserId) {
+      return undefined;
+    }
+
+    const userId = sessionUserId;
+    const timeoutId = setTimeout(() => {
+      const snapshot = persistedSnapshotRef.current;
+      if (hasWindow) {
+        window.localStorage.setItem(`pitagoritas:gameState:${userId}`, JSON.stringify(snapshot));
+      }
+      void saveGameState(userId, snapshot);
+    }, 2000);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [
+    sessionUserId,
+    state.maxScore,
+    state.bestStreak,
+    state.totalExercises,
+    state.correctExercises,
+    state.timedCorrectExercises,
+    state.achievements,
+  ]);
+
+  useEffect(() => {
+    if (!sessionUserId) {
       syncedRef.current = false;
       return;
     }
@@ -665,6 +728,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         logger.error('[GameContext] Error al obtener estadísticas remotas.', error);
+      }
+
+      try {
+        const remoteGameState = await loadGameState(userId);
+        if (remoteGameState) {
+          dispatch({ type: 'HYDRATE_PERSISTED', payload: remoteGameState });
+        } else {
+          // Primera sesión de este usuario en la nube: sembrar con lo local.
+          await saveGameState(userId, persistedSnapshotRef.current);
+        }
+      } catch (error) {
+        logger.error('[GameContext] Error al sincronizar el estado de juego.', error);
       }
 
       await flushQueue(userId);

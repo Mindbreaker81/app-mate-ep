@@ -1,6 +1,35 @@
 # Migración de base de datos — Pitagoritas
 
-Este documento describe los cambios de base de datos necesarios para las expansiones curriculares v2.0 y v3.0, y el usuario administrador (v3.1).
+Este documento describe los cambios de base de datos necesarios para las expansiones curriculares v2.0 y v3.0, el usuario administrador (v3.1) y el estado de juego por usuario (v3.2).
+
+## v3.2 — Estado de juego por usuario
+
+### Resumen
+
+Añade la tabla `game_state` (una fila por usuario, columna `data` jsonb) para que
+logros, récords y meta diaria sigan al niño entre dispositivos en lugar de vivir
+solo en el localStorage del navegador. RLS: cada usuario solo ve y escribe su fila.
+
+### Archivo de migración
+
+`supabase/migrations/0007_game_state.sql`
+
+### Cómo aplicarla
+
+Ejecuta el contenido de `0007_game_state.sql` en el SQL Editor del Dashboard
+(o con `psql` usando la connection string del Session pooler).
+
+### Verificación
+
+```sql
+select policyname from pg_policies where tablename = 'game_state';
+```
+
+Debe devolver `game_state own`. Tras jugar con un niño logueado:
+
+```sql
+select user_id, data->>'maxScore' as max_score, updated_at from public.game_state;
+```
 
 ## v3.1 — Usuario administrador único
 
