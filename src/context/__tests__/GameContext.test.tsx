@@ -32,10 +32,13 @@ function renderWithProviders(ui: React.ReactElement) {
   const authValue: AuthContextValue = {
     session: null,
     profile: null,
+    isAdmin: false,
     loading: false,
     error: null,
     signIn: vi.fn(),
     signUp: vi.fn(),
+    signInAdmin: vi.fn(),
+    changePassword: vi.fn(),
     signOut: vi.fn(),
     clearError: vi.fn(),
   };

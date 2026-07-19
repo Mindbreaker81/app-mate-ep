@@ -3,16 +3,23 @@ import type { ReactNode } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
+import { AdminLogin } from './AdminLogin';
+import { AdminDashboard } from '../admin/AdminDashboard';
 
-type Mode = 'login' | 'register';
+type Mode = 'login' | 'register' | 'admin';
 
 interface AuthGateProps {
   children: ReactNode;
 }
 
 export function AuthGate({ children }: AuthGateProps) {
-  const { session, loading } = useAuth();
+  const { session, isAdmin, loading, clearError } = useAuth();
   const [mode, setMode] = useState<Mode>('login');
+
+  const switchMode = (next: Mode) => {
+    clearError();
+    setMode(next);
+  };
 
   if (loading) {
     return (
@@ -26,6 +33,20 @@ export function AuthGate({ children }: AuthGateProps) {
   }
 
   if (!session) {
+    if (mode === 'admin') {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 px-4">
+          <div className="bg-white shadow-xl rounded-3xl p-8 max-w-md w-full space-y-6">
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-bold text-gray-800">🛠️ Acceso admin</h1>
+              <p className="text-gray-600">Inicia sesión con tu email y contraseña.</p>
+            </div>
+            <AdminLogin onBack={() => switchMode('login')} />
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 px-4">
         <div className="bg-white shadow-xl rounded-3xl p-8 max-w-2xl w-full space-y-6">
@@ -38,7 +59,7 @@ export function AuthGate({ children }: AuthGateProps) {
               className={`px-4 py-2 rounded-full font-semibold transition-colors ${
                 mode === 'login' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-700'
               }`}
-              onClick={() => setMode('login')}
+              onClick={() => switchMode('login')}
             >
               Iniciar sesión
             </button>
@@ -46,19 +67,32 @@ export function AuthGate({ children }: AuthGateProps) {
               className={`px-4 py-2 rounded-full font-semibold transition-colors ${
                 mode === 'register' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-700'
               }`}
-              onClick={() => setMode('register')}
+              onClick={() => switchMode('register')}
             >
               Registrarme
             </button>
           </div>
           {mode === 'login' ? (
-            <LoginForm onSwitch={() => setMode('register')} />
+            <LoginForm onSwitch={() => switchMode('register')} />
           ) : (
-            <RegisterForm onSwitch={() => setMode('login')} />
+            <RegisterForm onSwitch={() => switchMode('login')} />
           )}
+          <div className="text-center">
+            <button
+              type="button"
+              className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => switchMode('admin')}
+            >
+              Admin
+            </button>
+          </div>
         </div>
       </div>
     );
+  }
+
+  if (isAdmin) {
+    return <AdminDashboard />;
   }
 
   return <>{children}</>;

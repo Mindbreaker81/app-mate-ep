@@ -7,10 +7,13 @@ const renderWithAuth = (ui: React.ReactElement, overrides: Partial<AuthContextVa
   const value: AuthContextValue = {
     session: null,
     profile: null,
+    isAdmin: false,
     loading: false,
     error: null,
     signIn: vi.fn(),
     signUp: vi.fn().mockResolvedValue(undefined),
+    signInAdmin: vi.fn(),
+    changePassword: vi.fn(),
     signOut: vi.fn(),
     clearError: vi.fn(),
     ...overrides,
