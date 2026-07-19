@@ -60,7 +60,8 @@ begin
     raise exception 'invalid_pin';
   end if;
   select id into target_id from public.profiles where username = lower(trim(target_username));
-  if target_id is null then
+  -- El admin no es un niño: su contraseña no se degrada a PIN
+  if target_id is null or exists (select 1 from public.admin_users where user_id = target_id) then
     raise exception 'user_not_found';
   end if;
   update auth.users
@@ -92,6 +93,8 @@ as $$
   from public.profiles p
   left join public.attempts a on a.user_id = p.id
   where public.is_admin()
+    -- El trigger handle_new_user también crea perfil para el admin: excluirlo
+    and not exists (select 1 from public.admin_users au where au.user_id = p.id)
   group by p.id, p.username, p.avatar, p.created_at
   order by p.username;
 $$;
