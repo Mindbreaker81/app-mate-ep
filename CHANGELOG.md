@@ -31,6 +31,11 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   decimal o fracción
 
 ### Corregido
+- **StrictMode en desarrollo (PIT-28)**: el doble montaje encolaba dos veces
+  la generación de problema y la segunda quedaba después de la restauración
+  de la sesión diaria, pisando el ejercicio restaurado por uno de modo libre
+  tras recargar (en producción no ocurría). La generación pasa por la acción
+  idempotente `ENSURE_PROBLEM`, que solo crea problema si no hay uno
 - **Pestañas de Home**: en escritorio el emoji salía duplicado («🧭 🧭 Mi
   camino») y en móvil el nombre accesible era solo el emoji (el texto estaba
   en `hidden sm:inline`). Ahora el emoji es decorativo (`aria-hidden`) y el

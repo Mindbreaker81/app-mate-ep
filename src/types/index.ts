@@ -798,6 +798,9 @@ export type GameAction =
   | { type: 'RESTORE_DAILY_SESSION'; payload: DailySessionSnapshot | null }
   | { type: 'CHECK_SESSION_DAY' }
   | { type: 'SET_PATH_SKILL'; payload: string | null }
+  // Genera un problema de modo libre solo si no hay uno (idempotente: seguro
+  // bajo el doble montaje de StrictMode y encolado tras RESTORE_DAILY_SESSION).
+  | { type: 'ENSURE_PROBLEM' }
   | { type: 'UPDATE_TIMER'; payload: number }
   | { type: 'START_TIMER' }
   | { type: 'STOP_TIMER' }

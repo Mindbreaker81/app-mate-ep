@@ -742,6 +742,18 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ? { ...state, pathSkillId: null, dailySession: null, sessionDone: 0, sessionDate: null }
         : { ...state, pathSkillId: action.payload, dailySession: null, sessionDone: 0, sessionDate: null };
 
+    case 'ENSURE_PROBLEM':
+      // Idempotente: si ya hay problema (p. ej. el restaurado de la sesión
+      // diaria, encolado antes que esta acción) no se toca. Así el doble
+      // montaje de StrictMode nunca pisa el ejercicio restaurado.
+      if (state.currentProblem) {
+        return state;
+      }
+      return {
+        ...state,
+        currentProblem: createProblemForState(state),
+      };
+
     case 'UPDATE_TIMER':
       return {
         ...state,
@@ -964,15 +976,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!state.currentProblem) {
-      // getEffectiveLevel solo lee level/levelMode/manualLevel, ya listados como dependencias.
-      const effectiveLevel = getEffectiveLevel({
-        level: state.level,
-        levelMode: state.levelMode,
-        manualLevel: state.manualLevel,
-      });
-      dispatch({ type: 'SET_PROBLEM', payload: generateProblem(effectiveLevel, state.practiceMode, state.grade) });
+      // ENSURE_PROBLEM es idempotente en el reducer: si mientras tanto llegó un
+      // RESTORE_DAILY_SESSION (o el doble montaje de StrictMode encoló dos
+      // veces esta acción), el problema restaurado no se pisa.
+      dispatch({ type: 'ENSURE_PROBLEM' });
     }
-  }, [state.currentProblem, state.level, state.levelMode, state.manualLevel, state.practiceMode, state.grade]);
+  }, [state.currentProblem, state.level, state.levelMode, state.manualLevel, state.practiceMode, state.grade, dispatch]);
 
   useEffect(() => {
     if (!sessionUserId) {
