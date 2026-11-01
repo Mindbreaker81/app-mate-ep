@@ -433,6 +433,30 @@ export function getNumericProblemAnswer(problem: Problem): number | null {
   return null;
 }
 
+/** Parser estricto: la cadena completa debe ser un número (entero o decimal con coma o punto). */
+export function parseFullNumber(value: string): number | null {
+  const normalized = value.trim().replace(',', '.');
+  if (!/^-?\d+(?:\.\d+)?$/.test(normalized)) {
+    return null;
+  }
+  const parsed = Number.parseFloat(normalized);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+/** Parser de fracciones escritas como "a/b" (acepta espacios y negativos). */
+export function parseFractionString(value: string): { numerator: number; denominator: number } | null {
+  const match = value.trim().match(/^(-?\d+)\s*\/\s*(-?\d+)$/);
+  if (!match) {
+    return null;
+  }
+  const numerator = Number.parseInt(match[1], 10);
+  const denominator = Number.parseInt(match[2], 10);
+  if (Number.isNaN(numerator) || Number.isNaN(denominator) || denominator === 0) {
+    return null;
+  }
+  return { numerator, denominator };
+}
+
 export function answersMatch(problem: Problem, userValue: string | Fraction | MixedNumber | RemainderAnswer): boolean {
   if (isFactorizationProblem(problem)) {
     return typeof userValue === 'string' && normalizeFactorizationAnswer(userValue) === problem.answer;
@@ -456,7 +480,7 @@ export function answersMatch(problem: Problem, userValue: string | Fraction | Mi
 
   if (isConversionProblem(problem)) {
     if (typeof problem.answer === 'number') {
-      const numeric = typeof userValue === 'string' ? Number.parseFloat(userValue.replace(',', '.')) : null;
+      const numeric = typeof userValue === 'string' ? parseFullNumber(userValue) : null;
       return numeric !== null && numbersEqual(numeric, problem.answer);
     }
     return typeof userValue === 'object' && 'numerator' in userValue && !('whole' in userValue) &&
@@ -495,12 +519,21 @@ export function answersMatch(problem: Problem, userValue: string | Fraction | Mi
   }
 
   if (isProbabilityProblem(problem)) {
-    const numeric = typeof userValue === 'string' ? Number.parseFloat(userValue.replace(',', '.')) : null;
-    return numeric !== null && numbersEqual(numeric, problem.answer);
+    // Se acepta el decimal exacto o una fracción "a/b" equivalente al caso favorable/total.
+    const numeric = typeof userValue === 'string' ? parseFullNumber(userValue) : null;
+    if (numeric !== null) {
+      return numbersEqual(numeric, problem.answer);
+    }
+    const probability = problem as ProbabilityProblem & { favorable?: number; total?: number };
+    if (typeof probability.favorable === 'number' && typeof probability.total === 'number') {
+      const asFraction = typeof userValue === 'string' ? parseFractionString(userValue) : null;
+      return asFraction !== null && fractionEquals(asFraction, { numerator: probability.favorable, denominator: probability.total });
+    }
+    return false;
   }
 
   if (isEstimationProblem(problem)) {
-    const numeric = typeof userValue === 'string' ? Number.parseFloat(userValue) : null;
+    const numeric = typeof userValue === 'string' ? parseFullNumber(userValue) : null;
     return numeric !== null && numbersEqual(numeric, problem.answer);
   }
 
@@ -510,10 +543,10 @@ export function answersMatch(problem: Problem, userValue: string | Fraction | Mi
   }
 
   const parsed = typeof userValue === 'string'
-    ? Number.parseFloat(userValue.trim().replace(',', '.'))
+    ? parseFullNumber(userValue)
     : typeof userValue === 'number'
       ? userValue
       : null;
 
-  return parsed !== null && !Number.isNaN(parsed) && numbersEqual(parsed, numericAnswer);
+  return parsed !== null && numbersEqual(parsed, numericAnswer);
 }

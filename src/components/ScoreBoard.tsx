@@ -1,5 +1,6 @@
 import { useGame } from '../context/GameContext';
 import { LEVELS } from '../utils/gameConfig';
+import { formatGradeLabel } from '../utils/operationLabels';
 
 export function ScoreBoard() {
   const { state, setLevelMode, setManualLevel } = useGame();
@@ -116,7 +117,7 @@ export function ScoreBoard() {
             </p>
           </div>
         )}
-        <p className="text-xs text-gray-500 text-center mt-2">Curso: {state.grade === '5e' ? '5.º' : '4.º'} Primaria</p>
+        <p className="text-xs text-gray-500 text-center mt-2">Curso: {formatGradeLabel(state.grade)}</p>
       </div>
     </div>
   );

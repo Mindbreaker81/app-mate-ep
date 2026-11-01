@@ -167,10 +167,12 @@ function buildCheckAnswerPayload(params: {
   currentProblem: GameState['currentProblem'];
   userAnswer: GameState['userAnswer'];
   level: GameState['level'];
+  levelMode?: GameState['levelMode'];
+  manualLevel?: GameState['manualLevel'];
   timeMode: GameState['timeMode'];
   timeRemaining: GameState['timeRemaining'];
 }): CheckAnswerPayload {
-  const { currentProblem, userAnswer: rawUserAnswer, level, timeMode, timeRemaining } = params;
+  const { currentProblem, userAnswer: rawUserAnswer, level, levelMode, manualLevel, timeMode, timeRemaining } = params;
 
   if (!currentProblem) {
     throw new Error('No hay un problema activo para evaluar.');
@@ -208,7 +210,9 @@ function buildCheckAnswerPayload(params: {
   }
 
   const timeSpent = calculateTimeSpent(timeMode, timeRemaining);
-  const difficulty = getDifficulty(level, problem.operation);
+  // En modo manual la dificultad debe reflejar el nivel elegido, no el automático.
+  const effectiveLevel = levelMode === 'manual' ? (manualLevel ?? level) : level;
+  const difficulty = getDifficulty(effectiveLevel, problem.operation);
 
   return {
     isCorrect,
@@ -612,6 +616,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         currentProblem: state.currentProblem,
         userAnswer: overrideAnswer ?? state.userAnswer,
         level: state.level,
+        levelMode: state.levelMode,
+        manualLevel: state.manualLevel,
         timeMode: state.timeMode,
         timeRemaining: state.timeRemaining,
       });

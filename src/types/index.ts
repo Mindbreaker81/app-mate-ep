@@ -331,6 +331,10 @@ export interface ProbabilityProblem {
   options: number[];
   operation: 'probability-simple';
   answer: number;
+  /** Casos favorables, para aceptar también la respuesta en forma de fracción. */
+  favorable?: number;
+  /** Total de casos posibles. */
+  total?: number;
   explanation: string;
 }
 

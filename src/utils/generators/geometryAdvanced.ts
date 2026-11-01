@@ -23,7 +23,7 @@ export function generateCircleCircumference(levelConfig: LevelConfig): CirclePro
   const piValue = getPiValue(levelConfig.id);
   const answer = roundToPrecision(2 * piValue * radius, 2);
   return {
-    prompt: `Calcula la longitud de un círculo de radio ${radius} cm (usa π = ${piValue})`,
+    prompt: `Calcula la longitud de una circunferencia de radio ${radius} cm (usa π = ${piValue})`,
     radius,
     piValue,
     operation: 'circle-circumference',

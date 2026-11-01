@@ -2,10 +2,14 @@ import type { IntegerArithmeticProblem, IntegerCompareProblem, IntegerOrderProbl
 import { formatInteger, randomInt, resolveLevelLimits, shuffle, type LevelConfig } from './shared';
 
 function randomInteger(maxAbs: number, allowNegative: boolean): number {
-  if (!allowNegative || maxAbs < 2) {
-    return randomInt(1, maxAbs);
+  if (maxAbs < 2) {
+    return randomInt(0, maxAbs);
   }
-  return randomInt(-maxAbs, maxAbs) || 1;
+  if (!allowNegative) {
+    // Incluye el cero: los enteros empiezan en 0 también.
+    return randomInt(0, maxAbs);
+  }
+  return randomInt(-maxAbs, maxAbs);
 }
 
 export function generateIntegerAddition(levelConfig: LevelConfig): IntegerArithmeticProblem {
@@ -43,8 +47,10 @@ export function generateIntegerSubtraction(levelConfig: LevelConfig): IntegerAri
 
 export function generateIntegerMultiplication(levelConfig: LevelConfig): IntegerArithmeticProblem {
   const limits = resolveLevelLimits(levelConfig);
+  const bothNegative = levelConfig.id >= 4;
   const num1 = randomInteger(Math.min(limits.maxIntegerAbsolute, 12), levelConfig.id >= 3);
-  const num2 = randomInteger(Math.min(limits.maxIntegerAbsolute, 12), false);
+  // A partir del nivel 4 puede salir − × − (dos negativos).
+  const num2 = randomInteger(Math.min(limits.maxIntegerAbsolute, 12), bothNegative && randomInt(0, 1) === 0);
   const answer = num1 * num2;
   return {
     display: `${formatInteger(num1)} × ${formatInteger(num2)}`,
@@ -52,21 +58,30 @@ export function generateIntegerMultiplication(levelConfig: LevelConfig): Integer
     num2,
     operation: 'integer-multiplication',
     answer,
-    explanation: `Paso 1: Multiplica ${formatInteger(num1)} × ${formatInteger(num2)} = ${answer}.`,
+    explanation: `Paso 1: Multiplica valores: ${Math.abs(num1)} × ${Math.abs(num2)} = ${Math.abs(answer)}.\nPaso 2: ${formatInteger(num1)} × ${formatInteger(num2)} = ${answer} (${signRuleText(num1, num2)}).`,
   };
 }
 
+function signRuleText(num1: number, num2: number): string {
+  if (num1 >= 0 && num2 >= 0) return 'más por más es más';
+  if (num1 <= 0 && num2 <= 0) return 'menos por menos es más';
+  return 'menos por más (o más por menos) es menos';
+}
+
 export function generateIntegerDivision(levelConfig: LevelConfig): IntegerArithmeticProblem {
-  const num2 = randomInt(2, Math.min(levelConfig.maxNumberDiv, 12));
-  const quotient = randomInt(-10, 10) || 2;
+  // A partir del nivel 4 el divisor puede ser negativo.
+  const allowNegativeDivisor = levelConfig.id >= 4 && randomInt(0, 1) === 0;
+  const divisorAbs = randomInt(2, Math.min(levelConfig.maxNumberDiv, 12));
+  const num2 = allowNegativeDivisor ? -divisorAbs : divisorAbs;
+  const quotient = randomInt(-10, 10);
   const num1 = num2 * quotient;
   return {
-    display: `${formatInteger(num1)} ÷ ${num2}`,
+    display: `${formatInteger(num1)} ÷ ${formatInteger(num2)}`,
     num1,
     num2,
     operation: 'integer-division',
     answer: quotient,
-    explanation: `Paso 1: ${formatInteger(num2)} × ${quotient} = ${formatInteger(num1)}.\nPaso 2: ${formatInteger(num1)} ÷ ${num2} = ${quotient}.`,
+    explanation: `Paso 1: ${formatInteger(num2)} × ${formatInteger(quotient)} = ${formatInteger(num1)}.\nPaso 2: ${formatInteger(num1)} ÷ ${formatInteger(num2)} = ${formatInteger(quotient)}.`,
   };
 }
 
@@ -90,14 +105,30 @@ export function generateIntegerOrder(levelConfig: LevelConfig): IntegerOrderProb
   const limits = resolveLevelLimits(levelConfig);
   const values = Array.from({ length: 4 }, () => randomInteger(limits.maxIntegerAbsolute, true));
   const unique = Array.from(new Set(values));
-  while (unique.length < 4) {
-    unique.push(randomInteger(limits.maxIntegerAbsolute, true));
+  // Relleno sin repetir valores (ordenar duplicados no tiene solución clara).
+  let fillAttempts = 0;
+  while (unique.length < 4 && fillAttempts < 100) {
+    fillAttempts += 1;
+    const candidate = randomInteger(limits.maxIntegerAbsolute, true);
+    if (!unique.includes(candidate)) {
+      unique.push(candidate);
+    }
   }
   const sorted = [...unique.slice(0, 4)].sort((a, b) => a - b);
   const labels = sorted.map(formatInteger);
   const answer = labels.join(', ');
-  const shuffled = shuffle(sorted.map(formatInteger));
-  const options = shuffle([answer, shuffle([...labels]).join(', '), shuffle([...labels]).join(', '), shuffle([...labels]).join(', ')]).slice(0, 4);
+
+  // Opciones: la correcta más permutaciones distintas (nunca se pierde la correcta).
+  const options: string[] = [answer];
+  let attempts = 0;
+  while (options.length < 4 && attempts < 50) {
+    attempts += 1;
+    const candidate = shuffle([...labels]).join(', ');
+    if (!options.includes(candidate)) {
+      options.push(candidate);
+    }
+  }
+  const shuffled = shuffle(labels);
   return {
     prompt: 'Ordena de menor a mayor:',
     values: shuffled,

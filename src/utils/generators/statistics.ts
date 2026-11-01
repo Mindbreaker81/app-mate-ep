@@ -7,10 +7,22 @@ function generateValues(levelConfig: LevelConfig): number[] {
   return Array.from({ length: limits.meanDataPoints }, () => randomInt(1, 12));
 }
 
+/** Datos con media entera exacta: se ajusta el último valor para que la suma sea divisible. */
+function generateValuesWithExactMean(levelConfig: LevelConfig): number[] {
+  const limits = resolveLevelLimits(levelConfig);
+  const count = limits.meanDataPoints;
+  const values = Array.from({ length: count - 1 }, () => randomInt(1, 12));
+  const partialSum = values.reduce((total, value) => total + value, 0);
+  const last = count - (partialSum % count);
+  values.push(last + (last < count && randomInt(0, 1) === 0 ? count : 0));
+  return values;
+}
+
 export function generateMeanProblem(levelConfig: LevelConfig): MeanProblem {
-  const values = generateValues(levelConfig);
+  const values = generateValuesWithExactMean(levelConfig);
+  const count = values.length;
   const sum = values.reduce((total, value) => total + value, 0);
-  const answer = roundToPrecision(sum / values.length, 1);
+  const answer = sum / count;
   return {
     prompt: `Notas: ${values.join(', ')}. ¿Cuál es la media?`,
     values,
@@ -18,7 +30,7 @@ export function generateMeanProblem(levelConfig: LevelConfig): MeanProblem {
     answer,
     explanation:
       `Paso 1: Suma ${values.join(' + ')} = ${sum}.\n` +
-      `Paso 2: Divide entre ${values.length}: ${sum} ÷ ${values.length} = ${formatMathNumber(answer)}.`,
+      `Paso 2: Divide entre ${count}: ${sum} ÷ ${count} = ${formatMathNumber(answer)}.`,
   };
 }
 

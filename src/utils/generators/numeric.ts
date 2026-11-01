@@ -128,10 +128,19 @@ export function generateDecimalProblem(
       answer = roundToPrecision(num1 - num2, maxPlaces);
       explanation = `Paso 1: Coloca los decimales en columna.\nPaso 2: Resta ${formatMathNumber(num1)} - ${formatMathNumber(num2)} = ${formatMathNumber(answer)}.`;
       break;
-    case 'decimal-multiplication':
-      answer = roundToPrecision(num1 * num2, maxPlaces + 1);
+    case 'decimal-multiplication': {
+      // Cifras acotadas para que el producto sea exacto y manejable: p1 + p2 ≤ 3.
+      const places1 = Math.min(maxPlaces, 2);
+      const places2 = 1;
+      num1 = roundToPrecision(num1, places1);
+      num2 = randomDecimal(Math.max(2, Math.floor(maxWhole / 2)), places2);
+      if (num2 > num1) {
+        [num1, num2] = [num2, num1];
+      }
+      answer = roundToPrecision(num1 * num2, places1 + places2);
       explanation = `Paso 1: Multiplica como si fueran números enteros.\nPaso 2: Cuenta las cifras decimales.\nPaso 3: ${formatMathNumber(num1)} × ${formatMathNumber(num2)} = ${formatMathNumber(answer)}.`;
       break;
+    }
     case 'decimal-division': {
       num2 = randomDecimal(Math.max(2, Math.min(levelConfig.maxNumberDiv, 12)), Math.min(maxPlaces, 2));
       answer = randomDecimal(Math.max(2, Math.floor(maxWhole / 3)), Math.min(maxPlaces, 2));

@@ -31,6 +31,12 @@ export function fractionEquals(a: Fraction, b: Fraction): boolean {
   return left.numerator === right.numerator && left.denominator === right.denominator;
 }
 
+/** true si la fracción ya está en forma simplificada (y no es 0/1). */
+export function isSimplifiedFraction(frac: Fraction): boolean {
+  const simplified = simplifyFraction(frac);
+  return simplified.numerator === frac.numerator && simplified.denominator === Math.abs(frac.denominator);
+}
+
 export function formatFraction(frac: Fraction): string {
   const simplified = simplifyFraction(frac);
   return `${simplified.numerator}/${simplified.denominator}`;

@@ -45,7 +45,9 @@ export function generatePercentageProblem(levelConfig: LevelConfig): PercentageP
   }
 
   if (template === 3) {
-    const price = randomInt(20, Math.max(20, levelConfig.maxPercentageBase));
+    // Precio divisible por el porcentaje: descuento y precio final sin céntimos raros.
+    const divisor = getPercentDivisor(percent);
+    const price = divisor * randomInt(2, Math.max(3, Math.floor(levelConfig.maxPercentageBase / divisor)));
     const answer = roundToPrecision(price * (1 - percent / 100), 2);
     return {
       prompt: `Una bici cuesta ${price} € y tiene un ${percent}% de descuento. ¿Cuánto pagas?`,
@@ -85,24 +87,43 @@ export function generatePercentageProblem(levelConfig: LevelConfig): PercentageP
     const p2 = pickRandom(PERCENT_OPTIONS);
     const v1 = roundToPrecision(base1 * p1 / 100, 2);
     const v2 = roundToPrecision(base2 * p2 / 100, 2);
-    const answer = v1 > v2 ? v1 : v2;
+    // Sin empates: el enunciado comparativo exige un único valor mayor claro.
+    if (v1 === v2) {
+      return generatePercentageProblem(levelConfig);
+    }
+    const answer = Math.max(v1, v2);
     return {
-      prompt: `¿Qué es más: el ${p1}% de ${base1} o el ${p2}% de ${base2}?`,
+      prompt: `¿Qué es más: el ${p1}% de ${base1} o el ${p2}% de ${base2}? Escribe el valor más grande.`,
       operation: 'percentage',
       answer,
       explanation: `${p1}% de ${base1} = ${formatMathNumber(v1)}. ${p2}% de ${base2} = ${formatMathNumber(v2)}. Mayor: ${formatMathNumber(answer)}.`,
     };
   }
 
-  const from = randomInt(20, levelConfig.maxPercentageBase);
-  const to = randomInt(Math.floor(from * 0.5), from);
-  const answer = roundToPrecision(((from - to) / from) * 100, 0);
+  // Rebaja exacta: el precio inicial es múltiplo que hace entero el porcentaje.
+  const gcdPct = gcdForPercent(percent);
+  const step = 100 / gcdPct;
+  const maxK = Math.max(2, Math.floor(levelConfig.maxPercentageBase / step));
+  const from = step * randomInt(2, maxK);
+  const to = from - (from * percent) / 100;
+  const answer = percent;
   return {
-    prompt: `Un artículo pasa de ${from} € a ${to} €. ¿Qué porcentaje de descuento es?`,
+    prompt: `Un artículo pasa de ${formatMathNumber(from)} € a ${formatMathNumber(to)} €. ¿Qué porcentaje de descuento es?`,
     operation: 'percentage',
     answer,
-    explanation: `Paso 1: Descuento ${from - to} € sobre ${from} €.\nPaso 2: (${from - to}/${from}) × 100 = ${answer}%.`,
+    explanation: `Paso 1: Descuento ${formatMathNumber(from - to)} € sobre ${formatMathNumber(from)} €.\nPaso 2: (${formatMathNumber(from - to)}/${formatMathNumber(from)}) × 100 = ${answer}%.`,
   };
+}
+
+function gcdForPercent(percent: number): number {
+  let a = percent;
+  let b = 100;
+  while (b !== 0) {
+    const temp = a % b;
+    a = b;
+    b = temp;
+  }
+  return a || 100;
 }
 
 function getPercentDivisor(percent: number): number {

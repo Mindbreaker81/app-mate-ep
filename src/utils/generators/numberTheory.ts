@@ -22,8 +22,15 @@ export function generateFactorizationProblem(levelConfig: LevelConfig): Factoriz
 }
 
 export function generateGcdProblem(levelConfig: LevelConfig): GcdLcmProblem {
-  const num1 = randomInt(6, Math.max(6, levelConfig.maxFactorizationNumber));
-  const num2 = randomInt(6, Math.max(6, levelConfig.maxFactorizationNumber));
+  const max = Math.max(6, levelConfig.maxFactorizationNumber);
+  // Se construyen a partir de un factor común para que el MCD no sea trivial (1) casi nunca.
+  const common = randomInt(2, Math.min(12, Math.max(2, Math.floor(max / 4))));
+  const range = Math.max(2, Math.floor(max / common) - 1);
+  let num1 = common * randomInt(1, range);
+  let num2 = common * randomInt(1, range);
+  while (num1 === num2) {
+    num2 = common * randomInt(1, range);
+  }
   const answer = gcd(num1, num2);
   return {
     prompt: `Calcula el MCD de ${num1} y ${num2}`,

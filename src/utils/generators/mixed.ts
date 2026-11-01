@@ -71,7 +71,8 @@ export function generateMixedProblem(level: number, levelConfig: LevelConfig): M
       const divisor = buildDivisor();
       const quotient = randomInt(2, 10);
       const dividend = divisor * quotient;
-      const c = buildAddition();
+      // El minuendo debe superar al cociente para que el resultado no sea negativo.
+      const c = quotient + randomInt(1, Math.max(2, additionRange));
       const answer = c - quotient;
       return mk(`${c} - ${dividend} ÷ ${divisor}`, [c, '-', dividend, '÷', divisor], answer,
         `Paso 1: ${dividend} ÷ ${divisor} = ${quotient}.\nPaso 2: ${c} - ${quotient} = ${answer}.`);
@@ -97,8 +98,9 @@ export function generateMixedProblem(level: number, levelConfig: LevelConfig): M
     () => {
       const a = buildFactor();
       const b = buildFactor();
-      const c = buildAddition();
       const product = a * b;
+      // Se resta una cantidad menor que el producto para no obtener negativos en Primaria.
+      const c = randomInt(1, Math.max(1, product - 1));
       const answer = product - c;
       return mk(`${a} × ${b} - ${c}`, [a, '×', b, '-', c], answer,
         `Paso 1: ${a} × ${b} = ${product}.\nPaso 2: ${product} - ${c} = ${answer}.`);

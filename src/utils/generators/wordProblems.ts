@@ -6,9 +6,10 @@ type WordTemplate = (config: LevelConfig) => WordProblem;
 
 const templates: WordTemplate[] = [
   (config) => {
-    const total = randomInt(12, config.maxNumber);
+    // Resultado exacto: se elige primero cuánto recibe cada uno y de ahí el total.
     const friends = randomInt(2, 6);
-    const answer = Math.floor(total / friends);
+    const answer = randomInt(2, Math.max(3, Math.floor(config.maxNumber / friends)));
+    const total = friends * answer;
     return {
       prompt: `Tienes ${total} caramelos y los repartes entre ${friends} amigos por igual. ¿Cuántos recibe cada uno?`,
       operation: 'word-problem',
@@ -97,13 +98,13 @@ const templates: WordTemplate[] = [
   (config) => {
     const divisor = randomInt(3, Math.min(config.maxNumberDiv, 9));
     const quotient = randomInt(2, 8);
-    const remainder = randomInt(1, divisor - 1);
-    const total = divisor * quotient + remainder;
+    // Reparto exacto: sin resto, para que "por igual" no dé lugar a dudas.
+    const total = divisor * quotient;
     return {
       prompt: `Repartes ${total} galletas entre ${divisor} niños. ¿Cuántas recibe cada uno?`,
       operation: 'word-problem',
       answer: quotient,
-      explanation: `Paso 1: ${total} ÷ ${divisor} = ${quotient} resto ${remainder}. Cada uno recibe ${quotient}.`,
+      explanation: `Paso 1: ${total} ÷ ${divisor} = ${quotient}. Cada uno recibe ${quotient}.`,
     };
   },
   (config) => {
@@ -130,8 +131,9 @@ const templates: WordTemplate[] = [
     };
   },
   (config) => {
-    const total = randomInt(8, config.maxNumber);
-    const half = Math.floor(total / 2);
+    // Total par para que "la mitad" sea un número exacto.
+    const total = 2 * randomInt(4, Math.max(4, Math.floor(config.maxNumber / 2)));
+    const half = total / 2;
     return {
       prompt: `En una fiesta hay ${total} invitados. La mitad son niños. ¿Cuántos niños hay?`,
       operation: 'word-problem',
