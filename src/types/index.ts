@@ -480,6 +480,10 @@ export interface GameState {
   daily: DailyProgress | null;
   /** Días (YYYY-MM-DD) con al menos un ejercicio, para la racha de días. */
   practiceDays: string[];
+  /** Progreso por habilidad del camino de aprendizaje. */
+  skillProgress: Record<string, SkillProgress>;
+  /** Sesión diaria en curso: ids de habilidad ordenados (10 ejercicios). */
+  dailySession: string[] | null;
 }
 
 export type SerializedAnswer =
@@ -532,6 +536,31 @@ export interface WeeklyProgress {
 }
 
 export type OperationKey = Operation;
+
+/** Estado de una habilidad en el camino de aprendizaje. */
+export type SkillState = 'locked' | 'practicing' | 'dominated' | 'review';
+
+/** Progreso de una habilidad (persistido dentro de game_state.data, sin migración). */
+export interface SkillProgress {
+  /** Estado guardado ('practicing' | 'dominated' | 'review'); 'locked' se deriva. */
+  state: Exclude<SkillState, 'locked'>;
+  /** Resultados de la ventana reciente (máx. 12), del más antiguo al más nuevo. */
+  recentResults: boolean[];
+  /** Aciertos seguidos al primer intento (para subir de nivel). */
+  streakCorrect: number;
+  /** Fallos seguidos (para bajar de nivel). */
+  streakWrong: number;
+  /** Días (YYYY-MM-DD) con actividad en esta habilidad. */
+  activeDays: string[];
+  /** Fecha (YYYY-MM-DD) en la que toca repaso, si la habilidad está dominada. */
+  reviewDueDate: string | null;
+  /** Repasos completados (índice dentro de los intervalos de repaso). */
+  reviewCount: number;
+  /** Nivel 1–3 dentro de la habilidad. */
+  level: number;
+  /** Sello temporal del último cambio, para fusionar local y remoto. */
+  updatedAt: string;
+}
 
 export type OperationStats = Record<OperationKey, OperationDetail>;
 
@@ -626,6 +655,8 @@ export interface PersistedGameState {
   achievements: Achievement[];
   daily?: DailyProgress | null;
   practiceDays?: string[];
+  /** Progreso por habilidad del camino de aprendizaje (game_state.data, sin migración). */
+  skills?: Record<string, SkillProgress>;
 }
 
 export type GameAction =
@@ -639,6 +670,8 @@ export type GameAction =
         difficulty: Difficulty;
         userAnswer: SerializedAnswer;
         problem: Problem;
+        /** true si es el primer intento de este ejercicio (evidencia de dominio). */
+        isFirstTry?: boolean;
       };
     }
   | { type: 'NEXT_PROBLEM' }
@@ -652,6 +685,9 @@ export type GameAction =
   | { type: 'SET_TIME_MODE'; payload: TimeMode }
   | { type: 'SET_LEVEL_MODE'; payload: LevelMode }
   | { type: 'SET_MANUAL_LEVEL'; payload: number }
+  | { type: 'INIT_SKILL_PROGRESS'; payload: Record<string, SkillProgress> }
+  | { type: 'START_DAILY_SESSION'; payload: string[] }
+  | { type: 'CANCEL_DAILY_SESSION' }
   | { type: 'UPDATE_TIMER'; payload: number }
   | { type: 'START_TIMER' }
   | { type: 'STOP_TIMER' }

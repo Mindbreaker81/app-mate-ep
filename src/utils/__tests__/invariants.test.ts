@@ -1,19 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import type { GradeId, Operation, Problem } from '../../types';
+import type { Fraction, GradeId, MixedNumber, Operation, Problem, RemainderAnswer } from '../../types';
 import { GRADE_CONFIGS, LEVELS } from '../gameConfig';
 import { generateOperationForTest, generateProblem } from '../generators';
 import { __templates } from '../generators/wordProblems';
 import { generateGcdProblem } from '../generators/numberTheory';
 import { formatMathNumber } from '../mathUtils';
 import { answersMatch, formatProblemAnswer } from '../problemUtils';
-import type { GradeId } from '../../types';
 
 /** Entrada canónica que escribiría un usuario para la respuesta correcta. */
-function correctInput(problem: Problem): string | { [k: string]: number } {
+function correctInput(problem: Problem): string | Fraction | MixedNumber | RemainderAnswer {
   const answer = (problem as { answer: unknown }).answer;
 
   if (answer !== null && typeof answer === 'object') {
-    return answer as { [k: string]: number };
+    return answer as Fraction | MixedNumber | RemainderAnswer;
   }
   if (typeof answer === 'number') {
     return formatMathNumber(answer);
@@ -22,7 +21,8 @@ function correctInput(problem: Problem): string | { [k: string]: number } {
 }
 
 function expectValidText(problem: Problem) {
-  for (const text of [problem.prompt ?? '', problem.explanation]) {
+  const prompt = 'prompt' in problem ? problem.prompt : '';
+  for (const text of [prompt ?? '', problem.explanation]) {
     expect(text, `prompt/explicación con NaN/undefined: ${text}`).toMatch(/^(?![\s\S]*(?:NaN|undefined|Infinity))/);
   }
 }

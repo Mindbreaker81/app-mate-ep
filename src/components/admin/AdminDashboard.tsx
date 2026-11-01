@@ -5,6 +5,7 @@ import { fetchUserStats } from '../../services/statsService';
 import type { DetailedStats } from '../../types';
 import { buildChildReport, type ChildReport } from '../../utils/childReport';
 import { attemptsToCsv } from '../../utils/attemptsCsv';
+import { buildSkillReport, skillReportToCsv } from '../../utils/skillReport';
 import { buildWeeklyTrend } from '../../utils/weeklyTrend';
 import { StatsView } from '../StatsView';
 import { PinResetDialog } from './PinResetDialog';
@@ -89,6 +90,18 @@ export function AdminDashboard() {
     URL.revokeObjectURL(url);
   };
 
+  const exportSkillCsv = () => {
+    if (!attempts || attempts.length === 0) return;
+    const csv = skillReportToCsv(buildSkillReport(attempts));
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pitagoritas-habilidades-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const openChild = async (child: ChildOverview) => {
     setSelected(child);
     setSelectedStats(null);
@@ -154,6 +167,14 @@ export function AdminDashboard() {
                 className="text-sm font-semibold px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 ⬇️ Exportar CSV
+              </button>
+              <button
+                type="button"
+                onClick={exportSkillCsv}
+                disabled={!attempts || attempts.length === 0}
+                className="text-sm font-semibold px-3 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                ⬇️ Por habilidad
               </button>
             </div>
 

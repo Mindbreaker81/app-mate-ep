@@ -8,6 +8,7 @@ import type {
   MixedNumber,
   PracticeMode,
   RemainderAnswer,
+  SkillProgress,
   TimeMode,
   Problem,
   AttemptPayload,
@@ -22,12 +23,14 @@ import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDiff
 import { getTimeModeConfig } from '../utils/timeConfig';
 import { useAuth } from './AuthContext';
 import { recordAttemptDirect, flushQueue, migrateLegacyData } from '../services/attemptService';
-import { fetchUserStats } from '../services/statsService';
+import { fetchUserStats, fetchOwnAttempts } from '../services/statsService';
 import { loadGameState, saveGameState } from '../services/gameStateService';
 import { simplifyFraction } from '../utils/fractionUtils';
 import { logger } from '../utils/logger';
 import { evaluateAchievements } from '../utils/achievementEngine';
 import { updateDailyProgress, updatePracticeDays } from '../utils/dailyGoal';
+import { skillIdForOperation } from '../utils/skillCatalog';
+import { mergeSkillProgress, recordSkillAttempt, initializeSkillProgressFromAttempts } from '../utils/skillProgress';
 import {
   answersMatch,
   isFactorizationProblem,
@@ -259,6 +262,23 @@ function getEffectiveLevel(state: Pick<GameState, 'level' | 'levelMode' | 'manua
   return state.levelMode === 'manual' ? state.manualLevel : state.level;
 }
 
+/** Actualiza el progreso de la habilidad del problema respondido (no-op si no tiene). */
+function updateSkillProgressForProblem(
+  state: Pick<GameState, 'skillProgress'>,
+  problem: Problem,
+  isCorrect: boolean,
+  isFirstTry: boolean,
+): Record<string, SkillProgress> {
+  const skillId = skillIdForOperation(problem.operation);
+  if (!skillId) {
+    return state.skillProgress;
+  }
+  return {
+    ...state.skillProgress,
+    [skillId]: recordSkillAttempt(state.skillProgress[skillId], { isCorrect, isFirstTry }),
+  };
+}
+
 export function toPersistedGameState(state: GameState): PersistedGameState {
   return {
     maxScore: state.maxScore,
@@ -269,6 +289,7 @@ export function toPersistedGameState(state: GameState): PersistedGameState {
     achievements: state.achievements,
     daily: state.daily,
     practiceDays: state.practiceDays,
+    skills: state.skillProgress,
   };
 }
 
@@ -296,6 +317,8 @@ const createInitialState = (): GameState => ({
   recentAchievement: null,
   daily: null,
   practiceDays: [],
+  skillProgress: {},
+  dailySession: null,
 });
 
 function createProblemForState(state: Pick<GameState, 'level' | 'levelMode' | 'manualLevel' | 'practiceMode' | 'grade'>): Problem {
@@ -393,6 +416,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         recentAchievement: enrichedUnlocked[0] ?? null,
         daily: updateDailyProgress(state.daily, new Date()),
         practiceDays: updatePracticeDays(state.practiceDays, new Date()),
+        skillProgress: updateSkillProgressForProblem(state, problem, isCorrect, action.payload.isFirstTry ?? true),
       };
     }
 
@@ -536,8 +560,21 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         achievements: mergedAchievements,
         daily: mergedDaily,
         practiceDays: mergedPracticeDays,
+        skillProgress: mergeSkillProgress(state.skillProgress, p.skills),
       };
     }
+
+    case 'INIT_SKILL_PROGRESS':
+      // Solo si no hay progreso ya (local o hidratado): nadie debe empezar de cero.
+      return Object.keys(state.skillProgress).length > 0
+        ? state
+        : { ...state, skillProgress: action.payload };
+
+    case 'START_DAILY_SESSION':
+      return { ...state, dailySession: action.payload };
+
+    case 'CANCEL_DAILY_SESSION':
+      return { ...state, dailySession: null };
 
     case 'UPDATE_TIMER':
       return {
@@ -622,7 +659,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         timeRemaining: state.timeRemaining,
       });
 
-      dispatch({ type: 'CHECK_ANSWER', payload: evaluation });
+      dispatch({ type: 'CHECK_ANSWER', payload: { ...evaluation, isFirstTry: state.isCorrect === null } });
 
       if (sessionUserId) {
         const attemptPayload = buildAttemptPayload(
@@ -638,6 +675,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       state.currentProblem,
       state.userAnswer,
       state.level,
+      state.levelMode,
+      state.manualLevel,
+      state.isCorrect,
       state.practiceMode,
       state.timeMode,
       state.timeRemaining,
@@ -748,6 +788,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     state.achievements,
     state.daily,
     state.practiceDays,
+    state.skillProgress,
   ]);
 
   useEffect(() => {
@@ -801,6 +842,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         if (cached) {
           dispatch({ type: 'HYDRATE_PERSISTED', payload: cached });
         }
+      }
+
+      // Camino de aprendizaje: si ni local ni remoto tienen progreso por
+      // habilidad, se reconstruye desde el historial de intentos del niño
+      // (INIT_SKILL_PROGRESS es no-op si ya hay progreso fusionado).
+      try {
+        const ownAttempts = await fetchOwnAttempts(userId);
+        if (ownAttempts && ownAttempts.length > 0) {
+          dispatch({ type: 'INIT_SKILL_PROGRESS', payload: initializeSkillProgressFromAttempts(ownAttempts) });
+        }
+      } catch (error) {
+        logger.warn('No se pudo inicializar el progreso por habilidades desde el historial.', error);
       }
 
       await flushQueue(userId);
