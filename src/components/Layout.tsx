@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Help } from './Help';
+import { MathGlossary } from './MathGlossary';
 import { useAuth } from '../context/AuthContext';
 
 interface LayoutProps {
@@ -11,6 +12,7 @@ const CHANGELOG_URL = 'https://github.com/Mindbreaker81/app-mate-ep/blob/main/CH
 
 export function Layout({ children }: LayoutProps) {
   const [showHelp, setShowHelp] = useState(false);
+  const [showGlossary, setShowGlossary] = useState(false);
   const { profile, signOut } = useAuth();
   const currentYear = new Date().getFullYear();
 
@@ -53,6 +55,13 @@ export function Layout({ children }: LayoutProps) {
             >
               ¿Cómo se usa?
             </button>
+            <button
+              type="button"
+              className="px-4 py-2 bg-purple-500 text-white rounded shadow hover:bg-purple-700 transition-colors text-base"
+              onClick={() => setShowGlossary(true)}
+            >
+              📖 Glosario
+            </button>
             {profile && (
               <>
                 <div className="flex items-center gap-2 bg-white rounded-full px-3 py-1 shadow">
@@ -79,6 +88,8 @@ export function Layout({ children }: LayoutProps) {
         <main className="max-w-4xl mx-auto flex-1 w-full">
           {showHelp ? <Help onClose={() => setShowHelp(false)} /> : children}
         </main>
+        {/* El glosario es un overlay: no desmonta el ejercicio ni el temporizador. */}
+        {showGlossary && <MathGlossary onClose={() => setShowGlossary(false)} />}
         <footer className="text-center mt-12 text-gray-500 text-sm">
           <p>¡Diviértete aprendiendo matemáticas! 🎓</p>
           <p className="mt-2">

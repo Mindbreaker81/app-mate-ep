@@ -2,7 +2,9 @@ import React, { useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { formatTime, getTimeModeConfig } from '../utils/timeConfig';
 import { getPracticeModeConfig } from '../utils/practiceConfig';
-import type { Fraction, MixedNumber, RemainderAnswer } from '../types';
+import type { Fraction, MixedNumber, Operation, RemainderAnswer } from '../types';
+import { MathGlossary } from './MathGlossary';
+import { glossaryTermsForOperation } from '../utils/glossary';
 import {
   allowsDecimalAnswer,
   allowsNegativeAnswer,
@@ -67,6 +69,8 @@ export function Exercise({ active = true }: { active?: boolean }) {
   // Segundo intento antes de revelar la solución (F4).
   const [attemptCount, setAttemptCount] = React.useState(0);
   const [hintLevel, setHintLevel] = React.useState<0 | 1 | 2>(0);
+  // Glosario (PIT-21): overlay modal, no desmonta el ejercicio.
+  const [glossaryTermId, setGlossaryTermId] = React.useState<string | null>(null);
 
   // La solución solo se revela tras fallar dos veces.
   const revealed = isCorrect === false && attemptCount >= 2;
@@ -155,6 +159,7 @@ export function Exercise({ active = true }: { active?: boolean }) {
     setShowExplanation(false);
     setAttemptCount(0);
     setHintLevel(0);
+    setGlossaryTermId(null);
   }, [currentProblem]);
 
   useEffect(() => {
@@ -666,7 +671,10 @@ export function Exercise({ active = true }: { active?: boolean }) {
               )}
               <div className="mt-3">
                 {showExplanation ? (
-                  <ExplanationBox explanation={currentProblem.explanation} />
+                  <>
+                    <ExplanationBox explanation={currentProblem.explanation} />
+                    <GlossaryTermLinks operation={currentProblem.operation} onOpen={setGlossaryTermId} />
+                  </>
                 ) : (
                   <button
                     type="button"
@@ -703,6 +711,7 @@ export function Exercise({ active = true }: { active?: boolean }) {
             <div className="mt-6 text-red-700 font-bold text-xl text-center" role="status" aria-live="polite">
               La respuesta correcta es: {formatProblemAnswer(currentProblem)}
               <ExplanationBox explanation={currentProblem.explanation} />
+              <GlossaryTermLinks operation={currentProblem.operation} onOpen={setGlossaryTermId} />
             </div>
           )}
 
@@ -715,6 +724,9 @@ export function Exercise({ active = true }: { active?: boolean }) {
           </div>
         </div>
         </div>
+      {glossaryTermId !== null && (
+        <MathGlossary initialTermId={glossaryTermId} onClose={() => setGlossaryTermId(null)} />
+      )}
     </AnswerKeyboardProvider>
   );
 }
@@ -724,5 +736,36 @@ function ExplanationBox({ explanation }: { explanation: string }) {
     <pre className="bg-gray-100 rounded p-3 mt-4 text-left text-base whitespace-pre-wrap font-sans font-normal text-gray-800">
       {explanation}
     </pre>
+  );
+}
+
+// Enlaces al glosario por IDs de término explícitos según la operación (PIT-21).
+function GlossaryTermLinks({
+  operation,
+  onOpen,
+}: {
+  operation: Operation;
+  onOpen: (termId: string) => void;
+}) {
+  const terms = glossaryTermsForOperation(operation);
+  if (terms.length === 0) {
+    return null;
+  }
+  return (
+    <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-base font-normal text-gray-700">
+      <span aria-hidden="true">📖</span>
+      <span className="font-semibold">Glosario:</span>
+      {terms.map((term) => (
+        <button
+          key={term.id}
+          type="button"
+          onClick={() => onOpen(term.id)}
+          aria-label={`Ver «${term.es}» en el glosario`}
+          className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-800 hover:bg-blue-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 transition-colors"
+        >
+          {term.es} · {term.ca}
+        </button>
+      ))}
+    </div>
   );
 }

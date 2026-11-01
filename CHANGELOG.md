@@ -16,6 +16,17 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   con nombres accesibles que no envían el formulario. También disponible en la
   prueba de colocación. Preferencia guardada localmente por usuario
   (`pitagoritas.mathKeyboard.<userId>`), sin migración.
+- **Glosario catalán–castellano** (PIT-21): 40 términos matemáticos usados por
+  las operaciones actuales, cada uno con término en castellano y catalán,
+  definición breve y ejemplo, en `src/data/mathGlossary.ts` (lista única,
+  pendiente de revisión familiar del vocabulario). Buscador insensible a
+  mayúsculas y tildes («mitjana», «circumferencia», «perímetre»). Acceso desde
+  la cabecera, desde la ayuda y desde las explicaciones de cada ejercicio con
+  enlaces por IDs de término explícitos según la operación; fichas con «Ver
+  también» para los pares que se confunden (media/mediana, círculo/
+  circunferencia). El panel es un overlay modal accesible (Escape, retorno de
+  foco, navegación con teclado) que no desmonta el ejercicio ni detiene el
+  temporizador; funciona offline. La interfaz sigue en castellano.
 
 ## [4.1.0] - 2026-11-02
 
