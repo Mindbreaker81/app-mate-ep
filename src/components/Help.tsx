@@ -28,10 +28,10 @@ export const Help: React.FC<HelpProps> = ({ onClose }) => (
         <b>Respuestas:</b> Fracciones deben estar simplificadas. En divisiones con resto escribe cociente y resto. En comparaciones elige una opción.
       </li>
       <li>
-        <b>5.º de Primaria incluye:</b> decimales, fracciones avanzadas, potencias, raíces, porcentajes, estimación, MCD/MCM, problemas con enunciado, geometría, unidades y media aritmética.
+        <b>5.º de Primaria incluye:</b> decimales, fracciones avanzadas, potencias, raíces, porcentajes, estimación, MCD/MCM, problemas con enunciado, geometría, unidades de medida y volumen, estadística, valor posicional, secuencias, proporcionalidad y finanzas (IVA, rebajas, interés).
       </li>
       <li>
-        <b>6.º de Primaria incluye:</b> enteros negativos, ecuaciones simples, razones y proporciones, mediana/moda/rango, probabilidad, círculo y volumen, escalas y todo el contenido de 5.º.
+        <b>6.º de Primaria incluye:</b> enteros negativos, ecuaciones de uno y dos pasos, razones y proporcionalidad directa e inversa, mediana/moda/rango, probabilidad (comparando casos), círculo y volumen, escalas y todo el contenido de 5.º.
       </li>
       <li>
         <b>Estadísticas y logros:</b> Consulta tu progreso y desbloquea medallas al practicar diferentes áreas.

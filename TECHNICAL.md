@@ -490,15 +490,30 @@ onClick={async (e) => {
 
 ---
 
-## Currículo por curso (v3.0)
+## Currículo por curso (v3.2 sin publicar)
 
 | Curso | ID | Operaciones | Modos práctica |
 |-------|-----|-------------|----------------|
 | 4.º | `4t` | 7 | 8 |
-| 5.º | `5e` | 39 | 20 |
-| 6.º | `6e` | 57 | 26 |
+| 5.º | `5e` | 43 | 22 |
+| 6.º | `6e` | 64 | 28 |
 
-**Generadores 6.º:** `integers.ts`, `equations.ts`, `ratios.ts`, `probability.ts`, `geometryAdvanced.ts`, `scales.ts` (+ `statistics.ts` ampliado).
+**Generadores 6.º:** `integers.ts`, `equations.ts`, `ratios.ts`, `probability.ts`,
+`geometryAdvanced.ts`, `scales.ts` (+ `statistics.ts` ampliado).
+
+**Generadores del ciclo 6-12-1:** `curriculum.ts` añade `place-value` (valor
+posicional hasta milésimas), `sequence` (aritméticas y geométricas),
+`proportionality-check` (opción múltiple Sí/No), `finance` (IVA, mejores precios,
+rebajas, interés simple), `probability-compare`, `two-step-equation` y
+`inverse-proportion`. `units.ts` cubre las unidades del ciclo completo (mm, dm,
+dam, hm, cL, dL, mg, t, superficie y volumen) y `probability.ts` tiene 5
+plantillas que aceptan decimal o fracción.
+
+**Catálogo de habilidades:** `skillCatalog.ts` define habilidades por área y tier
+con prerrequisitos; `MyPath.tsx` usa ese catálogo para la sesión diaria, la
+prueba de colocación y el repaso espaciado. Las habilidades de ampliación
+(ecuaciones de dos pasos, proporcionalidad inversa) son puente a 1.º de ESO y
+solo se ofrecen con los prerrequisitos dominados.
 
 **Logros:** 28 total (21 de v2.0 + 7 de v3.0).
 
@@ -506,5 +521,5 @@ Ver `docs/PLAN_6E_PRIMARIA.md` para el diseño detallado de 6.º.
 
 ---
 
-**Última actualización:** 2026-07-01
-**Versión:** 3.0.0
+**Última actualización:** 2026-07-19
+**Versión:** 3.1.1

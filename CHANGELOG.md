@@ -5,6 +5,36 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Añadido
+- **Catálogo de habilidades** (`skillCatalog.ts`): progreso persistido por habilidad,
+  niveles y repaso espaciado
+- **Pestaña «Mi camino»**: sesión diaria guiada, prueba de colocación y chip de
+  habilidad en curso
+- **Pistas graduales y segundo intento** antes de revelar la solución, con aviso
+  de simplificación en fracciones
+- **Ampliación curricular del ciclo 6-12-1** (7 operaciones nuevas, 64 en 6.º):
+  - Valor posicional hasta milésimas (`place-value`)
+  - Secuencias aritméticas y geométricas (`sequence`)
+  - Comprobación de proporcionalidad con tabla y opción múltiple (`proportionality-check`)
+  - Finanzas: IVA, mejores precios, rebajas e interés simple (`finance`)
+  - Comparar probabilidades con contexto (ruleta, bolsa, dados) (`probability-compare`)
+  - Ecuaciones de dos pasos (`two-step-equation`)
+  - Proporcionalidad inversa (obreros y días, trabajo constante) (`inverse-proportion`)
+- **2 modos de práctica nuevos**: `number-sense` y `finance` (22 modos en 5.º, 28 en 6.º)
+- **3 habilidades nuevas en «Mi camino»** como puente a 1.º de ESO, con
+  prerrequisitos dominados: ecuaciones de dos pasos y proporcionalidad inversa
+- **Unidades de medida completas**: mm, dm, dam, hm, cL, dL, mg, toneladas,
+  superficie (m² ↔ cm²) y volumen (1 L = 1000 cm³)
+- **Probabilidad con plantillas variadas** que aceptan la respuesta como
+  decimal o fracción
+
+### Corregido
+- **Resta de nivel 1** podía dar resultado 0 (ahora siempre positivo estricto)
+- **Comparación de opciones de texto** en los nuevos tipos de opción múltiple
+  («¿Proporcional?» y comparar probabilidades) rechazaba la respuesta correcta
+
 ## [3.1.1] - 2026-07-19
 
 ### Corregido

@@ -19,11 +19,11 @@ Una aplicación web interactiva para que niños de **4.º, 5.º y 6.º de Primar
 - **Persistencia en la nube**: Datos guardados en Supabase con seguridad RLS
 
 ### 📝 Ejercicios y Operaciones
-- **57 tipos de operaciones** en 6.º de Primaria (39 en 5.º, 7 en 4.º)
+- **64 tipos de operaciones** en 6.º de Primaria (43 en 5.º, 7 en 4.º)
 - **4.º:** suma, resta, multiplicación, división, fracciones (+/−) y operaciones mixtas
-- **5.º:** decimales, fracciones (×/÷), mixtas, potencias, raíces, porcentajes, estimación, factorización, MCD/MCM, problemas verbales, geometría, medidas, estadística y más
-- **6.º:** enteros negativos, ecuaciones, razones, probabilidad, círculo/volumen, escalas y todo el contenido de 5.º
-- **26 modos de práctica** agrupados por categorías
+- **5.º:** decimales, fracciones (×/÷), mixtas, potencias, raíces, porcentajes, estimación, factorización, MCD/MCM, problemas verbales, geometría, medidas (superficie y volumen), estadística, valor posicional, secuencias, proporcionalidad y finanzas
+- **6.º:** enteros negativos, ecuaciones (de uno y dos pasos), razones, proporcionalidad directa e inversa, probabilidad, círculo/volumen, escalas y todo el contenido de 5.º
+- **28 modos de práctica** agrupados por categorías
 - **10 niveles progresivos** con selector manual opcional
 - **Validación robusta**: Fracciones deben estar simplificadas
 - **Explicaciones paso a paso**: Solución detallada cuando fallas
@@ -139,7 +139,7 @@ npm run test:ui
 npm test -- --coverage
 ```
 
-**Cobertura actual:** ~36% con 32 tests pasando
+**Cobertura actual:** 238 tests pasando (lógica crítica: generadores, estadísticas, autenticación)
 
 ## 🏗️ Scripts disponibles
 
@@ -210,7 +210,8 @@ npm run lint:fix     # Linting con auto-fix
 
 - **[CHANGELOG.md](./CHANGELOG.md)** - Historial de cambios y versiones
 - **[TECHNICAL.md](./TECHNICAL.md)** - Documentación técnica completa
-- **[PLAN_DE_TRABAJO.md](./PLAN_DE_TRABAJO.md)** - Plan de desarrollo y fases
+- **[DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md)** - Migraciones de base de datos
+- **[docs/PLAN_6E_PRIMARIA.md](./docs/PLAN_6E_PRIMARIA.md)** - Plan curricular de 6.º
 
 ## 🌐 Despliegue en Vercel
 
@@ -328,7 +329,7 @@ pitagoritas/
 
 Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de cambios.
 
-**Última versión:** 1.0.0 (2025-10-26)
+**Última versión:** 3.1.1 (ver [CHANGELOG.md](./CHANGELOG.md))
 
 ## 📄 Licencia
 
