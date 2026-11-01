@@ -31,6 +31,9 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   decimal o fracción
 
 ### Corregido
+- **Sesión diaria de «Mi camino»**: se guarda en localStorage por usuario y se
+  reanuda tras recargar la app (cola, habilidad en curso, ejercicios hechos y
+  fecha); se descarta al cambiar de día o de usuario (PIT-28)
 - **Prueba de colocación**: se muestran todos los enunciados, se rechazan respuestas vacías y se mejora la accesibilidad.
 - **Mi camino**: la sesión avanza por las habilidades previstas, genera ejercicios del nivel de cada habilidad y cuenta cada ejercicio una sola vez.
 - **Cambio de pestaña**: se conservan respuestas y pistas, y el temporizador se pausa mientras el ejercicio está oculto.

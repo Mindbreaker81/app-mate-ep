@@ -556,7 +556,7 @@ export interface GameState {
   skillProgress: Record<string, SkillProgress>;
   /** Sesión diaria en curso: ids de habilidad pendientes tras la actual ([] = agotada). */
   dailySession: string[] | null;
-  /** Ejercicios respondidos dentro de la sesión diaria en curso (no persistido). */
+  /** Ejercicios respondidos dentro de la sesión diaria en curso. */
   sessionDone: number;
   /** Día local (YYYY-MM-DD) al que pertenece la sesión; se reinicia al cambiar de día. */
   sessionDate: string | null;
@@ -739,6 +739,22 @@ export interface PersistedGameState {
   skills?: Record<string, SkillProgress>;
 }
 
+/**
+ * Sesión diaria reanudable de «Mi camino». Es efímera y propia del dispositivo:
+ * se guarda en localStorage por usuario (no viaja a Supabase ni a otros
+ * dispositivos) y solo se restaura el mismo día local.
+ */
+export interface DailySessionSnapshot {
+  /** Día local (YYYY-MM-DD) al que pertenece la sesión. */
+  date: string;
+  /** Habilidad del camino en curso. */
+  skillId: string | null;
+  /** Habilidades pendientes tras la actual ([] = cola agotada). */
+  queue: string[];
+  /** Ejercicios respondidos dentro de la sesión. */
+  done: number;
+}
+
 export type GameAction =
   | { type: 'SET_PROBLEM'; payload: Problem }
   | { type: 'SET_ANSWER'; payload: string | Fraction | MixedNumber | RemainderAnswer }
@@ -769,6 +785,7 @@ export type GameAction =
   | { type: 'MERGE_SKILL_PROGRESS'; payload: Record<string, SkillProgress> }
   | { type: 'START_DAILY_SESSION'; payload: string[] }
   | { type: 'CANCEL_DAILY_SESSION' }
+  | { type: 'RESTORE_DAILY_SESSION'; payload: DailySessionSnapshot | null }
   | { type: 'CHECK_SESSION_DAY' }
   | { type: 'SET_PATH_SKILL'; payload: string | null }
   | { type: 'UPDATE_TIMER'; payload: number }

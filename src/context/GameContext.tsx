@@ -31,6 +31,7 @@ import { evaluateAchievements } from '../utils/achievementEngine';
 import { updateDailyProgress, updatePracticeDays } from '../utils/dailyGoal';
 import { getSkillById, skillIdForOperation } from '../utils/skillCatalog';
 import { mergeSkillProgress, recordSkillAttempt, initializeSkillProgressFromAttempts, todayKey } from '../utils/skillProgress';
+import { clearDailySession, loadDailySession, saveDailySession } from '../utils/dailySessionStorage';
 import {
   answersMatch,
   isFactorizationProblem,
@@ -657,6 +658,46 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'CANCEL_DAILY_SESSION':
       return { ...state, dailySession: null, sessionDone: 0, sessionDate: null };
 
+    case 'RESTORE_DAILY_SESSION': {
+      // Sin sesión válida que restaurar (otro día, datos corruptos, otro
+      // usuario): limpiar lo que haya en memoria para no mostrar la sesión
+      // de otro niño ni la de ayer.
+      const snapshot = action.payload;
+      if (!snapshot || snapshot.date !== todayKey()) {
+        if (state.dailySession === null && state.sessionDate === null && !state.pathSkillId) {
+          return state;
+        }
+        const clearedState = { ...state, pathSkillId: null };
+        return {
+          ...state,
+          dailySession: null,
+          sessionDone: 0,
+          sessionDate: null,
+          pathSkillId: null,
+          currentProblem: createProblemForState(clearedState),
+          userAnswer: '',
+          isCorrect: null,
+          recentAchievement: null,
+          ...getResetTimerState(state.timeMode),
+        };
+      }
+      // El ejercicio en curso no viaja (es efímero): se genera uno nuevo de la
+      // habilidad restaurada, igual que al avanzar con «siguiente».
+      const restoredState = { ...state, pathSkillId: snapshot.skillId };
+      return {
+        ...state,
+        dailySession: snapshot.queue,
+        pathSkillId: snapshot.skillId,
+        sessionDone: snapshot.done,
+        sessionDate: snapshot.date,
+        currentProblem: createProblemForState(restoredState),
+        userAnswer: '',
+        isCorrect: null,
+        recentAchievement: null,
+        ...getResetTimerState(state.timeMode),
+      };
+    }
+
     case 'CHECK_SESSION_DAY':
       // La sesión es del día local en que empezó: al cambiar de fecha (app
       // abierta o al volver a primer plano) se cierra por completo — cola,
@@ -735,6 +776,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const userAnswerRef = useRef<GameState['userAnswer']>(state.userAnswer);
   const syncedRef = useRef(false);
   const legacySnapshotRef = useRef<LegacySnapshot | null>(null);
+  // Usuario cuya sesión diaria ya se restauró en este montaje y si había una
+  // sesión viva en memoria en el commit anterior (para saber cuándo borrar la
+  // clave guardada).
+  const sessionOwnerRef = useRef<string | null>(null);
+  const liveSessionRef = useRef(false);
 
   legacySnapshotRef.current = {
     stats: state.stats,
@@ -1008,6 +1054,44 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     void sync();
   }, [sessionUserId]);
+
+  useEffect(() => {
+    if (!hasWindow) {
+      return;
+    }
+    if (!sessionUserId) {
+      // Sin usuario no hay clave donde guardar: la sesión solo vive en
+      // memoria. Al entrar el siguiente niño, la restauración de su clave
+      // (válida o no) descarta lo que quede del anterior.
+      sessionOwnerRef.current = null;
+      liveSessionRef.current = false;
+      return;
+    }
+    if (sessionOwnerRef.current !== sessionUserId) {
+      // Primer commit del usuario: restaurar ANTES de escribir nada, porque
+      // el estado en memoria todavía no es suyo (podría ser de otro niño).
+      sessionOwnerRef.current = sessionUserId;
+      liveSessionRef.current = false;
+      dispatch({ type: 'RESTORE_DAILY_SESSION', payload: loadDailySession(sessionUserId) });
+      return;
+    }
+    if (state.dailySession !== null && state.sessionDate !== null) {
+      liveSessionRef.current = true;
+      saveDailySession(sessionUserId, {
+        date: state.sessionDate,
+        skillId: state.pathSkillId,
+        queue: state.dailySession,
+        done: state.sessionDone,
+      });
+    } else {
+      // Solo borrar la clave si hubo una sesión viva en memoria: al montar aún
+      // no se ha aplicado la restauración y no debe eliminarse lo guardado.
+      if (liveSessionRef.current) {
+        clearDailySession(sessionUserId);
+      }
+      liveSessionRef.current = false;
+    }
+  }, [sessionUserId, state.dailySession, state.sessionDate, state.sessionDone, state.pathSkillId]);
 
   useEffect(() => {
     if (!sessionUserId || !hasWindow) {

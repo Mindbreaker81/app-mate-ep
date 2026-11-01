@@ -26,7 +26,7 @@ npm run build          # typecheck + vite build
 
 - `npm test` fija `TZ=Europe/Madrid` y `TAILWIND_DISABLE_SOURCE_MAP=1` vía `cross-env`: la zona horaria importa (rachas y semanas se calculan por calendario); no invocar `vitest`/`tsc` a pelo en CI.
 - CI (`.github/workflows/ci.yml`): lint → typecheck → build → tests con cobertura, Node 20.
-- Estado a 2026-11-01: typecheck y lint sin errores, **269 tests en verde** tras los cambios de colocación, sesión diaria y navegación.
+- Estado a 2026-11-01: typecheck y lint sin errores, **297 tests en verde** tras la persistencia de la sesión diaria (PIT-28).
 - Variables de entorno: `.env` local (no versionado) con `VITE_SUPABASE_*`. No tocar `.env`.
 
 ## Reglas de trabajo
@@ -63,4 +63,4 @@ npm run build          # typecheck + vite build
   - **T2** = consolidación del ciclo (5.º–6.º en conjunto)
   - **T3** = «Ampliació ESO», puente a 1.º de ESO (enteros, ecuaciones de dos pasos, proporcionalidad inversa…); solo se ofrece con los prerrequisitos dominados.
 - Implementado en `main` local (sin push): F0+F1 invariantes y correcciones (`548ebc4`), F2 catálogo/motor de dominio (`afd1aff`), F3 «Mi camino» (`eb898c2`), F4 pistas/segundo intento (`b33c03e`), F5 ampliación curricular ciclo + puente ESO (`6a8340b`), F7 docs (`cf95699`).
-- **Pendiente:** verificación en navegador con autenticación real de la persistencia tras recarga, desbloqueo T3 y modo libre 4.º/5.º/6.º; la cola de la sesión diaria aún no persiste tras recargar (PIT-28). También están pendientes la distinción de contenidos de ampliación en los informes (PIT-27), bump a 4.0.0, push y deploy. F6 (mejoras opcionales: SVG gráficos/recta numérica/geometría visual, teclado en pantalla, panel padres, insignias por dominio, bilingüe, voz, más contenido ESO) sin empezar.
+- **Pendiente:** verificación en navegador con autenticación real de la persistencia tras recarga, desbloqueo T3 y modo libre 4.º/5.º/6.º. PIT-28 (sesión diaria persistida en localStorage por usuario) resuelto en tests; queda la verificación con autenticación real. También están pendientes la distinción de contenidos de ampliación en los informes (PIT-27), bump a 4.0.0, push y deploy. F6 (mejoras opcionales: SVG gráficos/recta numérica/geometría visual, teclado en pantalla, panel padres, insignias por dominio, bilingüe, voz, más contenido ESO) sin empezar.
