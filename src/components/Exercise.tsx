@@ -40,6 +40,8 @@ import { formatMathNumber } from '../utils/mathUtils';
 import { celebrate } from '../utils/celebration';
 import { getSkillById } from '../utils/skillCatalog';
 import { buildHint, simplifiableFractionNote, typicalMistakeMessage } from '../utils/hints';
+import { problemSpeechText } from '../utils/problemText';
+import { ReadAloudButton } from './ReadAloudButton';
 import {
   AnswerKeyboardProvider,
   FractionInputs,
@@ -604,6 +606,10 @@ export function Exercise({ active = true }: { active?: boolean }) {
                 />
               </>
             ) : null}
+            <div className="mt-4">
+              {/* PIT-31: lectura voluntaria del enunciado (nunca de la solución). */}
+              <ReadAloudButton text={problemSpeechText(currentProblem)} active={active} />
+            </div>
           </div>
 
           {isTimerActive && (

@@ -35,6 +35,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   responder y también al hidratar/fusionar el progreso (en silencio, sin
   duplicar por ID). Persisten en `game_state.data`, sin migración ni cambio en
   los logros existentes.
+- **Lectura voluntaria de enunciados** (PIT-31, parte de PIT-22): botón
+  «🔊 Escuchar / ⏹ Detener lectura» bajo el enunciado que verbaliza la
+  estructura del problema en castellano con SpeechSynthesis del navegador
+  (fracciones «tres cuartos», enteros con signo, potencias, raíces,
+  paréntesis, unidades, %, °, π, decimales con coma y las opciones visibles).
+  Sin autoplay ni lectura de la solución; cancela al cambiar de ejercicio,
+  pestaña o al desmontar. Sin soporte de API el botón no aparece; sin voz en
+  español se mantiene el texto y se avisa. Sin dependencias ni migración.
 
 ## [4.1.0] - 2026-11-02
 
