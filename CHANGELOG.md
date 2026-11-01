@@ -31,6 +31,13 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   decimal o fracción
 
 ### Corregido
+- **Informes**: distinguen el curso elegido del tramo del contenido (PIT-27).
+  `contentStage.ts` deriva el tramo de cada intento a partir de su operación
+  vía `skillCatalog`, sin migración: repaso de 4.º, inicio/consolidación del
+  ciclo 5.º–6.º (nunca un curso solo) y ampliación ESO (T3, aunque el curso
+  elegido sea 5.º/6.º). El informe del niño gana la sección «Por tramo de
+  contenido», la tabla por curso muestra la columna «Contenido» y los CSV de
+  intentos y de habilidades incluyen la columna «tramo».
 - **Sesión diaria de «Mi camino»**: se guarda en localStorage por usuario y se
   reanuda tras recargar la app (cola, habilidad en curso, ejercicios hechos y
   fecha); se descarta al cambiar de día o de usuario (PIT-28)

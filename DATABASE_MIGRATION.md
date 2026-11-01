@@ -2,6 +2,40 @@
 
 Este documento describe los cambios de base de datos necesarios para las expansiones curriculares v2.0 y v3.0, el usuario administrador (v3.1) y el estado de juego por usuario (v3.2).
 
+## Propuestas (no aplicadas)
+
+### Procedencia del intento (`source`)
+
+PIT-27 distinguió en los informes el curso elegido (`attempts.grade`) del tramo
+del contenido, derivado de `attempts.operation` vía `skillCatalog`. Eso cubre
+todos los intentos históricos sin migración, pero hay un caso ambiguo: un niño
+con curso elegido 4.º que practica una habilidad T1 **desde «Mi camino»** se
+etiqueta como «Repaso de 4.º» (es indistinguible del modo libre de 4.º, que
+solo genera operaciones T1).
+
+Para resolverlo se propone añadir una columna que registre de dónde salió el
+intento:
+
+```sql
+alter table public.attempts
+  add column if not exists source text not null default 'free';
+
+alter table public.attempts
+  add constraint attempts_source_check
+  check (source in ('free', 'path', 'daily-session', 'placement'));
+```
+
+- `free`: modo libre (valor por defecto, así los intentos históricos quedan
+  marcados como modo libre — la app anterior no conocía «Mi camino»).
+- `path`: práctica de una habilidad concreta desde «Mi camino».
+- `daily-session`: ejercicio de la sesión diaria.
+- `placement`: pregunta de la prueba de colocación.
+
+Con esta columna, los informes podrían (a) etiquetar «repaso de 4.º» solo los
+intentos `free` de 4.º y (b) separar el rendimiento en «Mi camino» del del modo
+libre. No es necesaria para PIT-27 tal como está implementado; es una mejora de
+precisión a valorar antes de crear la migración `0008_*.sql`.
+
 ## v3.2 — Estado de juego por usuario
 
 ### Resumen

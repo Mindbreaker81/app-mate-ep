@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const adminServiceState = vi.hoisted(() => ({
@@ -142,11 +142,12 @@ describe('AdminDashboard', () => {
     // Insignia en la lista: 1 refuerzo
     expect(await screen.findByText('⚠️ 1')).toBeInTheDocument();
 
-    // En el detalle: aviso completo y desglose por curso
+    // En el detalle: aviso completo y desglose por curso elegido
     fireEvent.click(screen.getByRole('button', { name: /nico/i }));
     expect(await screen.findByText(/reforzar divisiones/i)).toBeInTheDocument();
-    expect(screen.getByText('5.º de Primaria')).toBeInTheDocument();
-    expect(screen.getByText('Divisiones')).toBeInTheDocument();
+    const gradeCard = screen.getByText('Curso elegido: 5.º de Primaria').closest('div')!;
+    expect(gradeCard).toBeInTheDocument();
+    expect(within(gradeCard).getByText('Divisiones')).toBeInTheDocument();
   });
 
   it('muestra la evolución semanal en el detalle del niño', async () => {

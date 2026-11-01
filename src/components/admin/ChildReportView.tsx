@@ -1,11 +1,64 @@
-import type { ChildReport, Advisory } from '../../utils/childReport';
+import type { ChildReport, Advisory, OperationBreakdown } from '../../utils/childReport';
 import { formatOperationLabel, formatGradeLabel } from '../../utils/operationLabels';
+import { contentStageLabel } from '../../utils/contentStage';
 
 const advisoryStyles: Record<Advisory['kind'], { icon: string; classes: string }> = {
   reinforce: { icon: '⚠️', classes: 'bg-red-50 border-red-300 text-red-800' },
   strength: { icon: '🌟', classes: 'bg-green-50 border-green-300 text-green-800' },
   inactive: { icon: '💤', classes: 'bg-slate-100 border-slate-300 text-slate-700' },
 };
+
+function accuracyClass(accuracy: number): string {
+  if (accuracy < 60) return 'text-red-700 font-semibold';
+  if (accuracy >= 85) return 'text-green-700 font-semibold';
+  return '';
+}
+
+function OperationsTable({
+  operations,
+  showStage,
+}: {
+  operations: OperationBreakdown[];
+  /** Muestra la columna «Contenido» (tramo) por ejercicio. */
+  showStage: boolean;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="text-gray-500 border-b">
+            <th className="py-2 pr-4">Ejercicio</th>
+            {showStage && <th className="py-2 pr-4">Contenido</th>}
+            <th className="py-2 pr-4">Intentos</th>
+            <th className="py-2 pr-4">Aciertos</th>
+            <th className="py-2 pr-4">Fallos</th>
+            <th className="py-2 pr-4">Precisión</th>
+            <th className="py-2">Tiempo medio</th>
+          </tr>
+        </thead>
+        <tbody>
+          {operations.map((op) => (
+            <tr key={op.operation} className="border-b last:border-b-0">
+              <td className="py-2 pr-4 font-medium text-gray-700">
+                {formatOperationLabel(op.operation)}
+              </td>
+              {showStage && (
+                <td className="py-2 pr-4 text-gray-600">{contentStageLabel(op.contentStage)}</td>
+              )}
+              <td className="py-2 pr-4">{op.total}</td>
+              <td className="py-2 pr-4 text-green-700">{op.correct}</td>
+              <td className="py-2 pr-4 text-red-700">{op.failed}</td>
+              <td className="py-2 pr-4">
+                <span className={accuracyClass(op.accuracy)}>{op.accuracy}%</span>
+              </td>
+              <td className="py-2">{op.avgTime}s</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function ChildReportView({ report }: { report: ChildReport }) {
   return (
@@ -29,52 +82,36 @@ export function ChildReportView({ report }: { report: ChildReport }) {
         </section>
       )}
 
+      {report.byStage.length > 0 && (
+        <section className="space-y-4">
+          <h3 className="text-xl font-semibold text-gray-700">🧭 Por tramo de contenido</h3>
+          <p className="text-sm text-gray-500">
+            El tramo se deriva del tipo de ejercicio: T1/T2 son el ciclo 5.º–6.º en conjunto
+            y T3 es ampliación ESO, sea cual sea el curso elegido.
+          </p>
+          {report.byStage.map((stage) => (
+            <div key={stage.stage ?? 'sin-clasificar'} className="bg-white rounded-lg shadow p-4 space-y-2">
+              <h4 className="font-semibold text-gray-800">
+                Contenido: {contentStageLabel(stage.stage)}
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  {stage.total} intentos · {stage.accuracy}% de aciertos
+                </span>
+              </h4>
+              <OperationsTable operations={stage.operations} showStage={false} />
+            </div>
+          ))}
+        </section>
+      )}
+
       {report.byGrade.length > 0 && (
         <section className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-700">📚 Por curso y tipo de ejercicio</h3>
+          <h3 className="text-xl font-semibold text-gray-700">📚 Por curso elegido y tipo de ejercicio</h3>
           {report.byGrade.map((grade) => (
             <div key={grade.grade} className="bg-white rounded-lg shadow p-4 space-y-2">
-              <h4 className="font-semibold text-gray-800">{formatGradeLabel(grade.grade)}</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="text-gray-500 border-b">
-                      <th className="py-2 pr-4">Ejercicio</th>
-                      <th className="py-2 pr-4">Intentos</th>
-                      <th className="py-2 pr-4">Aciertos</th>
-                      <th className="py-2 pr-4">Fallos</th>
-                      <th className="py-2 pr-4">Precisión</th>
-                      <th className="py-2">Tiempo medio</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {grade.operations.map((op) => (
-                      <tr key={op.operation} className="border-b last:border-b-0">
-                        <td className="py-2 pr-4 font-medium text-gray-700">
-                          {formatOperationLabel(op.operation)}
-                        </td>
-                        <td className="py-2 pr-4">{op.total}</td>
-                        <td className="py-2 pr-4 text-green-700">{op.correct}</td>
-                        <td className="py-2 pr-4 text-red-700">{op.failed}</td>
-                        <td className="py-2 pr-4">
-                          <span
-                            className={
-                              op.accuracy < 60
-                                ? 'text-red-700 font-semibold'
-                                : op.accuracy >= 85
-                                  ? 'text-green-700 font-semibold'
-                                  : ''
-                            }
-                          >
-                            {op.accuracy}%
-                          </span>
-                        </td>
-                        <td className="py-2">{op.avgTime}s</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <h4 className="font-semibold text-gray-800">
+                Curso elegido: {formatGradeLabel(grade.grade)}
+              </h4>
+              <OperationsTable operations={grade.operations} showStage />
             </div>
           ))}
         </section>

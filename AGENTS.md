@@ -8,7 +8,7 @@ App web para que niños de Primaria practiquen matemáticas. Autor: Edmundo Rosa
 - **Backend:** Supabase (Auth + PostgreSQL con RLS). Migraciones versionadas en `supabase/migrations/` (0001–0007). `attempts.operation` es texto libre y el progreso de habilidades vive en el JSON `game_state.data`: **las operaciones nuevas no necesitan migración**.
 - **Estado:** `src/context/` (`AuthContext`, `GameContext`). Los intentos se guardan de inmediato en Supabase con cola local offline; el estado de juego (logros, récords, habilidades) va en `game_state` por usuario.
 - **Generadores de problemas:** `src/utils/generators/` (un archivo por familia + `index.ts` como orquestador). `src/utils/problemGenerator.ts` es solo un reexport.
-- **Camino de aprendizaje:** `skillCatalog.ts` (habilidades por área/tier con prerrequisitos), `skillProgress.ts` (motor de dominio: ventana de 12, mín. 10 intentos, ≥80 %, 2 días; repaso 1/3/7/14 d; nivel sube con 3 aciertos seguidos y baja con 2 fallos), `skillReport.ts`, `MyPath.tsx` (pestaña "Mi camino", sesión diaria, prueba de colocación).
+- **Camino de aprendizaje:** `skillCatalog.ts` (habilidades por área/tier con prerrequisitos), `skillProgress.ts` (motor de dominio: ventana de 12, mín. 10 intentos, ≥80 %, 2 días; repaso 1/3/7/14 d; nivel sube con 3 aciertos seguidos y baja con 2 fallos), `skillReport.ts`, `MyPath.tsx` (pestaña "Mi camino", sesión diaria, prueba de colocación). `contentStage.ts` deriva el tramo del contenido de un intento (repaso 4.º / ciclo 5.º–6.º T1-T2 / ampliación ESO T3) a partir de la operación, para que los informes no lo atribuyan al curso elegido.
 - **Pistas:** `src/utils/hints.ts` (pistas graduales + detección de errores típicos + segundo intento en `Exercise.tsx`).
 - Docs: `README.md`, `TECHNICAL.md`, `CHANGELOG.md`, `DATABASE_MIGRATION.md`, `docs/PLAN_6E_PRIMARIA.md`.
 
@@ -26,7 +26,7 @@ npm run build          # typecheck + vite build
 
 - `npm test` fija `TZ=Europe/Madrid` y `TAILWIND_DISABLE_SOURCE_MAP=1` vía `cross-env`: la zona horaria importa (rachas y semanas se calculan por calendario); no invocar `vitest`/`tsc` a pelo en CI.
 - CI (`.github/workflows/ci.yml`): lint → typecheck → build → tests con cobertura, Node 20.
-- Estado a 2026-11-01: typecheck y lint sin errores, **297 tests en verde** tras la persistencia de la sesión diaria (PIT-28).
+- Estado a 2026-11-01: typecheck y lint sin errores, **312 tests en verde** tras PIT-28 (sesión diaria persistida) y PIT-27 (tramo del contenido en informes).
 - Variables de entorno: `.env` local (no versionado) con `VITE_SUPABASE_*`. No tocar `.env`.
 
 ## Reglas de trabajo
@@ -63,4 +63,4 @@ npm run build          # typecheck + vite build
   - **T2** = consolidación del ciclo (5.º–6.º en conjunto)
   - **T3** = «Ampliació ESO», puente a 1.º de ESO (enteros, ecuaciones de dos pasos, proporcionalidad inversa…); solo se ofrece con los prerrequisitos dominados.
 - Implementado en `main` local (sin push): F0+F1 invariantes y correcciones (`548ebc4`), F2 catálogo/motor de dominio (`afd1aff`), F3 «Mi camino» (`eb898c2`), F4 pistas/segundo intento (`b33c03e`), F5 ampliación curricular ciclo + puente ESO (`6a8340b`), F7 docs (`cf95699`).
-- **Pendiente:** verificación en navegador con autenticación real de la persistencia tras recarga, desbloqueo T3 y modo libre 4.º/5.º/6.º. PIT-28 (sesión diaria persistida en localStorage por usuario) resuelto en tests; queda la verificación con autenticación real. También están pendientes la distinción de contenidos de ampliación en los informes (PIT-27), bump a 4.0.0, push y deploy. F6 (mejoras opcionales: SVG gráficos/recta numérica/geometría visual, teclado en pantalla, panel padres, insignias por dominio, bilingüe, voz, más contenido ESO) sin empezar.
+- **Pendiente:** verificación en navegador con autenticación real de la persistencia tras recarga, desbloqueo T3 y modo libre 4.º/5.º/6.º. PIT-28 (sesión diaria persistida en localStorage por usuario) resuelto en tests; queda la verificación con autenticación real. PIT-27 resuelto: los informes distinguen curso elegido y tramo del contenido vía `contentStage.ts` (sin migración; propuesta de columna de procedencia en `DATABASE_MIGRATION.md`). También están pendientes bump a 4.0.0, push y deploy. F6 (mejoras opcionales: SVG gráficos/recta numérica/geometría visual, teclado en pantalla, panel padres, insignias por dominio, bilingüe, voz, más contenido ESO) sin empezar.

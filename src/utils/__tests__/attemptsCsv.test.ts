@@ -31,6 +31,14 @@ const attempts: AttemptRecord[] = [
     timeSpent: 5,
     createdAt: '2026-07-18T11:00:00Z',
   },
+  {
+    userId: 'uuid-1',
+    operation: 'two-step-equation',
+    grade: '6e',
+    isCorrect: true,
+    timeSpent: 20,
+    createdAt: '2026-07-18T12:00:00Z',
+  },
 ];
 
 describe('attemptsToCsv', () => {
@@ -39,8 +47,22 @@ describe('attemptsToCsv', () => {
     const lines = csv.split('\r\n');
 
     expect(csv.startsWith('﻿')).toBe(true);
-    expect(lines[0]).toBe('﻿niño;curso;ejercicio;correcto;tiempo_s;fecha');
-    expect(lines[1]).toBe('nico;5.º de Primaria;Divisiones;sí;12;2026-07-18T10:00:00Z');
+    expect(lines[0]).toBe('﻿niño;curso;tramo;ejercicio;correcto;tiempo_s;fecha');
+    expect(lines[1]).toBe(
+      'nico;5.º de Primaria;Inicio del ciclo 5.º–6.º;Divisiones;sí;12;2026-07-18T10:00:00Z',
+    );
+  });
+
+  it('distingue el curso elegido del tramo del contenido', () => {
+    const csv = attemptsToCsv(attempts, children);
+    const lines = csv.split('\r\n');
+
+    // Curso elegido 4.º + operación T1 → repaso de 4.º.
+    expect(lines[2]).toContain('uuid-desconocido;4.º de Primaria;Repaso de 4.º');
+    // Curso elegido 6.º + operación T3 → ampliación ESO, nunca «6.º».
+    expect(lines[3]).toBe(
+      'nico;6.º de Primaria;Ampliación ESO;Ecuaciones de dos pasos;sí;20;2026-07-18T12:00:00Z',
+    );
   });
 
   it('usa el id cuando no encuentra el username', () => {

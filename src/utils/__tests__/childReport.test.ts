@@ -34,6 +34,7 @@ describe('buildChildReport', () => {
     expect(grade5?.operations).toEqual([
       {
         operation: 'division',
+        contentStage: 'cycle-start',
         total: 2,
         correct: 1,
         failed: 1,
@@ -43,6 +44,59 @@ describe('buildChildReport', () => {
     ]);
     const grade6 = report.byGrade.find((g) => g.grade === '6e');
     expect(grade6?.operations[0]).toMatchObject({ operation: 'power', total: 1, accuracy: 100 });
+  });
+
+  it('anota el tramo del contenido en cada ejercicio del curso elegido', () => {
+    const report = buildChildReport(
+      [
+        attempt({ grade: '6e', operation: 'two-step-equation' }),
+        attempt({ grade: '6e', operation: 'division' }),
+      ],
+      NOW,
+    );
+
+    const grade6 = report.byGrade.find((g) => g.grade === '6e')!;
+    const eso = grade6.operations.find((op) => op.operation === 'two-step-equation')!;
+    expect(eso.contentStage).toBe('eso-extension');
+    const division = grade6.operations.find((op) => op.operation === 'division')!;
+    expect(division.contentStage).toBe('cycle-start');
+  });
+
+  it('agrupa por tramo: repaso de 4.º, ciclo y ampliación ESO', () => {
+    const report = buildChildReport(
+      [
+        // Curso elegido 4.º con contenido T1 → repaso de 4.º.
+        attempt({ grade: '4t', operation: 'addition', isCorrect: true }),
+        attempt({ grade: '4t', operation: 'addition', isCorrect: false }),
+        // Curso elegido 6.º con contenido T3 → ampliación ESO (nunca «6.º»).
+        attempt({ grade: '6e', operation: 'two-step-equation' }),
+        // Curso elegido 5.º con contenido T2 → consolidación del ciclo.
+        attempt({ grade: '5e', operation: 'decimal-addition' }),
+      ],
+      NOW,
+    );
+
+    expect(report.byStage.map((stage) => stage.stage)).toEqual([
+      'review-4',
+      'cycle-consolidation',
+      'eso-extension',
+    ]);
+
+    const repaso = report.byStage.find((stage) => stage.stage === 'review-4')!;
+    expect(repaso.total).toBe(2);
+    expect(repaso.accuracy).toBe(50);
+    expect(repaso.operations[0]).toMatchObject({ operation: 'addition', total: 2 });
+
+    const eso = report.byStage.find((stage) => stage.stage === 'eso-extension')!;
+    expect(eso.total).toBe(1);
+    expect(eso.operations[0].operation).toBe('two-step-equation');
+  });
+
+  it('agrupa las operaciones fuera del catálogo como tramo desconocido', () => {
+    const report = buildChildReport([attempt({ operation: 'operacion-historica' })], NOW);
+    const last = report.byStage.at(-1)!;
+    expect(last.stage).toBeNull();
+    expect(last.operations[0].operation).toBe('operacion-historica');
   });
 
   it('ordena los cursos 4t, 5e, 6e', () => {

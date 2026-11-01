@@ -1,11 +1,14 @@
 import type { AttemptRecord } from '../services/adminService';
 import type { Operation } from '../types';
-import { skillIdForOperation, getSkillById } from './skillCatalog';
+import { skillIdForOperation, getSkillById, type SkillTier } from './skillCatalog';
+import { contentStageForTier, contentStageLabel } from './contentStage';
 
 export interface SkillReportRow {
   skillId: string;
   skillName: string;
   area: string;
+  /** Tier del catálogo (1/2 ciclo 5.º–6.º, 3 ampliación ESO). */
+  tier: SkillTier;
   total: number;
   correct: number;
   accuracy: number; // 0-100
@@ -18,6 +21,7 @@ function emptyRow(skillId: string): SkillReportRow {
     skillId,
     skillName: skill?.name ?? skillId,
     area: skill ? skill.areaId : '',
+    tier: skill?.tier ?? 1,
     total: 0,
     correct: 0,
     accuracy: 0,
@@ -62,11 +66,12 @@ function escapeField(value: string): string {
 
 /** CSV del informe por habilidad (BOM UTF-8, separador ;). */
 export function skillReportToCsv(rows: SkillReportRow[]): string {
-  const header = ['habilidad', 'área', 'intentos', 'correctos', 'acierto_%', 'tiempo_medio_s'].join(SEPARATOR);
+  const header = ['habilidad', 'área', 'tramo', 'intentos', 'correctos', 'acierto_%', 'tiempo_medio_s'].join(SEPARATOR);
   const lines = rows.map((row) =>
     [
       escapeField(row.skillName),
       escapeField(row.area),
+      escapeField(contentStageLabel(contentStageForTier(row.tier))),
       String(row.total),
       String(row.correct),
       String(row.accuracy),
