@@ -12,6 +12,7 @@ import type {
   TimeMode,
   Problem,
   AttemptPayload,
+  AttemptSource,
   SerializedAnswer,
   LegacySnapshot,
   DetailedStats,
@@ -234,10 +235,23 @@ function getNumericLikeAnswer(problem: Problem): number | null {
   return null;
 }
 
+/**
+ * Procedencia del intento (attempts.source): la sesión diaria manda sobre la
+ * habilidad suelta del camino, y sin habilidad activa es modo libre.
+ * `dailySession` es la cola pendiente: con [] aún hay sesión en curso.
+ */
+function attemptSourceForState(
+  state: Pick<GameState, 'pathSkillId' | 'dailySession'>,
+): AttemptSource {
+  if (!state.pathSkillId) return 'free';
+  return state.dailySession !== null ? 'daily-session' : 'path';
+}
+
 function buildAttemptPayload(
   level: number,
   practiceMode: PracticeMode,
   grade: GradeId,
+  source: AttemptSource,
   payload: CheckAnswerPayload,
 ): AttemptPayload {
   const correctAnswer: SerializedAnswer = isFractionProblem(payload.problem)
@@ -251,6 +265,7 @@ function buildAttemptPayload(
     level,
     practiceMode,
     grade,
+    source,
     isCorrect: payload.isCorrect,
     timeSpent: payload.timeSpent,
     userAnswer: payload.userAnswer,
@@ -832,6 +847,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           attemptLevel,
           state.practiceMode,
           state.grade,
+          attemptSourceForState({ pathSkillId: state.pathSkillId, dailySession: state.dailySession }),
           evaluation,
         );
         void recordAttemptDirect(sessionUserId, attemptPayload);
@@ -847,6 +863,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       state.practiceMode,
       state.grade,
       state.pathSkillId,
+      state.dailySession,
       state.skillProgress,
       state.timeMode,
       state.timeRemaining,

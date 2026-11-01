@@ -52,4 +52,19 @@ describe('ChildReportView', () => {
     ).toBeInTheDocument();
     expect(within(stageSection).getByText(/2 intentos · 100% de aciertos/i)).toBeInTheDocument();
   });
+
+  it('resume el origen: modo libre frente a «Mi camino»', () => {
+    const report = buildChildReport([
+      attempt({ grade: '4t', operation: 'addition', source: 'free' }),
+      attempt({ grade: '4t', operation: 'addition', source: 'path', isCorrect: false }),
+      attempt({ grade: '6e', operation: 'two-step-equation', source: 'daily-session' }),
+    ]);
+
+    render(<ChildReportView report={report} />);
+
+    const freeCard = screen.getByText('Modo libre').closest('div')!;
+    expect(within(freeCard).getByText(/1 intento · 100% de aciertos/i)).toBeInTheDocument();
+    const pathCard = screen.getByText('Mi camino').closest('div')!;
+    expect(within(pathCard).getByText(/2 intentos · 50% de aciertos/i)).toBeInTheDocument();
+  });
 });

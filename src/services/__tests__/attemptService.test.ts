@@ -24,6 +24,7 @@ const baseAttempt = {
   userAnswer: 4,
   correctAnswer: 4,
   createdAt: '2026-04-03T00:00:00.000Z',
+  source: 'free' as const,
 };
 
 describe('attemptService', () => {
@@ -78,5 +79,33 @@ describe('attemptService', () => {
     await Promise.all([firstFlush, secondFlush]);
 
     expect(supabaseState.insert).toHaveBeenCalledTimes(2);
+  });
+
+  it('envía el source de cada intento', async () => {
+    enqueueBatch(
+      'user-1',
+      [
+        { ...baseAttempt, source: 'daily-session' },
+        { ...baseAttempt, source: 'path' },
+      ],
+      { flush: false },
+    );
+
+    await flushQueue('user-1');
+
+    expect(supabaseState.insert).toHaveBeenCalledTimes(2);
+    expect(supabaseState.insert.mock.calls[0][0].source).toBe('daily-session');
+    expect(supabaseState.insert.mock.calls[1][0].source).toBe('path');
+  });
+
+  it('los intentos encolados por una versión antigua (sin source) se envían como «free»', async () => {
+    const legacyAttempt = { ...baseAttempt };
+    delete (legacyAttempt as Partial<typeof baseAttempt>).source;
+
+    enqueueBatch('user-1', [legacyAttempt as typeof baseAttempt], { flush: false });
+    await flushQueue('user-1');
+
+    expect(supabaseState.insert).toHaveBeenCalledTimes(1);
+    expect(supabaseState.insert.mock.calls[0][0].source).toBe('free');
   });
 });

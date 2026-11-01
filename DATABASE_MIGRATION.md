@@ -1,40 +1,60 @@
 # Migración de base de datos — Pitagoritas
 
-Este documento describe los cambios de base de datos necesarios para las expansiones curriculares v2.0 y v3.0, el usuario administrador (v3.1) y el estado de juego por usuario (v3.2).
+Este documento describe los cambios de base de datos necesarios para las expansiones curriculares v2.0 y v3.0, el usuario administrador (v3.1), el estado de juego por usuario (v3.2) y la procedencia del intento (v3.3).
 
-## Propuestas (no aplicadas)
+## v3.3 — Procedencia del intento (`attempts.source`)
 
-### Procedencia del intento (`source`)
+### Resumen
 
-PIT-27 distinguió en los informes el curso elegido (`attempts.grade`) del tramo
-del contenido, derivado de `attempts.operation` vía `skillCatalog`. Eso cubre
-todos los intentos históricos sin migración, pero hay un caso ambiguo: un niño
-con curso elegido 4.º que practica una habilidad T1 **desde «Mi camino»** se
-etiqueta como «Repaso de 4.º» (es indistinguible del modo libre de 4.º, que
-solo genera operaciones T1).
+Añade la columna `source` a `attempts` para registrar de dónde salió cada
+intento. PIT-27 distingue en los informes el curso elegido (`attempts.grade`)
+del tramo del contenido, derivado de `attempts.operation` vía `skillCatalog`;
+`source` resuelve el único caso ambiguo que quedaba: un niño con curso elegido
+4.º que practica una habilidad T1 **desde «Mi camino»** es contenido del ciclo
+(`cycle-start`), no repaso de 4.º. Además permite separar en los informes el
+rendimiento en «Mi camino» del del modo libre.
 
-Para resolverlo se propone añadir una columna que registre de dónde salió el
-intento:
+Valores:
 
-```sql
-alter table public.attempts
-  add column if not exists source text not null default 'free';
-
-alter table public.attempts
-  add constraint attempts_source_check
-  check (source in ('free', 'path', 'daily-session', 'placement'));
-```
-
-- `free`: modo libre (valor por defecto, así los intentos históricos quedan
-  marcados como modo libre — la app anterior no conocía «Mi camino»).
+- `free`: modo libre (valor por defecto: los intentos históricos y los encolados
+  offline por versiones antiguas quedan marcados como modo libre — la app
+  anterior no conocía «Mi camino»).
 - `path`: práctica de una habilidad concreta desde «Mi camino».
 - `daily-session`: ejercicio de la sesión diaria.
-- `placement`: pregunta de la prueba de colocación.
+- `placement`: reservado para la prueba de colocación. **Nota:** hoy la
+  colocación no guarda intentos (solo actualiza el progreso de habilidades), así
+  que ningún intento llevará este valor hasta que se decida registrarla.
 
-Con esta columna, los informes podrían (a) etiquetar «repaso de 4.º» solo los
-intentos `free` de 4.º y (b) separar el rendimiento en «Mi camino» del del modo
-libre. No es necesaria para PIT-27 tal como está implementado; es una mejora de
-precisión a valorar antes de crear la migración `0008_*.sql`.
+### Archivo de migración
+
+`supabase/migrations/0008_add_source_to_attempts.sql`
+
+### Cómo aplicarla y orden de despliegue
+
+> **Estado:** aplicada en Supabase cloud (`sezqtlebdodwwbekgnlw`) el 2026-11-01 con
+> `supabase db push`. Antes se registraron 0006 y 0007 como aplicadas con
+> `supabase migration repair --status applied 0006 0007`, porque se habían ejecutado
+> a mano desde el SQL Editor y no constaban en el historial remoto.
+
+1. **Primero la migración**: ejecuta el contenido de `0008_add_source_to_attempts.sql`
+   en el SQL Editor del Dashboard (o con `psql`/`supabase db push`).
+2. **Después el código**: despliega la versión de la app que escribe `source`.
+
+La columna tiene `default 'free'` y `not null`, así que la app ya desplegada
+sigue insertando sin conocer la columna (Postgres aplica el default) y las
+filas existentes quedan como `free` al crearla. Si el código se desplegara
+antes de la migración, el insert con `source` fallaría — de ahí el orden.
+
+### Verificación
+
+```sql
+select source, count(*)
+from public.attempts
+group by source;
+```
+
+Las filas anteriores a la migración aparecen como `free`; los intentos nuevos
+llevan `free`, `path` o `daily-session` según su procedencia.
 
 ## v3.2 — Estado de juego por usuario
 

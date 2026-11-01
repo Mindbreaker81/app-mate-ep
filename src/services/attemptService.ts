@@ -57,6 +57,8 @@ async function sendAttempt(userId: string, attempt: PendingAttempt): Promise<voi
     level: attempt.level,
     practice_mode: attempt.practiceMode,
     grade: attempt.grade,
+    // Intentos encolados por una versión sin source (pre-0008) → modo libre.
+    source: attempt.source ?? 'free',
     is_correct: attempt.isCorrect,
     time_spent: attempt.timeSpent,
     user_answer: attempt.userAnswer,
@@ -140,6 +142,7 @@ export async function recordAttemptDirect(userId: string, attempt: AttemptPayloa
     level: attempt.level,
     practice_mode: attempt.practiceMode,
     grade: attempt.grade,
+    source: attempt.source ?? 'free',
     is_correct: attempt.isCorrect,
       time_spent: attempt.timeSpent,
       user_answer: attempt.userAnswer,
@@ -208,6 +211,8 @@ export async function migrateLegacyData(userId: string, snapshot: LegacySnapshot
         correctAnswer: null,
         createdAt: new Date().toISOString(),
         grade: snapshot.grade ?? '4t',
+        // Los datos legacy son anteriores a «Mi camino»: todo fue modo libre.
+        source: 'free',
       });
     }
   }

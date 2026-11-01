@@ -62,7 +62,7 @@ describe('adminService', () => {
   });
 
   describe('fetchAllAttempts', () => {
-    it('mapea los intentos a camelCase', async () => {
+    it('mapea los intentos a camelCase con su procedencia', async () => {
       supabaseState.select.mockResolvedValue({
         data: [
           {
@@ -72,6 +72,16 @@ describe('adminService', () => {
             is_correct: false,
             time_spent: 12,
             created_at: '2026-07-18T10:00:00Z',
+            source: 'daily-session',
+          },
+          {
+            user_id: 'uuid-1',
+            operation: 'addition',
+            grade: '4t',
+            is_correct: true,
+            time_spent: 5,
+            created_at: '2026-07-18T11:00:00Z',
+            // Fila antigua sin source → 'free'
           },
         ],
         error: null,
@@ -80,6 +90,9 @@ describe('adminService', () => {
       const result = await fetchAllAttempts();
 
       expect(supabaseState.from).toHaveBeenCalledWith('attempts');
+      expect(supabaseState.select).toHaveBeenCalledWith(
+        expect.stringContaining('source'),
+      );
       expect(result).toEqual([
         {
           userId: 'uuid-1',
@@ -88,6 +101,16 @@ describe('adminService', () => {
           isCorrect: false,
           timeSpent: 12,
           createdAt: '2026-07-18T10:00:00Z',
+          source: 'daily-session',
+        },
+        {
+          userId: 'uuid-1',
+          operation: 'addition',
+          grade: '4t',
+          isCorrect: true,
+          timeSpent: 5,
+          createdAt: '2026-07-18T11:00:00Z',
+          source: 'free',
         },
       ]);
     });

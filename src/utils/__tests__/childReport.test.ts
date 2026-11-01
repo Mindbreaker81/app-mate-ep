@@ -99,6 +99,44 @@ describe('buildChildReport', () => {
     expect(last.operations[0].operation).toBe('operacion-historica');
   });
 
+  it('un intento 4t+T1 desde «Mi camino» es ciclo, no repaso de 4.º', () => {
+    const report = buildChildReport(
+      [
+        attempt({ grade: '4t', operation: 'addition', source: 'path' }),
+        attempt({ grade: '4t', operation: 'addition', source: 'daily-session' }),
+        attempt({ grade: '4t', operation: 'addition' }), // sin source → free → repaso
+      ],
+      NOW,
+    );
+
+    expect(report.byStage.map((stage) => stage.stage)).toEqual(['review-4', 'cycle-start']);
+
+    const grade4 = report.byGrade.find((grade) => grade.grade === '4t')!;
+    // La misma operación aparece dos veces: una por cada tramo.
+    expect(grade4.operations).toHaveLength(2);
+    expect(grade4.operations.map((op) => op.contentStage)).toEqual(
+      expect.arrayContaining(['review-4', 'cycle-start']),
+    );
+    expect(grade4.operations.find((op) => op.contentStage === 'cycle-start')?.total).toBe(2);
+    expect(grade4.operations.find((op) => op.contentStage === 'review-4')?.total).toBe(1);
+  });
+
+  it('resume el origen: modo libre frente a «Mi camino»', () => {
+    const report = buildChildReport(
+      [
+        attempt({ source: 'free', isCorrect: true }),
+        attempt({ isCorrect: true }), // sin source → free
+        attempt({ source: 'path', isCorrect: true }),
+        attempt({ source: 'daily-session', isCorrect: false }),
+        attempt({ source: 'placement', isCorrect: false }),
+      ],
+      NOW,
+    );
+
+    expect(report.bySource.free).toEqual({ total: 2, correct: 2, accuracy: 100 });
+    expect(report.bySource.path).toEqual({ total: 3, correct: 1, accuracy: 33 });
+  });
+
   it('ordena los cursos 4t, 5e, 6e', () => {
     const report = buildChildReport(
       [attempt({ grade: '6e' }), attempt({ grade: '4t' }), attempt({ grade: '5e' })],

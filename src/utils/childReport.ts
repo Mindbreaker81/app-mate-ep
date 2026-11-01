@@ -1,9 +1,12 @@
 import { formatOperationLabel } from './operationLabels';
 import { CONTENT_STAGE_ORDER, contentStageFor, type ContentStage } from './contentStage';
+import type { AttemptSource } from '../types';
 
 export interface ChildAttempt {
   operation: string;
   grade: string;
+  /** Procedencia; ausente en intentos históricos → se trata como 'free'. */
+  source?: AttemptSource;
   isCorrect: boolean;
   timeSpent: number;
   createdAt: string;
@@ -44,11 +47,19 @@ export interface Advisory {
   total?: number;
 }
 
+export interface SourceTotals {
+  total: number;
+  correct: number;
+  accuracy: number;
+}
+
 export interface ChildReport {
   /** Desglose por curso elegido (el selector del modo libre). */
   byGrade: GradeBreakdown[];
   /** Desglose por tramo del contenido, derivado de la operación. */
   byStage: StageBreakdown[];
+  /** Modo libre frente a «Mi camino» (path + daily-session + placement). */
+  bySource: { free: SourceTotals; path: SourceTotals };
   advisories: Advisory[];
   lastActivity: string | null;
 }
@@ -69,6 +80,12 @@ interface OpAggregate {
   time: number;
 }
 
+/** Dentro de un curso, la misma operación puede caer en tramos distintos. */
+interface GradeOpAggregate extends OpAggregate {
+  operation: string;
+  stage: ContentStage | null;
+}
+
 function bump(map: Map<string, OpAggregate>, key: string, attempt: ChildAttempt): void {
   const op = map.get(key) ?? { total: 0, correct: 0, time: 0 };
   op.total += 1;
@@ -76,6 +93,8 @@ function bump(map: Map<string, OpAggregate>, key: string, attempt: ChildAttempt)
   op.time += attempt.timeSpent;
   map.set(key, op);
 }
+
+const GRADE_OP_SEP = '|';
 
 function toOperationBreakdown(
   operation: string,
@@ -94,26 +113,43 @@ function toOperationBreakdown(
 }
 
 export function buildChildReport(attempts: ChildAttempt[], now: Date = new Date()): ChildReport {
-  const byGradeMap = new Map<string, Map<string, OpAggregate>>();
+  const byGradeMap = new Map<string, Map<string, GradeOpAggregate>>();
   const byStageMap = new Map<ContentStage | null, Map<string, OpAggregate>>();
   const byOperation = new Map<string, { total: number; correct: number }>();
+  const bySource = { free: { total: 0, correct: 0 }, path: { total: 0, correct: 0 } };
   let lastActivity: string | null = null;
 
   for (const attempt of attempts) {
+    const stage = contentStageFor(attempt.grade, attempt.operation, attempt.source);
+
     let gradeOps = byGradeMap.get(attempt.grade);
     if (!gradeOps) {
       gradeOps = new Map();
       byGradeMap.set(attempt.grade, gradeOps);
     }
-    bump(gradeOps, attempt.operation, attempt);
+    const gradeKey = `${attempt.operation}${GRADE_OP_SEP}${stage ?? ''}`;
+    const gradeOp = gradeOps.get(gradeKey) ?? {
+      operation: attempt.operation,
+      stage,
+      total: 0,
+      correct: 0,
+      time: 0,
+    };
+    gradeOp.total += 1;
+    gradeOp.correct += attempt.isCorrect ? 1 : 0;
+    gradeOp.time += attempt.timeSpent;
+    gradeOps.set(gradeKey, gradeOp);
 
-    const stage = contentStageFor(attempt.grade, attempt.operation);
     let stageOps = byStageMap.get(stage);
     if (!stageOps) {
       stageOps = new Map();
       byStageMap.set(stage, stageOps);
     }
     bump(stageOps, attempt.operation, attempt);
+
+    const origin = (attempt.source ?? 'free') === 'free' ? 'free' : 'path';
+    bySource[origin].total += 1;
+    bySource[origin].correct += attempt.isCorrect ? 1 : 0;
 
     const overall = byOperation.get(attempt.operation) ?? { total: 0, correct: 0 };
     overall.total += 1;
@@ -129,8 +165,8 @@ export function buildChildReport(attempts: ChildAttempt[], now: Date = new Date(
     .sort(([a], [b]) => GRADE_ORDER.indexOf(a) - GRADE_ORDER.indexOf(b))
     .map(([grade, ops]) => ({
       grade,
-      operations: [...ops.entries()]
-        .map(([operation, data]) => toOperationBreakdown(operation, data, contentStageFor(grade, operation)))
+      operations: [...ops.values()]
+        .map((data) => toOperationBreakdown(data.operation, data, data.stage))
         .sort((a, b) => b.total - a.total),
     }));
 
@@ -190,5 +226,14 @@ export function buildChildReport(attempts: ChildAttempt[], now: Date = new Date(
     }
   }
 
-  return { byGrade, byStage, advisories, lastActivity };
+  return {
+    byGrade,
+    byStage,
+    bySource: {
+      free: { ...bySource.free, accuracy: accuracyOf(bySource.free.correct, bySource.free.total) },
+      path: { ...bySource.path, accuracy: accuracyOf(bySource.path.correct, bySource.path.total) },
+    },
+    advisories,
+    lastActivity,
+  };
 }

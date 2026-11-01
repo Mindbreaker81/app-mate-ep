@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import type { AttemptSource } from '../types';
 import { isValidPin } from '../utils/authHelpers';
 import { logger } from '../utils/logger';
 
@@ -26,6 +27,8 @@ export interface AttemptRecord {
   userId: string;
   operation: string;
   grade: string;
+  /** Procedencia del intento; los registros antiguos se normalizan a 'free'. */
+  source: AttemptSource;
   isCorrect: boolean;
   timeSpent: number;
   createdAt: string;
@@ -62,6 +65,7 @@ type AttemptRow = {
   user_id: string;
   operation: string;
   grade: string;
+  source: AttemptSource | null;
   is_correct: boolean;
   time_spent: number;
   created_at: string;
@@ -71,7 +75,7 @@ type AttemptRow = {
 export async function fetchAllAttempts(): Promise<AttemptRecord[] | null> {
   const { data, error } = await supabase
     .from('attempts')
-    .select('user_id, operation, grade, is_correct, time_spent, created_at');
+    .select('user_id, operation, grade, source, is_correct, time_spent, created_at');
 
   if (error) {
     logger.error('[adminService] Error al cargar intentos:', error);
@@ -82,6 +86,8 @@ export async function fetchAllAttempts(): Promise<AttemptRecord[] | null> {
     userId: row.user_id,
     operation: row.operation,
     grade: row.grade,
+    // Filas anteriores a la migración 0008 no tienen source → modo libre.
+    source: row.source ?? 'free',
     isCorrect: row.is_correct,
     timeSpent: row.time_spent,
     createdAt: row.created_at,

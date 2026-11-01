@@ -78,3 +78,16 @@ export const gradeLabels: Record<string, string> = {
 export function formatGradeLabel(grade: string): string {
   return gradeLabels[grade] ?? grade;
 }
+
+/** Procedencia del intento para los informes (attempts.source). */
+export const attemptSourceLabels: Record<string, string> = {
+  free: 'Modo libre',
+  path: 'Mi camino',
+  'daily-session': 'Mi camino (sesión diaria)',
+  placement: 'Mi camino (prueba de colocación)',
+};
+
+export function formatAttemptSourceLabel(source: string | null | undefined): string {
+  // Sin source (intentos antiguos o encolados por versiones viejas) → modo libre.
+  return attemptSourceLabels[source ?? 'free'] ?? 'Modo libre';
+}

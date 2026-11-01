@@ -1,4 +1,4 @@
-import type { ChildReport, Advisory, OperationBreakdown } from '../../utils/childReport';
+import type { ChildReport, Advisory, OperationBreakdown, SourceTotals } from '../../utils/childReport';
 import { formatOperationLabel, formatGradeLabel } from '../../utils/operationLabels';
 import { contentStageLabel } from '../../utils/contentStage';
 
@@ -38,7 +38,7 @@ function OperationsTable({
         </thead>
         <tbody>
           {operations.map((op) => (
-            <tr key={op.operation} className="border-b last:border-b-0">
+            <tr key={`${op.operation}-${op.contentStage ?? 'sin-clasificar'}`} className="border-b last:border-b-0">
               <td className="py-2 pr-4 font-medium text-gray-700">
                 {formatOperationLabel(op.operation)}
               </td>
@@ -60,9 +60,30 @@ function OperationsTable({
   );
 }
 
+function SourceCard({ title, totals }: { title: string; totals: SourceTotals }) {
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <h4 className="font-semibold text-gray-800">{title}</h4>
+      <p className="text-sm text-gray-500">
+        {totals.total} {totals.total === 1 ? 'intento' : 'intentos'} · {totals.accuracy}% de aciertos
+      </p>
+    </div>
+  );
+}
+
 export function ChildReportView({ report }: { report: ChildReport }) {
   return (
     <div className="space-y-6">
+      {report.bySource.free.total + report.bySource.path.total > 0 && (
+        <section className="space-y-2">
+          <h3 className="text-xl font-semibold text-gray-700">🧩 Origen de los intentos</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SourceCard title="Modo libre" totals={report.bySource.free} />
+            <SourceCard title="Mi camino" totals={report.bySource.path} />
+          </div>
+        </section>
+      )}
+
       {report.advisories.length > 0 && (
         <section className="space-y-2">
           <h3 className="text-xl font-semibold text-gray-700">📌 Avisos</h3>

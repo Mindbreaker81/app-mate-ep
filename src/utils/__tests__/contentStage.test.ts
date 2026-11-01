@@ -39,6 +39,27 @@ describe('contentStageFor', () => {
   });
 });
 
+describe('contentStageFor con procedencia (source)', () => {
+  it('«repaso de 4.º» solo con source «free» o ausente (históricos)', () => {
+    expect(contentStageFor('4t', 'addition')).toBe('review-4');
+    expect(contentStageFor('4t', 'addition', 'free')).toBe('review-4');
+    expect(contentStageFor('4t', 'addition', null)).toBe('review-4');
+  });
+
+  it('un intento 4t+T1 desde «Mi camino» es contenido del ciclo', () => {
+    expect(contentStageFor('4t', 'addition', 'path')).toBe('cycle-start');
+    expect(contentStageFor('4t', 'addition', 'daily-session')).toBe('cycle-start');
+    expect(contentStageFor('4t', 'addition', 'placement')).toBe('cycle-start');
+  });
+
+  it('el source no altera el tramo de T2/T3', () => {
+    expect(contentStageFor('6e', 'two-step-equation', 'daily-session')).toBe('eso-extension');
+    expect(contentStageFor('6e', 'two-step-equation', 'free')).toBe('eso-extension');
+    expect(contentStageFor('5e', 'decimal-addition', 'path')).toBe('cycle-consolidation');
+    expect(contentStageFor('5e', 'decimal-addition', 'free')).toBe('cycle-consolidation');
+  });
+});
+
 describe('contentStageForTier', () => {
   it('mapea cada tier del catálogo a su tramo', () => {
     expect(contentStageForTier(1)).toBe('cycle-start');

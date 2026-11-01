@@ -28,6 +28,15 @@ describe('fetchOwnAttempts', () => {
           is_correct: false,
           time_spent: 12,
           created_at: '2026-07-18T10:00:00Z',
+          source: 'path',
+        },
+        {
+          operation: 'addition',
+          grade: '4t',
+          is_correct: true,
+          time_spent: 5,
+          created_at: '2026-07-18T11:00:00Z',
+          // Fila antigua sin source → 'free'
         },
       ],
       error: null,
@@ -44,6 +53,15 @@ describe('fetchOwnAttempts', () => {
         isCorrect: false,
         timeSpent: 12,
         createdAt: '2026-07-18T10:00:00Z',
+        source: 'path',
+      },
+      {
+        operation: 'addition',
+        grade: '4t',
+        isCorrect: true,
+        timeSpent: 5,
+        createdAt: '2026-07-18T11:00:00Z',
+        source: 'free',
       },
     ]);
   });

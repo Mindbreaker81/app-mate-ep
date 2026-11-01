@@ -572,11 +572,21 @@ export type SerializedAnswer =
   | RemainderAnswer
   | null;
 
+/**
+ * Procedencia de un intento (migración 0008):
+ * - `free`: modo libre.
+ * - `path`: práctica de una habilidad desde «Mi camino».
+ * - `daily-session`: ejercicio de la sesión diaria.
+ * - `placement`: prueba de colocación (reservado; hoy no se guardan intentos).
+ */
+export type AttemptSource = 'free' | 'path' | 'daily-session' | 'placement';
+
 export interface AttemptPayload {
   operation: Operation;
   level: number;
   practiceMode: PracticeMode;
   grade: GradeId;
+  source: AttemptSource;
   isCorrect: boolean;
   timeSpent: number;
   userAnswer: SerializedAnswer;

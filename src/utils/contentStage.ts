@@ -1,4 +1,4 @@
-import type { Operation } from '../types';
+import type { AttemptSource, Operation } from '../types';
 import { getSkillById, skillIdForOperation, type SkillTier } from './skillCatalog';
 
 /**
@@ -8,7 +8,8 @@ import { getSkillById, skillIdForOperation, type SkillTier } from './skillCatalo
  * de `attempts.operation` vía el catálogo de habilidades, así que también sirve
  * para los intentos históricos sin migración.
  *
- * - `review-4`: repaso de 4.º (curso elegido 4.º con contenido T1).
+ * - `review-4`: repaso de 4.º (curso elegido 4.º con contenido T1 **en modo
+ *   libre**; desde «Mi camino» es contenido del ciclo).
  * - `cycle-start` / `cycle-consolidation`: ciclo 5.º–6.º en conjunto (T1/T2);
  *   nunca se atribuyen a un solo curso.
  * - `eso-extension`: T3 «Ampliació ESO»; nunca se presenta como 5.º ni 6.º.
@@ -37,21 +38,29 @@ export const CONTENT_STAGE_ORDER: ContentStage[] = [
 ];
 
 /**
- * Tramo del contenido de un intento a partir de su operación (y del curso
- * elegido solo para distinguir el repaso de 4.º).
+ * Tramo del contenido de un intento a partir de su operación, del curso elegido
+ * y de su procedencia (`attempts.source`, solo para distinguir el repaso de
+ * 4.º).
  *
  * El modo libre de 4.º solo genera operaciones T1, así que `grade === '4t'` con
- * una operación T1 es repaso de 4.º; si la operación es T2/T3 solo pudo venir
- * de «Mi camino» y manda el tramo de la habilidad. Devuelve `null` cuando la
- * operación no está en el catálogo (texto libre histórico).
+ * una operación T1 **hecha en modo libre** es repaso de 4.º; la misma operación
+ * practicada desde «Mi camino» (`path`/`daily-session`/`placement`) es
+ * contenido del ciclo. Si la operación es T2/T3 solo pudo venir de «Mi camino»
+ * y manda el tramo de la habilidad. Los intentos sin `source` (históricos o
+ * encolados por versiones antiguas) se tratan como `free`. Devuelve `null`
+ * cuando la operación no está en el catálogo (texto libre histórico).
  */
-export function contentStageFor(grade: string, operation: string): ContentStage | null {
+export function contentStageFor(
+  grade: string,
+  operation: string,
+  source?: AttemptSource | null,
+): ContentStage | null {
   const skillId = skillIdForOperation(operation as Operation);
   const skill = skillId ? getSkillById(skillId) : null;
   if (!skill) {
     return null;
   }
-  if (grade === '4t' && skill.tier === 1) {
+  if (grade === '4t' && skill.tier === 1 && (source ?? 'free') === 'free') {
     return 'review-4';
   }
   return STAGE_BY_TIER[skill.tier];

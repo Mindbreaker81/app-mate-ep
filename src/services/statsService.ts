@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import type { ChildAttempt } from '../utils/childReport';
-import type { DetailedStats, OperationKey } from '../types';
+import type { AttemptSource, DetailedStats, OperationKey } from '../types';
 import { OPERATION_KEYS } from '../types';
 import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats, normalizeStats } from '../utils/statsUtils';
 import { getDifficulty } from '../utils/problemGenerator';
@@ -18,6 +18,7 @@ type DbAttemptRow = {
 type OwnAttemptRow = {
   operation: string;
   grade: string;
+  source: AttemptSource | null;
   is_correct: boolean;
   time_spent: number;
   created_at: string;
@@ -27,7 +28,7 @@ type OwnAttemptRow = {
 export async function fetchOwnAttempts(userId: string): Promise<ChildAttempt[] | null> {
   const { data, error } = await supabase
     .from('attempts')
-    .select('operation, grade, is_correct, time_spent, created_at')
+    .select('operation, grade, source, is_correct, time_spent, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: true });
 
@@ -39,6 +40,8 @@ export async function fetchOwnAttempts(userId: string): Promise<ChildAttempt[] |
   return ((data ?? []) as OwnAttemptRow[]).map((row) => ({
     operation: row.operation,
     grade: row.grade,
+    // Filas anteriores a la migración 0008 no tienen source → modo libre.
+    source: row.source ?? 'free',
     isCorrect: row.is_correct,
     timeSpent: row.time_spent,
     createdAt: row.created_at,
