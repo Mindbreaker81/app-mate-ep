@@ -22,12 +22,12 @@ export function Home() {
   const gradeLabel = state.grade === '4t' ? '4.º' : state.grade === '5e' ? '5.º' : '6.º';
 
   const tabs = [
-    { id: 'path', label: '🧭 Mi camino', icon: '🧭' },
-    { id: 'exercise', label: '🧮 Ejercicio', icon: '🧮' },
-    { id: 'stats', label: '📊 Estadísticas', icon: '📊' },
-    { id: 'achievements', label: '🏆 Logros', icon: '🏆' },
-    { id: 'practice', label: '🎯 Práctica', icon: '🎯' },
-    { id: 'time', label: '⏱️ Tiempo', icon: '⏱️' }
+    { id: 'path', label: 'Mi camino', icon: '🧭' },
+    { id: 'exercise', label: 'Ejercicio', icon: '🧮' },
+    { id: 'stats', label: 'Estadísticas', icon: '📊' },
+    { id: 'achievements', label: 'Logros', icon: '🏆' },
+    { id: 'practice', label: 'Práctica', icon: '🎯' },
+    { id: 'time', label: 'Tiempo', icon: '⏱️' }
   ];
 
   // Contenido de las pestañas que no necesitan persistencia local: se montan al activarse.
@@ -147,8 +147,8 @@ export function Home() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              <span>{tab.icon}</span>
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span aria-hidden="true">{tab.icon}</span>
+              <span className="sr-only sm:not-sr-only">{tab.label}</span>
             </button>
           ))}
         </div>

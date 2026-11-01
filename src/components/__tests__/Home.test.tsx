@@ -71,4 +71,21 @@ describe('Home', () => {
 
     expect(gameMocks.setGrade).toHaveBeenCalledWith('5e');
   });
+
+  it('las pestañas tienen nombre accesible con texto y sin emoji duplicado (e2e Chrome)', () => {
+    render(<Home />);
+
+    // Nombre accesible completo en ambos breakpoints: el texto no vive solo
+    // en `hidden sm:inline` (que en móvil dejaba el nombre reducido al emoji).
+    const expectedNames = ['Mi camino', 'Ejercicio', 'Estadísticas', 'Logros', 'Práctica', 'Tiempo'];
+    expectedNames.forEach((name) => {
+      expect(screen.getByRole('tab', { name })).toBeInTheDocument();
+    });
+
+    // El emoji decorativo aparece exactamente una vez por pestaña y queda
+    // oculto a lectores de pantalla.
+    const pathTab = screen.getByRole('tab', { name: 'Mi camino' });
+    expect(pathTab.textContent?.split('🧭') ?? []).toHaveLength(2); // emoji + 1 aparición
+    expect(pathTab.querySelector('[aria-hidden="true"]')?.textContent).toBe('🧭');
+  });
 });

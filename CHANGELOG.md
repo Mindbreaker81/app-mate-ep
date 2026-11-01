@@ -31,6 +31,10 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   decimal o fracción
 
 ### Corregido
+- **Pestañas de Home**: en escritorio el emoji salía duplicado («🧭 🧭 Mi
+  camino») y en móvil el nombre accesible era solo el emoji (el texto estaba
+  en `hidden sm:inline`). Ahora el emoji es decorativo (`aria-hidden`) y el
+  texto siempre está en el árbol de accesibilidad (`sr-only sm:not-sr-only`)
 - **Sesión al recargar**: la app se quedaba unos 15 s en «Cargando…» y devolvía
   al niño al login con «Supabase getSession tardó más de 15000ms» aunque el
   token fuera válido. El callback de `onAuthStateChange` era asíncrono y
