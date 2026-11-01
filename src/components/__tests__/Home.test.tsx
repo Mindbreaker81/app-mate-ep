@@ -25,6 +25,7 @@ vi.mock('../../context/GameContext', () => ({
 }));
 
 vi.mock('../Exercise', () => ({ Exercise: () => <div>Exercise</div> }));
+vi.mock('../MyPath', () => ({ MyPath: () => <div>MyPath</div> }));
 vi.mock('../ScoreBoard', () => ({ ScoreBoard: () => <div>ScoreBoard</div> }));
 vi.mock('../Achievements', () => ({ Achievements: () => <div>Achievements</div> }));
 vi.mock('../DetailedStats', () => ({ DetailedStats: () => <div>DetailedStats</div> }));
@@ -41,10 +42,13 @@ describe('Home', () => {
 
     expect(screen.getByRole('tablist', { name: /secciones principales/i })).toBeInTheDocument();
 
+    const pathTab = screen.getByRole('tab', { name: /mi camino/i });
     const exerciseTab = screen.getByRole('tab', { name: /ejercicio/i });
     const statsTab = screen.getByRole('tab', { name: /estadísticas/i });
 
-    expect(exerciseTab).toHaveAttribute('aria-selected', 'true');
+    // El camino de aprendizaje es el inicio por defecto.
+    expect(pathTab).toHaveAttribute('aria-selected', 'true');
+    expect(exerciseTab).toHaveAttribute('aria-selected', 'false');
 
     fireEvent.click(statsTab);
 

@@ -43,6 +43,7 @@ vi.mock('../../context/GameContext', () => ({
 }));
 
 vi.mock('../Exercise', () => ({ Exercise: () => <div data-testid="exercise" /> }));
+vi.mock('../MyPath', () => ({ MyPath: () => <div>MyPath</div> }));
 
 describe('Home — confirmación de reinicio', () => {
   beforeEach(() => {
@@ -52,6 +53,8 @@ describe('Home — confirmación de reinicio', () => {
   it('el primer clic no reinicia: pide confirmación', () => {
     render(<Home />);
 
+    // El inicio por defecto es Mi camino: primero hay que ir a Ejercicio.
+    fireEvent.click(screen.getByRole('tab', { name: /ejercicio/i }));
     fireEvent.click(screen.getByRole('button', { name: /reiniciar juego/i }));
 
     expect(homeMocks.resetGame).not.toHaveBeenCalled();
@@ -62,6 +65,7 @@ describe('Home — confirmación de reinicio', () => {
   it('confirmar sí reinicia', () => {
     render(<Home />);
 
+    fireEvent.click(screen.getByRole('tab', { name: /ejercicio/i }));
     fireEvent.click(screen.getByRole('button', { name: /reiniciar juego/i }));
     fireEvent.click(screen.getByRole('button', { name: /sí, reiniciar/i }));
 
@@ -71,6 +75,7 @@ describe('Home — confirmación de reinicio', () => {
   it('cancelar vuelve al botón original sin reiniciar', () => {
     render(<Home />);
 
+    fireEvent.click(screen.getByRole('tab', { name: /ejercicio/i }));
     fireEvent.click(screen.getByRole('button', { name: /reiniciar juego/i }));
     fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
 

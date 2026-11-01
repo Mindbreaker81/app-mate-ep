@@ -33,12 +33,14 @@ import {
 } from '../utils/problemUtils';
 import { formatMathNumber } from '../utils/mathUtils';
 import { celebrate } from '../utils/celebration';
+import { getSkillById } from '../utils/skillCatalog';
 
 export function Exercise() {
   const { state, checkAnswer, nextProblem, setAnswer } = useGame();
-  const { currentProblem, userAnswer, isCorrect, timeRemaining, isTimerActive, practiceMode, timeMode, grade, levelMode, manualLevel, level } = state;
+  const { currentProblem, userAnswer, isCorrect, timeRemaining, isTimerActive, practiceMode, timeMode, grade, levelMode, manualLevel, level, pathSkillId } = state;
   const practiceConfig = getPracticeModeConfig(practiceMode, grade);
   const effectiveLevel = levelMode === 'manual' ? manualLevel : level;
+  const pathSkill = pathSkillId ? getSkillById(pathSkillId) : null;
 
   const [fracAnswer, setFracAnswer] = React.useState({ numerator: '', denominator: '' });
   const [mixedAnswer, setMixedAnswer] = React.useState({ whole: '', numerator: '', denominator: '' });
@@ -242,6 +244,14 @@ export function Exercise() {
             <span>{practiceConfig.icon}</span>
             <span>{practiceConfig.label}</span>
           </div>
+          {pathSkill && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+              <span>🧭</span>
+              <span>
+                {pathSkill.name} · Nivel {state.skillProgress[state.pathSkillId ?? '']?.level ?? 1}/3
+              </span>
+            </div>
+          )}
           {timeMode !== 'no-limit' && (
             <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
               <span>⏰</span>

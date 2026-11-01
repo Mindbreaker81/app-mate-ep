@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AchievementToast } from './AchievementToast';
 import { DailyGoalCard } from './DailyGoalCard';
 import { Exercise } from './Exercise';
+import { MyPath } from './MyPath';
 import { ScoreBoard } from './ScoreBoard';
 import { Achievements } from './Achievements';
 import { DetailedStats } from './DetailedStats';
@@ -10,16 +11,18 @@ import { TimeModes } from './TimeModes';
 import { useGame } from '../context/GameContext';
 import { getGradeConfig } from '../utils/gameConfig';
 
-type TabType = 'exercise' | 'stats' | 'achievements' | 'practice' | 'time';
+type TabType = 'path' | 'exercise' | 'stats' | 'achievements' | 'practice' | 'time';
 
 export function Home() {
-  const [activeTab, setActiveTab] = useState<TabType>('exercise');
+  // El camino de aprendizaje es el inicio por defecto.
+  const [activeTab, setActiveTab] = useState<TabType>('path');
   const [confirmingReset, setConfirmingReset] = useState(false);
   const { state, resetGame, setGrade } = useGame();
   const gradeOptions = ['4t', '5e', '6e'] as const;
   const gradeLabel = state.grade === '4t' ? '4.º' : state.grade === '5e' ? '5.º' : '6.º';
 
   const tabs = [
+    { id: 'path', label: '🧭 Mi camino', icon: '🧭' },
     { id: 'exercise', label: '🧮 Ejercicio', icon: '🧮' },
     { id: 'stats', label: '📊 Estadísticas', icon: '📊' },
     { id: 'achievements', label: '🏆 Logros', icon: '🏆' },
@@ -29,6 +32,8 @@ export function Home() {
 
   const renderActiveTab = () => {
     switch (activeTab) {
+      case 'path':
+        return <MyPath onStartSkill={() => setActiveTab('exercise')} />;
       case 'exercise':
         return (
           <div className="space-y-6">

@@ -484,6 +484,8 @@ export interface GameState {
   skillProgress: Record<string, SkillProgress>;
   /** Sesión diaria en curso: ids de habilidad ordenados (10 ejercicios). */
   dailySession: string[] | null;
+  /** Habilidad que se está practicando desde «Mi camino» (para mostrarla en el ejercicio). */
+  pathSkillId: string | null;
 }
 
 export type SerializedAnswer =
@@ -686,8 +688,10 @@ export type GameAction =
   | { type: 'SET_LEVEL_MODE'; payload: LevelMode }
   | { type: 'SET_MANUAL_LEVEL'; payload: number }
   | { type: 'INIT_SKILL_PROGRESS'; payload: Record<string, SkillProgress> }
+  | { type: 'MERGE_SKILL_PROGRESS'; payload: Record<string, SkillProgress> }
   | { type: 'START_DAILY_SESSION'; payload: string[] }
   | { type: 'CANCEL_DAILY_SESSION' }
+  | { type: 'SET_PATH_SKILL'; payload: string | null }
   | { type: 'UPDATE_TIMER'; payload: number }
   | { type: 'START_TIMER' }
   | { type: 'STOP_TIMER' }

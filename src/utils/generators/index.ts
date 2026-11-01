@@ -320,9 +320,14 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
   }
 }
 
+/** Genera un problema de una operación concreta (uso del camino de aprendizaje y tests). */
+export function generateOperation(operation: Operation, level: number, levelConfig: LevelConfig): Problem {
+  return generateByOperation(operation, level, levelConfig);
+}
+
 /** Solo para tests: genera un problema de una operación concreta sin pasar por el azar del modo. */
 export function generateOperationForTest(operation: Operation, level: number, levelConfig: LevelConfig): Problem {
-  return generateByOperation(operation, level, levelConfig);
+  return generateOperation(operation, level, levelConfig);
 }
 
 export function generateProblem(

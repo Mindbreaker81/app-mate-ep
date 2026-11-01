@@ -319,6 +319,7 @@ const createInitialState = (): GameState => ({
   practiceDays: [],
   skillProgress: {},
   dailySession: null,
+  pathSkillId: null,
 });
 
 function createProblemForState(state: Pick<GameState, 'level' | 'levelMode' | 'manualLevel' | 'practiceMode' | 'grade'>): Problem {
@@ -490,6 +491,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         practiceMode: nextPracticeMode,
+        // Un cambio manual de modo sale del camino de aprendizaje.
+        pathSkillId: null,
         currentProblem: generateProblem(getEffectiveLevel(state), nextPracticeMode, state.grade),
         userAnswer: '',
         isCorrect: null,
@@ -570,11 +573,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ? state
         : { ...state, skillProgress: action.payload };
 
+    case 'MERGE_SKILL_PROGRESS': {
+      // Colocación: completa habilidades sin progreso o con datos más recientes.
+      const merged = { ...state.skillProgress };
+      for (const [skillId, incoming] of Object.entries(action.payload)) {
+        const existing = merged[skillId];
+        if (!existing || new Date(incoming.updatedAt) > new Date(existing.updatedAt)) {
+          merged[skillId] = incoming;
+        }
+      }
+      return { ...state, skillProgress: merged };
+    }
+
     case 'START_DAILY_SESSION':
       return { ...state, dailySession: action.payload };
 
     case 'CANCEL_DAILY_SESSION':
       return { ...state, dailySession: null };
+
+    case 'SET_PATH_SKILL':
+      return { ...state, pathSkillId: action.payload };
 
     case 'UPDATE_TIMER':
       return {
