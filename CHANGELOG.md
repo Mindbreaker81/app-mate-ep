@@ -31,6 +31,9 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   decimal o fracción
 
 ### Corregido
+- **Botón de la sesión de hoy en móvil**: con el estado «Completada 🎉» el botón
+  se salía de la tarjeta a 390 px (la barra de progreso tenía un ancho mínimo de
+  140 px). La barra baja a 80 px y el botón no se encoge ni parte el texto
 - **Sesión completada y recarga**: al terminar la sesión diaria (10/10) y
   recargar, el contador volvía a 0/10 y se empezaba otra el mismo día (la
   clave guardada se borraba al completar). Ahora la sesión completada de hoy

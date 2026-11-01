@@ -126,7 +126,7 @@ export function MyPath({ onStartSkill }: MyPathProps) {
               aria-valuemin={0}
               aria-valuemax={DAILY_SESSION_SIZE}
               aria-label="Progreso de la sesión de hoy"
-              className="flex-1 min-w-[140px] h-3 bg-gray-200 rounded-full overflow-hidden"
+              className="flex-1 min-w-[80px] h-3 bg-gray-200 rounded-full overflow-hidden"
             >
               <div
                 className="h-full bg-blue-500 rounded-full transition-all duration-300"
@@ -140,7 +140,7 @@ export function MyPath({ onStartSkill }: MyPathProps) {
               type="button"
               onClick={startDailySession}
               disabled={sessionDone}
-              className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="shrink-0 whitespace-nowrap px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {sessionDone ? 'Completada 🎉' : sessionProgress > 0 ? 'Continuar' : 'Sesión de hoy'}
             </button>
