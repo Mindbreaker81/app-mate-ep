@@ -210,9 +210,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void initialize();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       clearError();
-      await resolveSession(newSession ?? null);
+      // supabase-js retiene su lock de token mientras ejecuta este callback y
+      // espera la promesa que devolvemos. Si hacemos await de consultas de
+      // supabase aquí dentro (perfil, admin), éstas piden el token con
+      // getSession(), que espera ese mismo lock: interbloqueo y «Cargando…»
+      // de 15 s al recargar. El callback es síncrono y difiere el trabajo;
+      // isMounted se comprueba dentro del temporizador por si se desmontó.
+      setTimeout(() => {
+        if (isMounted) {
+          void resolveSession(newSession ?? null);
+        }
+      }, 0);
     });
 
     return () => {

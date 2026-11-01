@@ -9,6 +9,16 @@ const supabaseState = vi.hoisted(() => {
     authCallback: null as AuthCallback | null,
     adminRowDelayMs: 0,
     adminRow: null as { user_id: string } | null,
+    // Modelo del lock `lock:sb-<ref>-auth-token` de supabase-js: mientras el
+    // emitter retiene el lock, getSession y las consultas (que piden el token)
+    // esperan a que se libere.
+    heldLock: null as Promise<void> | null,
+  };
+
+  const waitForLock = async () => {
+    if (state.heldLock) {
+      await state.heldLock;
+    }
   };
 
   const makeChain = (table: string) => {
@@ -19,15 +29,20 @@ const supabaseState = vi.hoisted(() => {
     chain.maybeSingle = vi.fn(
       () =>
         new Promise((resolve) => {
-          const data = table === 'admin_users' ? state.adminRow : null;
-          setTimeout(() => resolve({ data, error: null }), state.adminRowDelayMs);
+          void waitForLock().then(() => {
+            const data = table === 'admin_users' ? state.adminRow : null;
+            setTimeout(() => resolve({ data, error: null }), state.adminRowDelayMs);
+          });
         }),
     );
     return chain;
   };
 
   const auth = {
-    getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+    getSession: vi.fn(async () => {
+      await waitForLock();
+      return { data: { session: null }, error: null };
+    }),
     onAuthStateChange: vi.fn((cb: AuthCallback) => {
       state.authCallback = cb;
       return { data: { subscription: { unsubscribe: vi.fn() } } };
@@ -66,6 +81,27 @@ const adminSession = {
   access_token: 'token',
 } as unknown as Session;
 
+const kidSession = {
+  user: { id: 'kid-1' },
+  access_token: 'token-kid',
+} as unknown as Session;
+
+/** Emite un evento como auth-js v2: retiene el lock de token mientras ejecuta
+ *  el callback y no lo libera hasta que la promesa del callback resuelve. */
+function emitAuthStateChange(event: string, session: Session | null) {
+  const state = supabaseState.state;
+  let releaseLock!: () => void;
+  state.heldLock = new Promise<void>((resolve) => {
+    releaseLock = resolve;
+  });
+  const callbackResult = state.authCallback?.(event, session);
+  void Promise.resolve(callbackResult).finally(() => {
+    state.heldLock = null;
+    releaseLock();
+  });
+  return callbackResult;
+}
+
 describe('AuthContext — resolución de isAdmin', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -93,5 +129,26 @@ describe('AuthContext — resolución de isAdmin', () => {
 
     // Durante la ventana en que isAdmin aún se resolvía no debe haberse mostrado el juego
     expect(observedStates).not.toContain('kid');
+  });
+
+  it('regresión: la sesión se resuelve aunque auth-js retenga el lock durante onAuthStateChange', async () => {
+    supabaseState.state.adminRow = null; // niño, no admin
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByTestId('auth-state')).toHaveTextContent('anon'));
+
+    // auth-js emite INITIAL_SESSION/SIGNED_IN con el lock retenido mientras el
+    // callback no resuelve. Con el interbloqueo (await de supabase dentro del
+    // callback) la sesión nunca llega y el niño vuelve al login tras 15 s.
+    emitAuthStateChange('INITIAL_SESSION', kidSession);
+
+    await waitFor(
+      () => expect(screen.getByTestId('auth-state')).toHaveTextContent('kid'),
+      { timeout: 2000 },
+    );
   });
 });
