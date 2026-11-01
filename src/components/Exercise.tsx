@@ -38,6 +38,13 @@ import { formatMathNumber } from '../utils/mathUtils';
 import { celebrate } from '../utils/celebration';
 import { getSkillById } from '../utils/skillCatalog';
 import { buildHint, simplifiableFractionNote, typicalMistakeMessage } from '../utils/hints';
+import {
+  FractionInputs,
+  MixedNumberInputs,
+  NumericInput,
+  PromptInput,
+  RemainderInputs,
+} from './inputs/AnswerInputs';
 
 export function Exercise({ active = true }: { active?: boolean }) {
   const { state, checkAnswer, nextProblem, setAnswer, dispatch } = useGame();
@@ -362,27 +369,7 @@ export function Exercise({ active = true }: { active?: boolean }) {
               <div className="text-3xl font-semibold text-gray-800">
                 {currentProblem.num1} ÷ {currentProblem.num2} = ? resto ?
               </div>
-              <div className="flex items-center justify-center gap-2">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  aria-label="Cociente"
-                  className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl"
-                  value={remainderAnswer.quotient}
-                  onChange={(e) => setRemainderAnswer((prev) => ({ ...prev, quotient: e.target.value }))}
-                  disabled={revealed}
-                />
-                <span>resto</span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  aria-label="Resto"
-                  className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl"
-                  value={remainderAnswer.remainder}
-                  onChange={(e) => setRemainderAnswer((prev) => ({ ...prev, remainder: e.target.value }))}
-                  disabled={revealed}
-                />
-              </div>
+              <RemainderInputs value={remainderAnswer} onChange={setRemainderAnswer} disabled={revealed} />
             </div>
           ) : isIntegerCompareProblem(currentProblem) ? (
             renderMultipleChoice(currentProblem.prompt, [
@@ -636,163 +623,5 @@ function ExplanationBox({ explanation }: { explanation: string }) {
     <pre className="bg-gray-100 rounded p-3 mt-4 text-left text-base whitespace-pre-wrap font-sans font-normal text-gray-800">
       {explanation}
     </pre>
-  );
-}
-
-function FractionInputs({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: { numerator: string; denominator: string };
-  onChange: React.Dispatch<React.SetStateAction<{ numerator: string; denominator: string }>>;
-  disabled: boolean;
-}) {
-  return (
-    <span>
-      <input
-        type="number"
-        inputMode="numeric"
-        aria-label="Numerador"
-        className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl mx-1"
-        placeholder="Num"
-        value={value.numerator}
-        onChange={(e) => onChange((prev) => ({ ...prev, numerator: e.target.value }))}
-        disabled={disabled}
-      />
-      <span className="text-xl">/</span>
-      <input
-        type="number"
-        inputMode="numeric"
-        aria-label="Denominador"
-        className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl mx-1"
-        placeholder="Den"
-        value={value.denominator}
-        onChange={(e) => onChange((prev) => ({ ...prev, denominator: e.target.value }))}
-        disabled={disabled}
-      />
-    </span>
-  );
-}
-
-function MixedNumberInputs({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: { whole: string; numerator: string; denominator: string };
-  onChange: React.Dispatch<React.SetStateAction<{ whole: string; numerator: string; denominator: string }>>;
-  disabled: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-center gap-2">
-      <input
-        type="number"
-        inputMode="numeric"
-        aria-label="Parte entera"
-        className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl"
-        placeholder="Ent"
-        value={value.whole}
-        onChange={(e) => onChange((prev) => ({ ...prev, whole: e.target.value }))}
-        disabled={disabled}
-      />
-      <FractionInputs
-        value={{ numerator: value.numerator, denominator: value.denominator }}
-        onChange={(updater) => {
-          onChange((prev) => {
-            const next = typeof updater === 'function' ? updater(prev) : updater;
-            return { ...prev, numerator: next.numerator, denominator: next.denominator };
-          });
-        }}
-        disabled={disabled}
-      />
-    </div>
-  );
-}
-
-function NumericInput({
-  userAnswer,
-  setAnswer,
-  disabled,
-  setValidationError,
-}: {
-  userAnswer: string | Fraction | MixedNumber | RemainderAnswer;
-  setAnswer: (value: string) => void;
-  disabled: boolean;
-  setValidationError: (value: string | null) => void;
-}) {
-  return (
-    <div className="flex items-center justify-center gap-3">
-      <span className="text-2xl text-blue-600">=</span>
-      <input
-        type="number"
-        inputMode="numeric"
-        aria-label="Tu respuesta"
-        placeholder="Tu respuesta"
-        className="h-12 w-32 rounded-lg border-2 border-blue-400 text-center text-2xl"
-        value={typeof userAnswer === 'string' ? userAnswer : ''}
-        onChange={(e) => {
-          setValidationError(null);
-          setAnswer(e.target.value);
-        }}
-        disabled={disabled}
-      />
-    </div>
-  );
-}
-
-function PromptInput({
-  userAnswer,
-  setAnswer,
-  disabled,
-  setValidationError,
-  decimal = false,
-  factorization = false,
-  allowNegative = false,
-}: {
-  userAnswer: string | Fraction | MixedNumber | RemainderAnswer;
-  setAnswer: (value: string) => void;
-  disabled: boolean;
-  setValidationError: (value: string | null) => void;
-  decimal?: boolean;
-  factorization?: boolean;
-  allowNegative?: boolean;
-}) {
-  const currentValue = typeof userAnswer === 'string' ? userAnswer : '';
-
-  const toggleSign = () => {
-    setValidationError(null);
-    setAnswer(currentValue.startsWith('-') ? currentValue.slice(1) : `-${currentValue}`);
-  };
-
-  return (
-    <div className="flex items-center justify-center gap-3">
-      {!factorization && <span className="text-2xl text-blue-600">=</span>}
-      <input
-        type={factorization || decimal || allowNegative ? 'text' : 'number'}
-        inputMode={factorization ? undefined : decimal ? 'decimal' : 'numeric'}
-        step={factorization || allowNegative ? undefined : decimal ? 'any' : '1'}
-        aria-label={factorization ? 'Factores primos' : 'Tu respuesta'}
-        placeholder={factorization ? '2 x 2 x 3' : 'Tu respuesta'}
-        className="h-12 w-full max-w-xs rounded-lg border-2 border-blue-400 text-center text-2xl"
-        value={currentValue}
-        onChange={(e) => {
-          setValidationError(null);
-          setAnswer(e.target.value);
-        }}
-        disabled={disabled}
-      />
-      {allowNegative && (
-        <button
-          type="button"
-          aria-label="Cambiar signo"
-          onClick={toggleSign}
-          disabled={disabled}
-          className="h-12 w-12 shrink-0 rounded-lg border-2 border-blue-400 text-xl font-bold text-blue-700 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 transition-colors"
-        >
-          ±
-        </button>
-      )}
-    </div>
   );
 }
