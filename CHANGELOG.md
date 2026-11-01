@@ -31,6 +31,12 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   decimal o fracción
 
 ### Corregido
+- **Sesión completada y recarga**: al terminar la sesión diaria (10/10) y
+  recargar, el contador volvía a 0/10 y se empezaba otra el mismo día (la
+  clave guardada se borraba al completar). Ahora la sesión completada de hoy
+  se conserva en localStorage y tras recargar se sigue mostrando como
+  completada hasta el día siguiente; empezar otra solo si se pide
+  explícitamente con un botón existente
 - **StrictMode en desarrollo (PIT-28)**: el doble montaje encolaba dos veces
   la generación de problema y la segunda quedaba después de la restauración
   de la sesión diaria, pisando el ejercicio restaurado por uno de modo libre

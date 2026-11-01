@@ -1,6 +1,6 @@
 import type { DailySessionSnapshot } from '../types';
 import { getSkillById } from './skillCatalog';
-import { todayKey } from './skillProgress';
+import { DAILY_SESSION_SIZE, todayKey } from './skillProgress';
 import { logger } from './logger';
 
 /**
@@ -49,7 +49,10 @@ export function parseDailySession(raw: unknown, today: string): DailySessionSnap
   if (typeof done !== 'number' || !Number.isInteger(done) || done < 0) {
     return null;
   }
-  if (queue.length === 0 && skillId === null) {
+  // Sin cola ni habilidad solo hay nada que reanudar si la sesión no llegó a
+  // completarse. La completada (done = meta) se conserva: tras recargar se
+  // sigue mostrando como completada hasta el día siguiente.
+  if (queue.length === 0 && skillId === null && done < DAILY_SESSION_SIZE) {
     return null;
   }
 

@@ -66,10 +66,14 @@ describe('dailySessionStorage: serialización y validación', () => {
     expect(parseDailySession({ ...sampleSession, done: undefined }, TODAY)).toBeNull();
   });
 
-  it('descarta una sesión agotada: sin habilidad en curso ni cola no hay nada que reanudar', () => {
-    expect(
-      parseDailySession({ date: TODAY, skillId: null, queue: [], done: 10 }, TODAY),
-    ).toBeNull();
+  it('acepta la sesión completada de hoy: se sigue mostrando completada tras recargar', () => {
+    const completed = { date: TODAY, skillId: null, queue: [], done: 10 };
+    expect(parseDailySession(completed, TODAY)).toEqual(completed);
+  });
+
+  it('sigue descartando una sesión sin cola ni habilidad que no está completa', () => {
+    expect(parseDailySession({ date: TODAY, skillId: null, queue: [], done: 2 }, TODAY)).toBeNull();
+    expect(parseDailySession({ date: TODAY, skillId: null, queue: [], done: 9 }, TODAY)).toBeNull();
   });
 });
 
@@ -118,6 +122,15 @@ describe('dailySessionStorage: localStorage por usuario', () => {
   it('clearDailySession elimina la clave', () => {
     saveDailySession('user-a', sampleSession);
     clearDailySession('user-a');
+    expect(window.localStorage.getItem(dailySessionStorageKey('user-a'))).toBeNull();
+  });
+
+  it('la sesión completada de hoy sobrevive a la recarga (ida y vuelta por localStorage)', () => {
+    const completed = { date: TODAY, skillId: null, queue: [], done: 10 };
+    saveDailySession('user-a', completed);
+    expect(loadDailySession('user-a', TODAY)).toEqual(completed);
+    // Al día siguiente ya no cuenta: caduca como cualquier otra.
+    expect(loadDailySession('user-a', '2026-11-02')).toBeNull();
     expect(window.localStorage.getItem(dailySessionStorageKey('user-a'))).toBeNull();
   });
 });

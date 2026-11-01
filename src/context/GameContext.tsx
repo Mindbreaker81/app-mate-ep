@@ -31,7 +31,7 @@ import { logger } from '../utils/logger';
 import { evaluateAchievements } from '../utils/achievementEngine';
 import { updateDailyProgress, updatePracticeDays } from '../utils/dailyGoal';
 import { getSkillById, skillIdForOperation } from '../utils/skillCatalog';
-import { mergeSkillProgress, recordSkillAttempt, initializeSkillProgressFromAttempts, todayKey } from '../utils/skillProgress';
+import { DAILY_SESSION_SIZE, mergeSkillProgress, recordSkillAttempt, initializeSkillProgressFromAttempts, todayKey } from '../utils/skillProgress';
 import { clearDailySession, loadDailySession, saveDailySession } from '../utils/dailySessionStorage';
 import {
   answersMatch,
@@ -1113,7 +1113,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       // Solo borrar la clave si hubo una sesión viva en memoria: al montar aún
       // no se ha aplicado la restauración y no debe eliminarse lo guardado.
       if (liveSessionRef.current) {
-        clearDailySession(sessionUserId);
+        if (state.sessionDate !== null && state.sessionDone >= DAILY_SESSION_SIZE) {
+          // Sesión completada hoy: se guarda como completada para que, tras
+          // recargar, se siga mostrando 10/10 hasta el día siguiente (no se
+          // empieza otra automáticamente).
+          saveDailySession(sessionUserId, {
+            date: state.sessionDate,
+            skillId: null,
+            queue: [],
+            done: state.sessionDone,
+          });
+        } else {
+          clearDailySession(sessionUserId);
+        }
       }
       liveSessionRef.current = false;
     }
