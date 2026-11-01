@@ -27,7 +27,10 @@ vi.mock('../../context/GameContext', () => ({
     state: exerciseMocks.state,
     checkAnswer: exerciseMocks.checkAnswer,
     nextProblem: exerciseMocks.nextProblem,
-    setAnswer: exerciseMocks.setAnswer,
+    // El mock actualiza el userAnswer del estado para pasar la validación de envío.
+    setAnswer: (value: string) => {
+      exerciseMocks.state.userAnswer = value;
+    },
   }),
 }));
 
@@ -96,5 +99,50 @@ describe('Exercise — fluidez', () => {
     fireEvent.click(screen.getByRole('button', { name: /por qué/i }));
 
     expect(screen.getByText('2 + 3 = 5')).toBeInTheDocument();
+  });
+
+  it('fallo una vez deja reintentar y solo revela la solución al segundo fallo', () => {
+    // Flujo real: isCorrect parte de null y checkAnswer la pone a false.
+    exerciseMocks.state.isCorrect = null;
+    exerciseMocks.state.userAnswer = '';
+    exerciseMocks.checkAnswer.mockImplementation(() => {
+      exerciseMocks.state.isCorrect = false;
+    });
+
+    const view = render(<Exercise />);
+
+    // Primer intento fallido: mensaje de reintento, sin solución.
+    fireEvent.change(screen.getByLabelText('Tu respuesta'), { target: { value: '7' } });
+    view.rerender(<Exercise />);
+    fireEvent.click(screen.getByRole('button', { name: /enviar/i }));
+    view.rerender(<Exercise />);
+    expect(screen.getByText(/inténtalo una vez más/i)).toBeInTheDocument();
+    expect(screen.queryByText(/la respuesta correcta es/i)).not.toBeInTheDocument();
+
+    // Segundo intento fallido: se revela la solución.
+    fireEvent.change(screen.getByLabelText('Tu respuesta'), { target: { value: '8' } });
+    view.rerender(<Exercise />);
+    fireEvent.click(screen.getByRole('button', { name: /enviar/i }));
+    view.rerender(<Exercise />);
+    expect(screen.getByText(/la respuesta correcta es/i)).toBeInTheDocument();
+    expect(screen.getByText('2 + 3 = 5')).toBeInTheDocument();
+  });
+
+  it('tras fallar una vez se puede dar una pista gradual', () => {
+    exerciseMocks.state.isCorrect = null;
+    exerciseMocks.state.userAnswer = '';
+    exerciseMocks.checkAnswer.mockImplementation(() => {
+      exerciseMocks.state.isCorrect = false;
+    });
+
+    const view = render(<Exercise />);
+
+    fireEvent.change(screen.getByLabelText('Tu respuesta'), { target: { value: '7' } });
+    view.rerender(<Exercise />);
+    fireEvent.click(screen.getByRole('button', { name: /enviar/i }));
+    view.rerender(<Exercise />);
+
+    fireEvent.click(screen.getByRole('button', { name: /dar una pista/i }));
+    expect(screen.getByText(/coloca los números en columna/i)).toBeInTheDocument();
   });
 });

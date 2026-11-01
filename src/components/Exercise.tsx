@@ -34,6 +34,7 @@ import {
 import { formatMathNumber } from '../utils/mathUtils';
 import { celebrate } from '../utils/celebration';
 import { getSkillById } from '../utils/skillCatalog';
+import { buildHint, simplifiableFractionNote, typicalMistakeMessage } from '../utils/hints';
 
 export function Exercise() {
   const { state, checkAnswer, nextProblem, setAnswer } = useGame();
@@ -48,6 +49,12 @@ export function Exercise() {
   const [validationError, setValidationError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showExplanation, setShowExplanation] = React.useState(false);
+  // Segundo intento antes de revelar la solución (F4).
+  const [attemptCount, setAttemptCount] = React.useState(0);
+  const [hintLevel, setHintLevel] = React.useState<0 | 1 | 2>(0);
+
+  // La solución solo se revela tras fallar dos veces.
+  const revealed = isCorrect === false && attemptCount >= 2;
 
   useEffect(() => {
     setFracAnswer({ numerator: '', denominator: '' });
@@ -56,6 +63,8 @@ export function Exercise() {
     setValidationError(null);
     setIsSubmitting(false);
     setShowExplanation(false);
+    setAttemptCount(0);
+    setHintLevel(0);
   }, [currentProblem]);
 
   useEffect(() => {
@@ -67,8 +76,12 @@ export function Exercise() {
     }
   }, [isCorrect, state.streak]);
 
+  // Enter avanza al responder correcto o cuando la solución ya está revelada
+  // (no durante el segundo intento, para no saltárselo sin querer).
+  const canAdvance = isCorrect === true || revealed;
+
   useEffect(() => {
-    if (isCorrect === null) {
+    if (isCorrect === null || !canAdvance) {
       return undefined;
     }
 
@@ -81,20 +94,21 @@ export function Exercise() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isCorrect, nextProblem]);
+  }, [isCorrect, canAdvance, nextProblem]);
 
   const maxTime = timeMode !== 'no-limit' ? getTimeModeConfig(timeMode).seconds || 60 : 60;
 
   const submitAnswer = (answer: string | Fraction | MixedNumber | RemainderAnswer) => {
     setValidationError(null);
     setIsSubmitting(true);
+    setAttemptCount((count) => count + 1);
     setAnswer(answer);
     checkAnswer(answer);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentProblem || isCorrect !== null) {
+    if (!currentProblem || isCorrect === true || revealed) {
       return;
     }
 
@@ -193,6 +207,25 @@ export function Exercise() {
     return 'text-red-600';
   };
 
+  // F4: mensaje de error típico y pistas graduales durante el segundo intento.
+  const mistakeMessage =
+    isCorrect === false && !revealed && currentProblem && typeof userAnswer === 'string' && userAnswer.trim() !== ''
+      ? typicalMistakeMessage(currentProblem, userAnswer)
+      : null;
+  const hintText = hintLevel > 0 && currentProblem ? buildHint(currentProblem, hintLevel as 1 | 2) : null;
+  const simplificationNote =
+    isCorrect === true &&
+    currentProblem &&
+    isFractionProblem(currentProblem) &&
+    fracAnswer.numerator !== '' &&
+    fracAnswer.denominator !== ''
+      ? simplifiableFractionNote(
+          currentProblem,
+          Number.parseInt(fracAnswer.numerator, 10),
+          Number.parseInt(fracAnswer.denominator, 10),
+        )
+      : null;
+
   const renderMultipleChoice = (
     prompt: string,
     options: Array<{ key: string; label: string; value: string }>,
@@ -212,7 +245,7 @@ export function Exercise() {
                 setAnswer(option.value);
                 submitAnswer(option.value);
               }}
-              disabled={isCorrect !== null}
+              disabled={revealed}
               className={`rounded-lg border-2 px-4 py-3 text-lg font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
                 isSelected
                   ? 'border-blue-500 bg-blue-50 text-blue-800'
@@ -277,7 +310,7 @@ export function Exercise() {
                 {currentProblem.operation === 'mixed-number-addition' ? '+' : '-'}{' '}
                 {formatMixedNumber(currentProblem.num2)}
               </div>
-              <MixedNumberInputs value={mixedAnswer} onChange={setMixedAnswer} disabled={isCorrect !== null} />
+              <MixedNumberInputs value={mixedAnswer} onChange={setMixedAnswer} disabled={revealed} />
             </div>
           ) : isFractionProblem(currentProblem) ? (
             <>
@@ -293,7 +326,7 @@ export function Exercise() {
               </span>
               <span>{currentProblem.num2.numerator}/{currentProblem.num2.denominator}</span>
               <span className="mx-2">=</span>
-              <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={isCorrect !== null} />
+              <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={revealed} />
             </>
           ) : isRemainderProblem(currentProblem) ? (
             <div className="space-y-4">
@@ -308,7 +341,7 @@ export function Exercise() {
                   className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl"
                   value={remainderAnswer.quotient}
                   onChange={(e) => setRemainderAnswer((prev) => ({ ...prev, quotient: e.target.value }))}
-                  disabled={isCorrect !== null}
+                  disabled={revealed}
                 />
                 <span>resto</span>
                 <input
@@ -318,7 +351,7 @@ export function Exercise() {
                   className="h-12 w-20 rounded-lg border-2 border-blue-400 text-center text-2xl"
                   value={remainderAnswer.remainder}
                   onChange={(e) => setRemainderAnswer((prev) => ({ ...prev, remainder: e.target.value }))}
-                  disabled={isCorrect !== null}
+                  disabled={revealed}
                 />
               </div>
             </div>
@@ -338,7 +371,7 @@ export function Exercise() {
               <PromptInput
                 userAnswer={userAnswer}
                 setAnswer={setAnswer}
-                disabled={isCorrect !== null}
+                disabled={revealed}
                 setValidationError={setValidationError}
                 allowNegative
               />
@@ -366,7 +399,7 @@ export function Exercise() {
           ) : isMixedProblem(currentProblem) ? (
             <div className="space-y-4">
               <div className="text-3xl font-semibold text-gray-800">{currentProblem.expression}</div>
-              <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={isCorrect !== null} setValidationError={setValidationError} />
+              <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={revealed} setValidationError={setValidationError} />
             </div>
           ) : isPowerProblem(currentProblem) ? (
             <div className="space-y-4">
@@ -374,12 +407,12 @@ export function Exercise() {
                 {currentProblem.base}
                 <sup className="text-2xl align-super ml-1">{currentProblem.exponent}</sup>
               </div>
-              <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={isCorrect !== null} setValidationError={setValidationError} />
+              <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={revealed} setValidationError={setValidationError} />
             </div>
           ) : isSquareRootProblem(currentProblem) ? (
             <div className="space-y-4">
               <div className="text-4xl font-semibold text-gray-800">√{currentProblem.radicand}</div>
-              <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={isCorrect !== null} setValidationError={setValidationError} />
+              <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={revealed} setValidationError={setValidationError} />
             </div>
           ) : isEstimationProblem(currentProblem) ? (
             renderMultipleChoice(
@@ -403,21 +436,21 @@ export function Exercise() {
             <div className="space-y-4">
               <div className="text-2xl font-semibold text-gray-800">{currentProblem.prompt}</div>
               {'whole' in currentProblem.answer ? (
-                <MixedNumberInputs value={mixedAnswer} onChange={setMixedAnswer} disabled={isCorrect !== null} />
+                <MixedNumberInputs value={mixedAnswer} onChange={setMixedAnswer} disabled={revealed} />
               ) : (
-                <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={isCorrect !== null} />
+                <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={revealed} />
               )}
             </div>
           ) : isConversionProblem(currentProblem) ? (
             <div className="space-y-4">
               <div className="text-2xl font-semibold text-gray-800">{currentProblem.prompt}</div>
               {currentProblem.operation === 'decimal-to-fraction' ? (
-                <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={isCorrect !== null} />
+                <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={revealed} />
               ) : (
                 <PromptInput
                   userAnswer={userAnswer}
                   setAnswer={setAnswer}
-                  disabled={isCorrect !== null}
+                  disabled={revealed}
                   setValidationError={setValidationError}
                   decimal
                 />
@@ -433,7 +466,7 @@ export function Exercise() {
               <PromptInput
                 userAnswer={userAnswer}
                 setAnswer={setAnswer}
-                disabled={isCorrect !== null}
+                disabled={revealed}
                 setValidationError={setValidationError}
                 decimal={!isFactorizationProblem(currentProblem) && allowsDecimalAnswer(currentProblem)}
                 factorization={isFactorizationProblem(currentProblem)}
@@ -449,7 +482,7 @@ export function Exercise() {
               <PromptInput
                 userAnswer={userAnswer}
                 setAnswer={setAnswer}
-                disabled={isCorrect !== null}
+                disabled={revealed}
                 setValidationError={setValidationError}
                 decimal={allowsDecimalAnswer(currentProblem)}
               />
@@ -474,7 +507,7 @@ export function Exercise() {
               {validationError}
             </div>
           )}
-          {isCorrect === null && !isMultipleChoiceProblem(currentProblem) && (
+          {!revealed && isCorrect !== true && !isMultipleChoiceProblem(currentProblem) && (
             <button
               type="submit"
               className="px-6 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 transition-colors text-lg"
@@ -482,7 +515,7 @@ export function Exercise() {
               {isSubmitting ? 'Comprobando...' : 'Enviar'}
             </button>
           )}
-          {isCorrect !== null && (
+          {(isCorrect === true || revealed) && (
             <button
               type="button"
               onClick={nextProblem}
@@ -496,6 +529,11 @@ export function Exercise() {
         {isCorrect === true && (
           <div className="mt-6 text-green-700 font-bold text-xl text-center" role="status" aria-live="polite">
             ¡Correcto!
+            {simplificationNote && (
+              <p className="text-base font-normal text-blue-800 mt-1" role="status">
+                {simplificationNote}
+              </p>
+            )}
             <div className="mt-3">
               {showExplanation ? (
                 <ExplanationBox explanation={currentProblem.explanation} />
@@ -511,9 +549,29 @@ export function Exercise() {
             </div>
           </div>
         )}
-        {isCorrect === false && (
+        {isCorrect === false && !revealed && (
+          <div className="mt-6 text-orange-700 font-bold text-xl text-center" role="status" aria-live="polite">
+            No exactamente. ¡Inténtalo una vez más!
+            {mistakeMessage && (
+              <p className="text-base font-normal text-orange-800 mt-1">{mistakeMessage}</p>
+            )}
+            {hintText && (
+              <ExplanationBox explanation={`💡 ${hintText}`} />
+            )}
+            {hintLevel < 2 && (
+              <button
+                type="button"
+                onClick={() => setHintLevel((current) => (current === 0 ? 1 : 2) as 1 | 2)}
+                className="mt-2 text-sm font-semibold text-blue-600 underline hover:text-blue-800"
+              >
+                💡 Dar una pista
+              </button>
+            )}
+          </div>
+        )}
+        {revealed && (
           <div className="mt-6 text-red-700 font-bold text-xl text-center" role="status" aria-live="polite">
-            Incorrecto. La respuesta correcta es: {formatProblemAnswer(currentProblem)}
+            La respuesta correcta es: {formatProblemAnswer(currentProblem)}
             <ExplanationBox explanation={currentProblem.explanation} />
           </div>
         )}
