@@ -25,7 +25,9 @@ import {
   isMultipleChoiceProblem,
   isOrderValuesProblem,
   isPowerProblem,
+  isProbabilityCompareProblem,
   isProbabilityProblem,
+  isProportionalityProblem,
   isPromptProblem,
   isRemainderProblem,
   isSquareRootProblem,
@@ -384,6 +386,11 @@ export function Exercise() {
                 label: formatMathNumber(option),
                 value: String(option),
               })),
+            )
+          ) : isProportionalityProblem(currentProblem) || isProbabilityCompareProblem(currentProblem) ? (
+            renderMultipleChoice(
+              currentProblem.prompt,
+              currentProblem.options.map((option, index) => ({ key: `${index}`, label: option, value: option })),
             )
           ) : isCompareProblem(currentProblem) ? (
             renderMultipleChoice(currentProblem.prompt, [

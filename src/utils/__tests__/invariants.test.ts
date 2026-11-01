@@ -14,8 +14,11 @@ function correctInput(problem: Problem): string | Fraction | MixedNumber | Remai
   if (answer !== null && typeof answer === 'object') {
     return answer as Fraction | MixedNumber | RemainderAnswer;
   }
+  // En opción múltiple numérica el valor clicado es la cadena cruda de la opción.
   if (typeof answer === 'number') {
-    return formatMathNumber(answer);
+    return problem.operation === 'probability-simple' || problem.operation === 'estimation'
+      ? String(answer)
+      : formatMathNumber(answer);
   }
   return String(answer);
 }
@@ -32,11 +35,14 @@ function expectOptionsValid(problem: Problem) {
   if (!Array.isArray(options)) {
     return;
   }
+  // Las opciones numéricas se renderizan con formatMathNumber: comparamos etiquetas.
+  const labelFor = (value: unknown) => (typeof value === 'number' ? formatMathNumber(value) : String(value));
   expect(options.length, `opciones insuficientes: ${problem.operation}`).toBeGreaterThanOrEqual(2);
-  const unique = new Set(options.map((option) => String(option)));
-  expect(unique.size, `opciones duplicadas en ${problem.operation}: ${options.join(' | ')}`).toBe(options.length);
+  const labels = options.map(labelFor);
+  const unique = new Set(labels);
+  expect(unique.size, `opciones duplicadas en ${problem.operation}: ${labels.join(' | ')}`).toBe(labels.length);
   expect(
-    unique.has(String((problem as { answer: unknown }).answer)),
+    unique.has(labelFor((problem as { answer: unknown }).answer)),
     `respuesta correcta no incluida en opciones de ${problem.operation}`,
   ).toBe(true);
 }

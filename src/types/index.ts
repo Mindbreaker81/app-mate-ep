@@ -56,6 +56,13 @@ export const OPERATION_KEYS = [
   'volume-rectangular-prism',
   'triangle-angle-sum',
   'scale-conversion',
+  'place-value',
+  'sequence',
+  'proportionality-check',
+  'finance',
+  'probability-compare',
+  'two-step-equation',
+  'inverse-proportion',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
@@ -368,6 +375,64 @@ export interface ScaleProblem {
   explanation: string;
 }
 
+/** Valor posicional: ¿cuánto vale la cifra destacada? (hasta milésimas). */
+export interface PlaceValueProblem {
+  prompt: string;
+  operation: 'place-value';
+  answer: number;
+  explanation: string;
+}
+
+/** Secuencias: siguiente término. */
+export interface SequenceProblem {
+  prompt: string;
+  operation: 'sequence';
+  answer: number;
+  explanation: string;
+}
+
+/** Proporcionalidad: ¿es situación proporcional? (opción múltiple sí/no). */
+export interface ProportionalityProblem {
+  prompt: string;
+  options: string[];
+  operation: 'proportionality-check';
+  answer: string;
+  explanation: string;
+}
+
+/** Finanzas: IVA, mejor precio, rebajas e interés simple. */
+export interface FinanceProblem {
+  prompt: string;
+  operation: 'finance';
+  answer: number;
+  explanation: string;
+}
+
+/** Comparación cualitativa de probabilidades (opción múltiple). */
+export interface ProbabilityCompareProblem {
+  prompt: string;
+  options: string[];
+  operation: 'probability-compare';
+  answer: string;
+  explanation: string;
+}
+
+/** Puente T3 (Ampliació ESO): ecuaciones de dos pasos. */
+export interface TwoStepEquationProblem {
+  prompt: string;
+  operation: 'two-step-equation';
+  answer: number;
+  explanation: string;
+}
+
+/** Puente T3 (Ampliació ESO): proporcionalidad inversa. */
+export interface InverseProportionProblem {
+  prompt: string;
+  operation: 'inverse-proportion';
+  answer: number;
+  explanation: string;
+}
+
 export type Problem =
   | NumericProblem
   | RemainderProblem
@@ -402,7 +467,14 @@ export type Problem =
   | CircleProblem
   | VolumeProblem
   | TriangleAngleProblem
-  | ScaleProblem;
+  | ScaleProblem
+  | PlaceValueProblem
+  | SequenceProblem
+  | ProportionalityProblem
+  | FinanceProblem
+  | ProbabilityCompareProblem
+  | TwoStepEquationProblem
+  | InverseProportionProblem;
 
 export interface Achievement {
   id: string;
@@ -614,7 +686,9 @@ export type PracticeMode =
   | 'ratios'
   | 'probability'
   | 'geometry-advanced'
-  | 'scales';
+  | 'scales'
+  | 'number-sense'
+  | 'finance';
 
 export interface PracticeModeConfig {
   mode: PracticeMode;

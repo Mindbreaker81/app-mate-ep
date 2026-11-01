@@ -58,11 +58,13 @@ const MODE_OPERATIONS: Record<string, string[]> = {
   statistics: ['mean', 'median', 'mode', 'range'],
   rounding: ['round-decimal'],
   integers: ['integer-addition', 'integer-subtraction', 'integer-multiplication', 'integer-division', 'integer-compare', 'integer-order'],
-  equations: ['simple-equation'],
-  ratios: ['ratio', 'proportion'],
-  probability: ['probability-simple'],
+  equations: ['simple-equation', 'two-step-equation'],
+  ratios: ['ratio', 'proportion', 'inverse-proportion'],
+  probability: ['probability-simple', 'probability-compare'],
   'geometry-advanced': ['circle-area', 'circle-circumference', 'volume-rectangular-prism', 'triangle-angle-sum'],
   scales: ['scale-conversion'],
+  'number-sense': ['place-value', 'sequence', 'proportionality-check'],
+  finance: ['finance'],
 };
 
 interface MyPathProps {

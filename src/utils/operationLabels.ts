@@ -56,6 +56,13 @@ export const operationLabels = {
   'volume-rectangular-prism': 'Volumen del prisma',
   'triangle-angle-sum': 'Ángulos del triángulo',
   'scale-conversion': 'Escalas',
+  'place-value': 'Valor posicional',
+  sequence: 'Secuencias',
+  'proportionality-check': '¿Proporcional?',
+  finance: 'Finanzas (IVA, precios, interés)',
+  'probability-compare': 'Comparar probabilidades',
+  'two-step-equation': 'Ecuaciones de dos pasos',
+  'inverse-proportion': 'Proporcionalidad inversa',
 } as const;
 
 export function formatOperationLabel(operation: string): string {

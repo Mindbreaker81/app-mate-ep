@@ -243,6 +243,10 @@ const FIFTH_GRADE_OPERATIONS: Operation[] = [
   'angle-type',
   'unit-conversion',
   'round-decimal',
+  'place-value',
+  'sequence',
+  'proportionality-check',
+  'finance',
 ];
 
 const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [
@@ -264,6 +268,9 @@ const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [
   'volume-rectangular-prism',
   'triangle-angle-sum',
   'scale-conversion',
+  'probability-compare',
+  'two-step-equation',
+  'inverse-proportion',
 ];
 
 const SIXTH_GRADE_OPERATIONS: Operation[] = [...FIFTH_GRADE_OPERATIONS, ...SIXTH_GRADE_ONLY_OPERATIONS];
@@ -302,6 +309,8 @@ export const GRADE_CONFIGS: Record<'4t' | '5e' | '6e', GradeConfig> = {
       'units',
       'statistics',
       'rounding',
+      'number-sense',
+      'finance',
     ],
   },
   '6e': {
@@ -336,6 +345,8 @@ export const GRADE_CONFIGS: Record<'4t' | '5e' | '6e', GradeConfig> = {
       'probability',
       'geometry-advanced',
       'scales',
+      'number-sense',
+      'finance',
     ],
   },
 };

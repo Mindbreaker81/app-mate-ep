@@ -56,6 +56,15 @@ import { generateScaleConversion } from './scales';
 import { generateStatisticsProblem } from './statistics';
 import { generateUnitConversion } from './units';
 import { generateWordProblem } from './wordProblems';
+import {
+  generateFinanceProblem,
+  generateInverseProportionProblem,
+  generatePlaceValueProblem,
+  generateProbabilityCompareProblem,
+  generateProportionalityProblem,
+  generateSequenceProblem,
+  generateTwoStepEquationProblem,
+} from './curriculum';
 
 export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   addition: 2,
@@ -115,6 +124,13 @@ export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   'volume-rectangular-prism': 0.7,
   'triangle-angle-sum': 0.7,
   'scale-conversion': 0.7,
+  'place-value': 0.8,
+  sequence: 0.8,
+  'proportionality-check': 0.6,
+  finance: 0.8,
+  'probability-compare': 0.6,
+  'two-step-equation': 0.5,
+  'inverse-proportion': 0.5,
 };
 
 export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
@@ -157,9 +173,9 @@ export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
     'integer-compare',
     'integer-order',
   ],
-  equations: ['simple-equation'],
-  ratios: ['ratio', 'proportion'],
-  probability: ['probability-simple'],
+  equations: ['simple-equation', 'two-step-equation'],
+  ratios: ['ratio', 'proportion', 'inverse-proportion'],
+  probability: ['probability-simple', 'probability-compare'],
   'geometry-advanced': [
     'circle-area',
     'circle-circumference',
@@ -167,6 +183,8 @@ export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
     'triangle-angle-sum',
   ],
   scales: ['scale-conversion'],
+  'number-sense': ['place-value', 'sequence', 'proportionality-check'],
+  finance: ['finance'],
 };
 
 function pickWeightedOperation(operations: Operation[]): Operation {
@@ -313,6 +331,20 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
       return generateGeometryAdvancedProblem(levelConfig, operation);
     case 'scale-conversion':
       return generateScaleConversion(levelConfig);
+    case 'place-value':
+      return generatePlaceValueProblem(levelConfig);
+    case 'sequence':
+      return generateSequenceProblem(levelConfig);
+    case 'proportionality-check':
+      return generateProportionalityProblem();
+    case 'finance':
+      return generateFinanceProblem(levelConfig);
+    case 'probability-compare':
+      return generateProbabilityCompareProblem();
+    case 'two-step-equation':
+      return generateTwoStepEquationProblem(levelConfig);
+    case 'inverse-proportion':
+      return generateInverseProportionProblem(levelConfig);
     default: {
       const exhaustive: never = operation;
       throw new Error(`Operación no soportada: ${exhaustive}`);
@@ -388,7 +420,14 @@ export function getDifficulty(level: number, operation: Operation): 'easy' | 'me
     operation.startsWith('circle-') ||
     operation === 'volume-rectangular-prism' ||
     operation === 'triangle-angle-sum' ||
-    operation === 'scale-conversion'
+    operation === 'scale-conversion' ||
+    operation === 'place-value' ||
+    operation === 'sequence' ||
+    operation === 'proportionality-check' ||
+    operation === 'finance' ||
+    operation === 'probability-compare' ||
+    operation === 'two-step-equation' ||
+    operation === 'inverse-proportion'
   ) {
     return level >= 4 ? 'hard' : 'medium';
   }

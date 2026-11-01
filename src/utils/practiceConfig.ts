@@ -144,6 +144,20 @@ export const PRACTICE_MODES: PracticeModeConfig[] = [
     category: 'application',
   },
   {
+    mode: 'number-sense',
+    label: 'Sentido Numérico',
+    icon: '🔎',
+    description: 'Valor posicional, secuencias y proporcionalidad',
+    category: 'application',
+  },
+  {
+    mode: 'finance',
+    label: 'Finanzas',
+    icon: '🛒',
+    description: 'IVA, mejores precios, rebajas e interés simple',
+    category: 'application',
+  },
+  {
     mode: 'integers',
     label: 'Números Enteros',
     icon: '➖➕',

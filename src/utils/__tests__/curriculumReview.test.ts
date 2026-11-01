@@ -2,30 +2,42 @@ import { describe, expect, it } from 'vitest';
 import { GRADE_CONFIGS } from '../gameConfig';
 import { generateProblem } from '../problemGenerator';
 
-const SIXTH_ONLY_PREFIXES = [
-  'integer-',
+const SIXTH_ONLY_EXACT = [
+  'integer-addition',
+  'integer-subtraction',
+  'integer-multiplication',
+  'integer-division',
+  'integer-compare',
+  'integer-order',
   'simple-equation',
   'ratio',
   'proportion',
   'median',
   'mode',
   'range',
-  'probability-',
-  'circle-',
-  'volume-',
-  'triangle-angle',
-  'scale-',
+  'probability-simple',
+  'probability-compare',
+  'circle-area',
+  'circle-circumference',
+  'volume-rectangular-prism',
+  'triangle-angle-sum',
+  'scale-conversion',
+  'two-step-equation',
+  'inverse-proportion',
 ];
 
+const SIXTH_ONLY_PREFIXES = ['integer-'];
+
 function isSixthOnlyOperation(operation: string): boolean {
-  return SIXTH_ONLY_PREFIXES.some(
-    (prefix) => operation === prefix.replace(/-$/, '') || operation.startsWith(prefix),
+  return (
+    SIXTH_ONLY_EXACT.includes(operation) ||
+    SIXTH_ONLY_PREFIXES.some((prefix) => operation.startsWith(prefix))
   );
 }
 
 describe('curriculum isolation 5e vs 6e', () => {
-  it('5th grade keeps 39 operations without sixth-grade exclusives', () => {
-    expect(GRADE_CONFIGS['5e'].availableOperations).toHaveLength(39);
+  it('5th grade keeps 43 operations without sixth-grade exclusives', () => {
+    expect(GRADE_CONFIGS['5e'].availableOperations).toHaveLength(43);
     GRADE_CONFIGS['5e'].availableOperations.forEach((operation) => {
       expect(isSixthOnlyOperation(operation)).toBe(false);
     });

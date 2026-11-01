@@ -51,8 +51,9 @@ export function generateAddition(levelConfig: LevelConfig): NumericProblem {
 }
 
 export function generateSubtraction(levelConfig: LevelConfig): NumericProblem {
-  const num1 = randomInt(1, levelConfig.maxNumber);
-  const num2 = randomInt(1, Math.max(1, num1 - 1));
+  // num1 parte de 2 para garantizar resultado positivo estricto.
+  const num1 = randomInt(2, Math.max(2, levelConfig.maxNumber));
+  const num2 = randomInt(1, num1 - 1);
   return {
     num1,
     num2,

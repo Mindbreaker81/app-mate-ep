@@ -7,18 +7,18 @@ import {
   isIntegerArithmeticProblem,
   isIntegerCompareProblem,
   isIntegerOrderProblem,
+  isProbabilityCompareProblem,
   isProbabilityProblem,
   isPromptProblem,
-  isSimpleEquationProblem,
 } from '../problemUtils';
 
 describe('6th grade curriculum', () => {
-  it('exposes 57 operations in 6th grade config', () => {
-    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(57);
+  it('exposes 64 operations in 6th grade config', () => {
+    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(64);
   });
 
-  it('includes 26 practice modes for 6th grade', () => {
-    expect(getPracticeModesForGrade('6e')).toHaveLength(26);
+  it('includes 28 practice modes for 6th grade', () => {
+    expect(getPracticeModesForGrade('6e')).toHaveLength(28);
   });
 
   it('generates integer problems only in 6th grade', () => {
@@ -44,16 +44,16 @@ describe('6th grade curriculum', () => {
     }
   });
 
-  it('generates simple equations in equations mode', () => {
+  it('generates equations (one or two steps) in equations mode', () => {
     const problem = generateProblem(5, 'equations', '6e');
-    expect(isSimpleEquationProblem(problem)).toBe(true);
+    expect(['simple-equation', 'two-step-equation']).toContain(problem.operation);
     expect(typeof problem.answer).toBe('number');
   });
 
-  it('generates ratio or proportion problems', () => {
+  it('generates ratio, proportion or inverse proportion problems', () => {
     const problem = generateProblem(5, 'ratios', '6e');
     expect(isPromptProblem(problem)).toBe(true);
-    expect(problem.operation === 'ratio' || problem.operation === 'proportion').toBe(true);
+    expect(['ratio', 'proportion', 'inverse-proportion']).toContain(problem.operation);
   });
 
   it('generates extended statistics in statistics mode', () => {
@@ -63,9 +63,10 @@ describe('6th grade curriculum', () => {
 
   it('generates probability with valid options', () => {
     const problem = generateProblem(5, 'probability', '6e');
-    expect(isProbabilityProblem(problem)).toBe(true);
-    if (!isProbabilityProblem(problem)) return;
-    expect(problem.options).toContain(problem.answer);
+    expect(isProbabilityProblem(problem) || isProbabilityCompareProblem(problem)).toBe(true);
+    if (isProbabilityProblem(problem)) {
+      expect(problem.options).toContain(problem.answer);
+    }
   });
 
   it('validates probability answers numerically', () => {

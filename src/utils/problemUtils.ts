@@ -6,6 +6,7 @@ import type {
   ComparisonOperator,
   ConversionProblem,
   FactorizationProblem,
+  FinanceProblem,
   Fraction,
   FractionProblem,
   GcdLcmProblem,
@@ -13,6 +14,7 @@ import type {
   IntegerArithmeticProblem,
   IntegerCompareProblem,
   IntegerOrderProblem,
+  InverseProportionProblem,
   MeanProblem,
   MedianProblem,
   MixedNumber,
@@ -21,18 +23,23 @@ import type {
   ModeProblem,
   Operation,
   OrderValuesProblem,
+  PlaceValueProblem,
   PercentageProblem,
+  ProbabilityCompareProblem,
   ProbabilityProblem,
   Problem,
+  ProportionalityProblem,
   RangeProblem,
   RatioProblem,
   RemainderAnswer,
   RemainderProblem,
   RoundDecimalProblem,
   ScaleProblem,
+  SequenceProblem,
   SimpleEquationProblem,
   SquareRootProblem,
   TriangleAngleProblem,
+  TwoStepEquationProblem,
   UnitConversionProblem,
   VolumeProblem,
   WordProblem,
@@ -183,6 +190,34 @@ export function isScaleProblem(problem: Problem | null): problem is ScaleProblem
   return !!problem && problem.operation === 'scale-conversion';
 }
 
+export function isPlaceValueProblem(problem: Problem | null): problem is PlaceValueProblem {
+  return !!problem && problem.operation === 'place-value';
+}
+
+export function isSequenceProblem(problem: Problem | null): problem is SequenceProblem {
+  return !!problem && problem.operation === 'sequence';
+}
+
+export function isProportionalityProblem(problem: Problem | null): problem is ProportionalityProblem {
+  return !!problem && problem.operation === 'proportionality-check';
+}
+
+export function isFinanceProblem(problem: Problem | null): problem is FinanceProblem {
+  return !!problem && problem.operation === 'finance';
+}
+
+export function isProbabilityCompareProblem(problem: Problem | null): problem is ProbabilityCompareProblem {
+  return !!problem && problem.operation === 'probability-compare';
+}
+
+export function isTwoStepEquationProblem(problem: Problem | null): problem is TwoStepEquationProblem {
+  return !!problem && problem.operation === 'two-step-equation';
+}
+
+export function isInverseProportionProblem(problem: Problem | null): problem is InverseProportionProblem {
+  return !!problem && problem.operation === 'inverse-proportion';
+}
+
 export function isMultipleChoiceProblem(
   problem: Problem | null,
 ): problem is
@@ -192,7 +227,9 @@ export function isMultipleChoiceProblem(
   | AngleProblem
   | IntegerCompareProblem
   | IntegerOrderProblem
-  | ProbabilityProblem {
+  | ProbabilityProblem
+  | ProportionalityProblem
+  | ProbabilityCompareProblem {
   return (
     isEstimationProblem(problem) ||
     isCompareProblem(problem) ||
@@ -200,7 +237,9 @@ export function isMultipleChoiceProblem(
     isAngleProblem(problem) ||
     isIntegerCompareProblem(problem) ||
     isIntegerOrderProblem(problem) ||
-    isProbabilityProblem(problem)
+    isProbabilityProblem(problem) ||
+    isProportionalityProblem(problem) ||
+    isProbabilityCompareProblem(problem)
   );
 }
 
@@ -225,7 +264,12 @@ export function isPromptProblem(
   | CircleProblem
   | VolumeProblem
   | TriangleAngleProblem
-  | ScaleProblem {
+  | ScaleProblem
+  | PlaceValueProblem
+  | SequenceProblem
+  | FinanceProblem
+  | TwoStepEquationProblem
+  | InverseProportionProblem {
   return (
     isPercentageProblem(problem) ||
     isFactorizationProblem(problem) ||
@@ -245,7 +289,12 @@ export function isPromptProblem(
     isCircleProblem(problem) ||
     isVolumeProblem(problem) ||
     isTriangleAngleProblem(problem) ||
-    isScaleProblem(problem)
+    isScaleProblem(problem) ||
+    isPlaceValueProblem(problem) ||
+    isSequenceProblem(problem) ||
+    isFinanceProblem(problem) ||
+    isTwoStepEquationProblem(problem) ||
+    isInverseProportionProblem(problem)
   );
 }
 
@@ -263,6 +312,7 @@ export function allowsDecimalAnswer(problem: Problem): boolean {
     problem.operation === 'round-decimal' ||
     problem.operation === 'unit-conversion' ||
     problem.operation === 'probability-simple' ||
+    problem.operation === 'finance' ||
     problem.operation === 'circle-area' ||
     problem.operation === 'circle-circumference' ||
     problem.operation === 'scale-conversion'
@@ -507,6 +557,10 @@ export function answersMatch(problem: Problem, userValue: string | Fraction | Mi
   }
 
   if (isAngleProblem(problem)) {
+    return userValue === problem.answer;
+  }
+
+  if (isProportionalityProblem(problem) || isProbabilityCompareProblem(problem)) {
     return userValue === problem.answer;
   }
 
