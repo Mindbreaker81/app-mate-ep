@@ -27,6 +27,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   circunferencia). El panel es un overlay modal accesible (Escape, retorno de
   foco, navegación con teclado) que no desmonta el ejercicio ni detiene el
   temporizador; funciona offline. La interfaz sigue en castellano.
+- **Insignias por dominio** (PIT-20): sección nueva en «Logros» con una insignia
+  permanente por habilidad dominada (`mastery:<habilidad>`) y una por área
+  (`mastery-area:<área>`, conjuntos versionados explícitos). El dominio es el del
+  motor real (ventana de 12 intentos, mín. 10, ≥80 % y 2 días, con
+  prerrequisitos); un repaso pendiente nunca retira la insignia. Se conceden al
+  responder y también al hidratar/fusionar el progreso (en silencio, sin
+  duplicar por ID). Persisten en `game_state.data`, sin migración ni cambio en
+  los logros existentes.
 
 ## [4.1.0] - 2026-11-02
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef, useCallback } from 'react';
 import type {
+  Achievement,
   GameState,
   GameAction,
   Fraction,
@@ -33,6 +34,7 @@ import { updateDailyProgress, updatePracticeDays } from '../utils/dailyGoal';
 import { getSkillById, skillIdForOperation } from '../utils/skillCatalog';
 import { DAILY_SESSION_SIZE, mergeSkillProgress, recordSkillAttempt, initializeSkillProgressFromAttempts, todayKey } from '../utils/skillProgress';
 import { clearDailySession, loadDailySession, saveDailySession } from '../utils/dailySessionStorage';
+import { newMasteryAchievements } from '../utils/masteryAchievements';
 import {
   answersMatch,
   isFactorizationProblem,
@@ -278,6 +280,18 @@ function getEffectiveLevel(state: Pick<GameState, 'level' | 'levelMode' | 'manua
   return state.levelMode === 'manual' ? state.manualLevel : state.level;
 }
 
+/**
+ * Añade las insignias por dominio ya ganadas que falten en `achievements`.
+ * Fusión por ID: nunca duplica. Devuelve el mismo array si no hay nada nuevo.
+ */
+function appendMasteryBadges(
+  achievements: Achievement[],
+  skills: Record<string, SkillProgress>,
+): Achievement[] {
+  const badges = newMasteryAchievements(skills, new Set(achievements.map((item) => item.id)));
+  return badges.length === 0 ? achievements : [...achievements, ...badges];
+}
+
 /** Actualiza el progreso de la habilidad del problema respondido (no-op si no tiene). */
 function updateSkillProgressForProblem(
   state: Pick<GameState, 'skillProgress'>,
@@ -436,6 +450,19 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       }));
       newAchievements.push(...enrichedUnlocked);
 
+      const newSkillProgress = updateSkillProgressForProblem(
+        state,
+        problem,
+        isCorrect,
+        action.payload.isFirstTry ?? true,
+      );
+      // Insignias por dominio (PIT-20): se evalúan tras registrar el intento.
+      const masteryBadges = newMasteryAchievements(
+        newSkillProgress,
+        new Set(newAchievements.map((item) => item.id)),
+      );
+      newAchievements.push(...masteryBadges);
+
       const newLevel =
         [...LEVELS].reverse().find((level) => level.minScore <= newScore)?.id ?? state.level;
 
@@ -453,10 +480,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         stats: newStats,
         isTimerActive: false,
         timedCorrectExercises,
-        recentAchievement: enrichedUnlocked[0] ?? null,
+        recentAchievement: enrichedUnlocked[0] ?? masteryBadges[0] ?? null,
         daily: updateDailyProgress(state.daily, new Date()),
         practiceDays: updatePracticeDays(state.practiceDays, new Date()),
-        skillProgress: updateSkillProgressForProblem(state, problem, isCorrect, action.payload.isFirstTry ?? true),
+        skillProgress: newSkillProgress,
         // Una sola vez por ejercicio: el reintento de la misma pregunta no suma.
         sessionDone:
           state.dailySession !== null && (action.payload.isFirstTry ?? true)
@@ -623,6 +650,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const mergedPracticeDays = [...new Set([...state.practiceDays, ...(p.practiceDays ?? [])])]
         .sort()
         .slice(-60);
+      const mergedSkills = mergeSkillProgress(state.skillProgress, p.skills);
 
       return {
         ...state,
@@ -631,10 +659,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         totalExercises: Math.max(state.totalExercises, p.totalExercises ?? 0),
         correctExercises: Math.max(state.correctExercises, p.correctExercises ?? 0),
         timedCorrectExercises: Math.max(state.timedCorrectExercises, p.timedCorrectExercises ?? 0),
-        achievements: mergedAchievements,
+        // PIT-20: las insignias se evalúan tras fusionar, en silencio (sin toast).
+        achievements: appendMasteryBadges(mergedAchievements, mergedSkills),
         daily: mergedDaily,
         practiceDays: mergedPracticeDays,
-        skillProgress: mergeSkillProgress(state.skillProgress, p.skills),
+        skillProgress: mergedSkills,
       };
     }
 
@@ -642,7 +671,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       // Solo si no hay progreso ya (local o hidratado): nadie debe empezar de cero.
       return Object.keys(state.skillProgress).length > 0
         ? state
-        : { ...state, skillProgress: action.payload };
+        : {
+            ...state,
+            skillProgress: action.payload,
+            achievements: appendMasteryBadges(state.achievements, action.payload),
+          };
 
     case 'MERGE_SKILL_PROGRESS': {
       // Colocación: completa habilidades sin progreso o con datos más recientes.
@@ -653,7 +686,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           merged[skillId] = incoming;
         }
       }
-      return { ...state, skillProgress: merged };
+      return {
+        ...state,
+        skillProgress: merged,
+        achievements: appendMasteryBadges(state.achievements, merged),
+      };
     }
 
     case 'START_DAILY_SESSION': {
