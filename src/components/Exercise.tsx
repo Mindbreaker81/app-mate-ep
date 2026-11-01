@@ -38,8 +38,8 @@ import { celebrate } from '../utils/celebration';
 import { getSkillById } from '../utils/skillCatalog';
 import { buildHint, simplifiableFractionNote, typicalMistakeMessage } from '../utils/hints';
 
-export function Exercise() {
-  const { state, checkAnswer, nextProblem, setAnswer } = useGame();
+export function Exercise({ active = true }: { active?: boolean }) {
+  const { state, checkAnswer, nextProblem, setAnswer, dispatch } = useGame();
   const { currentProblem, userAnswer, isCorrect, timeRemaining, isTimerActive, practiceMode, timeMode, grade, levelMode, manualLevel, level, pathSkillId } = state;
   const practiceConfig = getPracticeModeConfig(practiceMode, grade);
   const effectiveLevel = levelMode === 'manual' ? manualLevel : level;
@@ -80,10 +80,11 @@ export function Exercise() {
 
   // Enter avanza al responder correcto o cuando la solución ya está revelada
   // (no durante el segundo intento, para no saltárselo sin querer).
+  // Cuando el ejercicio está oculto (otra pestaña activa) el listener no se registra.
   const canAdvance = isCorrect === true || revealed;
 
   useEffect(() => {
-    if (isCorrect === null || !canAdvance) {
+    if (!active || isCorrect === null || !canAdvance) {
       return undefined;
     }
 
@@ -96,7 +97,32 @@ export function Exercise() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isCorrect, canAdvance, nextProblem]);
+  }, [active, isCorrect, canAdvance, nextProblem]);
+
+  // El temporizador se pausa al ocultar la pestaña y se reanuda al volver,
+  // solo si lo pausó el ocultado, el modo tiene límite y no se agotó (0 s).
+  // También cubre temporizadores que se ACTIVAN con el ejercicio oculto
+  // (CHECK_SESSION_DAY al cruzar medianoche, cambio de curso/modo/nivel):
+  // esas acciones ponen isTimerActive a true y esta rama las detiene,
+  // dejando el tiempo restante intacto para reanudarlo al volver. Sin bucles:
+  // STOP_TIMER solo se despacha si isTimerActive es true.
+  const timerPausedByHide = React.useRef(false);
+
+  useEffect(() => {
+    if (!active) {
+      if (isTimerActive) {
+        dispatch({ type: 'STOP_TIMER' });
+        timerPausedByHide.current = true;
+      }
+      return;
+    }
+    if (timerPausedByHide.current) {
+      timerPausedByHide.current = false;
+      if (timeMode !== 'no-limit' && !isTimerActive && timeRemaining > 0) {
+        dispatch({ type: 'START_TIMER' });
+      }
+    }
+  }, [active, isTimerActive, timeMode, timeRemaining, dispatch]);
 
   const maxTime = timeMode !== 'no-limit' ? getTimeModeConfig(timeMode).seconds || 60 : 60;
 

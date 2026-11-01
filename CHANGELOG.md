@@ -31,6 +31,11 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   decimal o fracción
 
 ### Corregido
+- **Prueba de colocación**: se muestran todos los enunciados, se rechazan respuestas vacías y se mejora la accesibilidad.
+- **Mi camino**: la sesión avanza por las habilidades previstas, genera ejercicios del nivel de cada habilidad y cuenta cada ejercicio una sola vez.
+- **Cambio de pestaña**: se conservan respuestas y pistas, y el temporizador se pausa mientras el ejercicio está oculto.
+- **Registro de intentos**: el callback utiliza el curso actual al guardarlos.
+- **Lint**: corregido el error de `prefer-const` y las dependencias de los hooks.
 - **Resta de nivel 1** podía dar resultado 0 (ahora siempre positivo estricto)
 - **Comparación de opciones de texto** en los nuevos tipos de opción múltiple
   («¿Proporcional?» y comparar probabilidades) rechazaba la respuesta correcta

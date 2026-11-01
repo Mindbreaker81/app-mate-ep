@@ -26,7 +26,7 @@ export function generateGcdProblem(levelConfig: LevelConfig): GcdLcmProblem {
   // Se construyen a partir de un factor común para que el MCD no sea trivial (1) casi nunca.
   const common = randomInt(2, Math.min(12, Math.max(2, Math.floor(max / 4))));
   const range = Math.max(2, Math.floor(max / common) - 1);
-  let num1 = common * randomInt(1, range);
+  const num1 = common * randomInt(1, range);
   let num2 = common * randomInt(1, range);
   while (num1 === num2) {
     num2 = common * randomInt(1, range);

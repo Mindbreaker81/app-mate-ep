@@ -554,8 +554,12 @@ export interface GameState {
   practiceDays: string[];
   /** Progreso por habilidad del camino de aprendizaje. */
   skillProgress: Record<string, SkillProgress>;
-  /** Sesión diaria en curso: ids de habilidad ordenados (10 ejercicios). */
+  /** Sesión diaria en curso: ids de habilidad pendientes tras la actual ([] = agotada). */
   dailySession: string[] | null;
+  /** Ejercicios respondidos dentro de la sesión diaria en curso (no persistido). */
+  sessionDone: number;
+  /** Día local (YYYY-MM-DD) al que pertenece la sesión; se reinicia al cambiar de día. */
+  sessionDate: string | null;
   /** Habilidad que se está practicando desde «Mi camino» (para mostrarla en el ejercicio). */
   pathSkillId: string | null;
 }
@@ -765,6 +769,7 @@ export type GameAction =
   | { type: 'MERGE_SKILL_PROGRESS'; payload: Record<string, SkillProgress> }
   | { type: 'START_DAILY_SESSION'; payload: string[] }
   | { type: 'CANCEL_DAILY_SESSION' }
+  | { type: 'CHECK_SESSION_DAY' }
   | { type: 'SET_PATH_SKILL'; payload: string | null }
   | { type: 'UPDATE_TIMER'; payload: number }
   | { type: 'START_TIMER' }

@@ -17,7 +17,7 @@ import type {
   DetailedStats,
   PersistedGameState,
 } from '../types';
-import { generateProblem, getDifficulty } from '../utils/problemGenerator';
+import { generateOperation, generateProblem, getDifficulty } from '../utils/problemGenerator';
 import { LEVELS, ACHIEVEMENTS, getGradeConfig } from '../utils/gameConfig';
 import { initializeStats, updateWeeklyProgress, updateOperationStats, updateDifficultyStats, normalizeStats } from '../utils/statsUtils';
 import { getTimeModeConfig } from '../utils/timeConfig';
@@ -29,8 +29,8 @@ import { simplifyFraction } from '../utils/fractionUtils';
 import { logger } from '../utils/logger';
 import { evaluateAchievements } from '../utils/achievementEngine';
 import { updateDailyProgress, updatePracticeDays } from '../utils/dailyGoal';
-import { skillIdForOperation } from '../utils/skillCatalog';
-import { mergeSkillProgress, recordSkillAttempt, initializeSkillProgressFromAttempts } from '../utils/skillProgress';
+import { getSkillById, skillIdForOperation } from '../utils/skillCatalog';
+import { mergeSkillProgress, recordSkillAttempt, initializeSkillProgressFromAttempts, todayKey } from '../utils/skillProgress';
 import {
   answersMatch,
   isFactorizationProblem,
@@ -319,11 +319,34 @@ const createInitialState = (): GameState => ({
   practiceDays: [],
   skillProgress: {},
   dailySession: null,
+  sessionDone: 0,
+  sessionDate: null,
   pathSkillId: null,
 });
 
-function createProblemForState(state: Pick<GameState, 'level' | 'levelMode' | 'manualLevel' | 'practiceMode' | 'grade'>): Problem {
+/** Nivel de problema (1–10) a partir del nivel de habilidad (1–3): 3/6/9. */
+const SKILL_TO_PROBLEM_LEVEL = (skillLevel: number): number => Math.min(10, Math.max(1, skillLevel * 3));
+
+function createProblemForState(
+  state: Pick<
+    GameState,
+    'level' | 'levelMode' | 'manualLevel' | 'practiceMode' | 'grade' | 'pathSkillId' | 'skillProgress'
+  >,
+): Problem {
   const effectiveLevel = getEffectiveLevel(state);
+  // En el camino la operación sale de la habilidad activa (no del modo ni del
+  // curso libre) y la dificultad del nivel propio de la habilidad que muestra
+  // el chip, no del nivel global.
+  if (state.pathSkillId) {
+    const skill = getSkillById(state.pathSkillId);
+    if (skill && skill.operations.length > 0) {
+      const operation = skill.operations[Math.floor(Math.random() * skill.operations.length)];
+      const skillLevel = state.skillProgress[skill.id]?.level ?? 1;
+      const problemLevel = SKILL_TO_PROBLEM_LEVEL(skillLevel);
+      const levelConfig = LEVELS.find((entry) => entry.id === problemLevel) ?? LEVELS[0];
+      return generateOperation(operation, problemLevel, levelConfig);
+    }
+  }
   return generateProblem(effectiveLevel, state.practiceMode, state.grade);
 }
 
@@ -418,18 +441,48 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         daily: updateDailyProgress(state.daily, new Date()),
         practiceDays: updatePracticeDays(state.practiceDays, new Date()),
         skillProgress: updateSkillProgressForProblem(state, problem, isCorrect, action.payload.isFirstTry ?? true),
+        // Una sola vez por ejercicio: el reintento de la misma pregunta no suma.
+        sessionDone:
+          state.dailySession !== null && (action.payload.isFirstTry ?? true)
+            ? state.sessionDone + 1
+            : state.sessionDone,
       };
     }
 
-    case 'NEXT_PROBLEM':
+    case 'NEXT_PROBLEM': {
+      // Convención única: dailySession = habilidades PENDIENTES tras la actual.
+      // Se consume la cabeza en cada ejercicio (las repeticiones cuentan).
+      // Cola agotada o inválida → salida observable a modo libre.
+      let pathSkillId = state.pathSkillId;
+      let dailySession = state.dailySession;
+      if (dailySession) {
+        let queue = dailySession;
+        let nextSkill: string | null = null;
+        while (queue.length > 0 && nextSkill === null) {
+          const [head, ...rest] = queue;
+          queue = rest;
+          nextSkill = getSkillById(head) ? head : null;
+        }
+        if (nextSkill !== null) {
+          pathSkillId = nextSkill;
+          dailySession = queue;
+        } else {
+          pathSkillId = null;
+          dailySession = null;
+        }
+      }
+      const nextState = { ...state, pathSkillId };
       return {
         ...state,
-        currentProblem: createProblemForState(state),
+        pathSkillId,
+        dailySession,
+        currentProblem: createProblemForState(nextState),
         userAnswer: '',
         isCorrect: null,
         recentAchievement: null,
         ...getResetTimerState(state.timeMode),
       };
+    }
 
     case 'RESET_GAME':
       return {
@@ -476,7 +529,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         grade: action.payload,
         practiceMode: nextPracticeMode,
-        currentProblem: generateProblem(getEffectiveLevel(state), nextPracticeMode, action.payload),
+        currentProblem: createProblemForState({
+          ...state,
+          practiceMode: nextPracticeMode,
+          grade: action.payload,
+        }),
         userAnswer: '',
         isCorrect: null,
         ...getResetTimerState(state.timeMode),
@@ -491,9 +548,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         practiceMode: nextPracticeMode,
-        // Un cambio manual de modo sale del camino de aprendizaje.
-        pathSkillId: null,
-        currentProblem: generateProblem(getEffectiveLevel(state), nextPracticeMode, state.grade),
+        currentProblem: createProblemForState({ ...state, practiceMode: nextPracticeMode }),
         userAnswer: '',
         isCorrect: null,
         ...getResetTimerState(state.timeMode),
@@ -585,14 +640,51 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, skillProgress: merged };
     }
 
-    case 'START_DAILY_SESSION':
-      return { ...state, dailySession: action.payload };
+    case 'START_DAILY_SESSION': {
+      // La cola son los ejercicios pendientes tras el primero, que queda activo.
+      const [first, ...rest] = action.payload;
+      return {
+        ...state,
+        dailySession: rest,
+        pathSkillId: first ?? state.pathSkillId,
+        sessionDone: 0,
+        sessionDate: todayKey(),
+        userAnswer: '',
+        isCorrect: null,
+      };
+    }
 
     case 'CANCEL_DAILY_SESSION':
-      return { ...state, dailySession: null };
+      return { ...state, dailySession: null, sessionDone: 0, sessionDate: null };
+
+    case 'CHECK_SESSION_DAY':
+      // La sesión es del día local en que empezó: al cambiar de fecha (app
+      // abierta o al volver a primer plano) se cierra por completo — cola,
+      // contador, habilidad del camino y el ejercicio de ayer, que queda
+      // sustituido por uno nuevo de modo libre sin contarse.
+      if (state.sessionDate !== null && state.sessionDate !== todayKey()) {
+        const freeState = { ...state, pathSkillId: null };
+        return {
+          ...state,
+          dailySession: null,
+          sessionDone: 0,
+          sessionDate: null,
+          pathSkillId: null,
+          currentProblem: createProblemForState(freeState),
+          userAnswer: '',
+          isCorrect: null,
+          recentAchievement: null,
+          ...getResetTimerState(state.timeMode),
+        };
+      }
+      return state;
 
     case 'SET_PATH_SKILL':
-      return { ...state, pathSkillId: action.payload };
+      // Elegir otra habilidad a mano cancela la sesión en curso; la sesión se
+      // inicia con START_DAILY_SESSION, que ya fija la primera habilidad.
+      return action.payload === null
+        ? { ...state, pathSkillId: null, dailySession: null, sessionDone: 0, sessionDate: null }
+        : { ...state, pathSkillId: action.payload, dailySession: null, sessionDone: 0, sessionDate: null };
 
     case 'UPDATE_TIMER':
       return {
@@ -680,8 +772,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'CHECK_ANSWER', payload: { ...evaluation, isFirstTry: state.isCorrect === null } });
 
       if (sessionUserId) {
+        // getEffectiveLevel solo lee level/levelMode/manualLevel, ya listados como dependencias.
+        const effectiveLevel = getEffectiveLevel({
+          level: state.level,
+          levelMode: state.levelMode,
+          manualLevel: state.manualLevel,
+        });
+        // En el camino el nivel registrado es el de la habilidad (igual que al generar).
+        const attemptLevel = state.pathSkillId
+          ? SKILL_TO_PROBLEM_LEVEL(state.skillProgress[state.pathSkillId]?.level ?? 1)
+          : effectiveLevel;
         const attemptPayload = buildAttemptPayload(
-          getEffectiveLevel(state),
+          attemptLevel,
           state.practiceMode,
           state.grade,
           evaluation,
@@ -697,6 +799,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       state.manualLevel,
       state.isCorrect,
       state.practiceMode,
+      state.grade,
+      state.pathSkillId,
+      state.skillProgress,
       state.timeMode,
       state.timeRemaining,
       sessionUserId,
@@ -777,8 +882,32 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   useEffect(() => {
+    if (!hasWindow) {
+      return undefined;
+    }
+    // Vigila el cambio de día local mientras la app sigue abierta y al volver
+    // a primer plano: la sesión diaria pertenece solo a su fecha.
+    const checkDay = () => dispatch({ type: 'CHECK_SESSION_DAY' });
+    const intervalId = window.setInterval(checkDay, 60_000);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') checkDay();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!state.currentProblem) {
-      dispatch({ type: 'SET_PROBLEM', payload: generateProblem(getEffectiveLevel(state), state.practiceMode, state.grade) });
+      // getEffectiveLevel solo lee level/levelMode/manualLevel, ya listados como dependencias.
+      const effectiveLevel = getEffectiveLevel({
+        level: state.level,
+        levelMode: state.levelMode,
+        manualLevel: state.manualLevel,
+      });
+      dispatch({ type: 'SET_PROBLEM', payload: generateProblem(effectiveLevel, state.practiceMode, state.grade) });
     }
   }, [state.currentProblem, state.level, state.levelMode, state.manualLevel, state.practiceMode, state.grade]);
 
@@ -933,6 +1062,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setPracticeMode = (mode: PracticeMode) => {
+    // Elegir un modo a mano (Práctica o "Te toca entrenar") sale del camino de
+    // aprendizaje; MyPath fija la habilidad con SET_PATH_SKILL antes de llamar
+    // a SET_PRACTICE_MODE directamente, así que el reducer no la limpia.
+    dispatch({ type: 'SET_PATH_SKILL', payload: null });
     dispatch({ type: 'SET_PRACTICE_MODE', payload: mode });
   };
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import type { GradeId, Problem, SkillProgress, SkillState } from '../types';
 import { getGradeConfig, LEVELS } from '../utils/gameConfig';
@@ -12,7 +12,8 @@ import {
   recordSkillAttempt,
 } from '../utils/skillProgress';
 import { generateOperation } from '../utils/generators';
-import { answersMatch, parseFullNumber } from '../utils/problemUtils';
+import { formatMathNumber } from '../utils/mathUtils';
+import { answersMatch, isPowerProblem, parseFullNumber } from '../utils/problemUtils';
 
 const STATE_LABELS: Record<SkillState, { label: string; classes: string }> = {
   locked: { label: '🔒 Bloqueada', classes: 'bg-gray-100 text-gray-500 border-gray-200' },
@@ -76,25 +77,30 @@ export function MyPath({ onStartSkill }: MyPathProps) {
   const [showPlacement, setShowPlacement] = useState(false);
   const skillProgress = state.skillProgress ?? {};
 
-  const sessionProgress = Math.min(state.daily?.count ?? 0, DAILY_SESSION_SIZE);
+  const sessionProgress = Math.min(state.sessionDone, DAILY_SESSION_SIZE);
   const sessionDone = sessionProgress >= DAILY_SESSION_SIZE;
 
   const startSkill = (skill: Skill) => {
-    const mode = practiceModeForSkill(skill, state.grade);
-    if (!mode) {
-      return;
-    }
+    // Sin modo equivalente en el curso libre (p. ej. T3 en 4.º) se usa 'all':
+    // el ejercicio se genera por habilidad, no por modo, así que funciona igual.
+    const mode = practiceModeForSkill(skill, state.grade) ?? 'all';
     dispatch({ type: 'SET_PATH_SKILL', payload: skill.id });
     dispatch({ type: 'SET_PRACTICE_MODE', payload: mode as never });
     onStartSkill();
   };
 
   const startDailySession = () => {
+    if (state.dailySession !== null && state.pathSkillId && SKILLS.some((skill) => skill.id === state.pathSkillId)) {
+      // Sesión en curso: volver al ejercicio tal cual, sin regenerarlo.
+      onStartSkill();
+      return;
+    }
     const session = buildDailySession(skillProgress);
     dispatch({ type: 'START_DAILY_SESSION', payload: session });
     const first = SKILLS.find((skill) => skill.id === session[0]);
     if (first) {
-      startSkill(first);
+      dispatch({ type: 'SET_PRACTICE_MODE', payload: (practiceModeForSkill(first, state.grade) ?? 'all') as never });
+      onStartSkill();
     }
   };
 
@@ -229,7 +235,7 @@ export function MyPath({ onStartSkill }: MyPathProps) {
 
 // — Prueba de colocación —
 
-const PLACEMENT_PLAN: Array<{ skillId: string; operation: Parameters<typeof generateOperation>[0] }> = [
+export const PLACEMENT_PLAN: Array<{ skillId: string; operation: Parameters<typeof generateOperation>[0] }> = [
   { skillId: 'sumas-restas', operation: 'addition' },
   { skillId: 'sumas-restas', operation: 'subtraction' },
   { skillId: 'multiplicacion-division', operation: 'multiplication' },
@@ -248,14 +254,44 @@ const PLACEMENT_PLAN: Array<{ skillId: string; operation: Parameters<typeof gene
   { skillId: 'teoria-numeros', operation: 'lcm' },
 ];
 
-function problemPrompt(problem: Problem): string {
+/** Símbolos para problemas numéricos sin enunciado (misma convención que Exercise). */
+const NUMERIC_OPERATION_SYMBOLS: Record<string, string> = {
+  addition: '+',
+  subtraction: '-',
+  multiplication: '×',
+  division: '÷',
+  'decimal-addition': '+',
+  'decimal-subtraction': '-',
+  'decimal-multiplication': '×',
+  'decimal-division': '÷',
+};
+
+/** Enunciado visible para los problemas de la prueba de colocación (PLACEMENT_PLAN).
+ *  Los que tienen campo prompt lo usan tal cual; los numéricos y las potencias se
+ *  componen con la misma presentación que usa Exercise. Devuelve '' para cualquier
+ *  otra forma de problema, que no aparece en la colocación. */
+export function problemPrompt(problem: Problem): string {
   if ('prompt' in problem && problem.prompt) {
     return problem.prompt;
+  }
+  if (isPowerProblem(problem)) {
+    return `${problem.base}${problem.exponent === 2 ? '²' : '³'} = ?`;
+  }
+  if (
+    'num1' in problem &&
+    typeof problem.num1 === 'number' &&
+    'num2' in problem &&
+    typeof problem.num2 === 'number'
+  ) {
+    const symbol = NUMERIC_OPERATION_SYMBOLS[problem.operation];
+    if (symbol) {
+      return `${formatMathNumber(problem.num1)} ${symbol} ${formatMathNumber(problem.num2)} = ?`;
+    }
   }
   return '';
 }
 
-function PlacementTest({
+export function PlacementTest({
   onFinish,
   onCancel,
 }: {
@@ -272,7 +308,11 @@ function PlacementTest({
 
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, boolean[]>>({});
+  const questionId = useId();
+  const progressId = useId();
+  const errorId = useId();
 
   if (index >= questions.length) {
     // Resultado: progreso inicial a partir de los resultados por habilidad (se repiten todos).
@@ -308,30 +348,44 @@ function PlacementTest({
   const prompt = problemPrompt(current);
 
   const submit = () => {
-    const parsed = parseFullNumber(answer);
-    const isCorrect = parsed !== null && answersMatch(current, answer);
+    // Respuesta vacía o no numérica: no cuenta como fallo, avisa y deja avanzar después.
+    if (answer.trim() === '' || parseFullNumber(answer) === null) {
+      setError('Escribe tu respuesta antes de continuar.');
+      return;
+    }
+    const isCorrect = answersMatch(current, answer);
     setResults((prev) => ({
       ...prev,
       [plan.skillId]: [...(prev[plan.skillId] ?? []), isCorrect],
     }));
     setAnswer('');
+    setError(null);
     setIndex((value) => value + 1);
   };
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-gray-500">
+        <span id={progressId} className="text-sm text-gray-500">
           Prueba de colocación · pregunta {index + 1} de {questions.length}
         </span>
         <button type="button" onClick={onCancel} className="text-sm text-gray-500 underline hover:text-gray-700">
           Cancelar
         </button>
       </div>
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-6">
+      <div
+        className="h-2 bg-gray-200 rounded-full overflow-hidden mb-6"
+        role="progressbar"
+        aria-label="Progreso de la prueba de colocación"
+        aria-valuemin={0}
+        aria-valuemax={questions.length}
+        aria-valuenow={index}
+      >
         <div className="h-full bg-indigo-500" style={{ width: `${(index / questions.length) * 100}%` }} />
       </div>
-      <p className="text-2xl font-semibold text-gray-800 text-center mb-6">{prompt}</p>
+      <p id={questionId} className="text-2xl font-semibold text-gray-800 text-center mb-6" aria-live="polite">
+        {prompt}
+      </p>
       <form
         className="flex justify-center gap-3"
         onSubmit={(event) => {
@@ -342,10 +396,17 @@ function PlacementTest({
         <input
           type="text"
           inputMode="decimal"
-          aria-label="Respuesta"
+          aria-labelledby={questionId}
+          aria-describedby={error ? `${progressId} ${errorId}` : progressId}
+          aria-invalid={error ? true : undefined}
           className="h-12 w-32 rounded-lg border-2 border-indigo-400 text-center text-2xl"
           value={answer}
-          onChange={(event) => setAnswer(event.target.value)}
+          onChange={(event) => {
+            setAnswer(event.target.value);
+            if (error) {
+              setError(null);
+            }
+          }}
           autoFocus
         />
         <button
@@ -355,6 +416,11 @@ function PlacementTest({
           Enviar
         </button>
       </form>
+      {error && (
+        <p id={errorId} role="alert" className="text-red-600 text-sm text-center mt-3">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -30,48 +30,11 @@ export function Home() {
     { id: 'time', label: '⏱️ Tiempo', icon: '⏱️' }
   ];
 
+  // Contenido de las pestañas que no necesitan persistencia local: se montan al activarse.
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'path':
         return <MyPath onStartSkill={() => setActiveTab('exercise')} />;
-      case 'exercise':
-        return (
-          <div className="space-y-6">
-            <Exercise />
-            <div className="flex justify-center">
-              {confirmingReset ? (
-                <div className="flex items-center gap-3 bg-white rounded-lg shadow px-4 py-3">
-                  <span className="font-semibold text-gray-700">¿Seguro? Se pierden puntos y racha.</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      resetGame();
-                      setConfirmingReset(false);
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    Sí, reiniciar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmingReset(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setConfirmingReset(true)}
-                  className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 transition-colors"
-                >
-                  🔄 Reiniciar Juego
-                </button>
-              )}
-            </div>
-          </div>
-        );
       case 'stats':
         return (
           <div className="space-y-6">
@@ -89,6 +52,45 @@ export function Home() {
         return null;
     }
   };
+
+  // Bloque de ejercicio con su confirmación de reinicio.
+  const exercisePanel = (
+    <>
+      <Exercise active={activeTab === 'exercise'} />
+      <div className="flex justify-center">
+        {confirmingReset ? (
+          <div className="flex items-center gap-3 bg-white rounded-lg shadow px-4 py-3">
+            <span className="font-semibold text-gray-700">¿Seguro? Se pierden puntos y racha.</span>
+            <button
+              type="button"
+              onClick={() => {
+                resetGame();
+                setConfirmingReset(false);
+              }}
+              className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Sí, reiniciar
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmingReset(false)}
+              className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmingReset(true)}
+            className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 transition-colors"
+          >
+            🔄 Reiniciar Juego
+          </button>
+        )}
+      </div>
+    </>
+  );
   
   return (
     <div className="space-y-6">
@@ -152,16 +154,34 @@ export function Home() {
         </div>
       </div>
       
-      {/* Contenido de las tabs */}
+      {/* Contenido de las tabs. Exercise permanece siempre montado en su
+          contenedor (solo cambia de visibilidad) para no perder pistas,
+          reintentos ni respuestas parciales al cambiar de pestaña. */}
       <div className="min-h-[500px]">
-        <section
-          id={`${activeTab}-panel`}
-          role="tabpanel"
-          aria-labelledby={`${activeTab}-tab`}
-          className="min-h-[500px]"
+        {activeTab !== 'exercise' && (
+          <section
+            id={`${activeTab}-panel`}
+            role="tabpanel"
+            aria-labelledby={`${activeTab}-tab`}
+            className="min-h-[500px]"
+          >
+            {renderActiveTab()}
+          </section>
+        )}
+        <div
+          hidden={activeTab !== 'exercise'}
+          style={activeTab === 'exercise' ? undefined : { display: 'none' }}
+          aria-hidden={activeTab !== 'exercise'}
         >
-          {renderActiveTab()}
-        </section>
+          <section
+            id="exercise-panel"
+            role="tabpanel"
+            aria-labelledby="exercise-tab"
+            className="min-h-[500px] space-y-6"
+          >
+            {exercisePanel}
+          </section>
+        </div>
       </div>
       
       {/* Información rápida del estado actual */}
