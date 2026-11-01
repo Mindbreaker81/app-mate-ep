@@ -21,6 +21,10 @@ export const MAX_SAME_SKILL_IN_ROW = 3;
 /** Tamaño de la sesión diaria. */
 export const DAILY_SESSION_SIZE = 10;
 
+/** Nivel de problema (1–10) a partir del nivel de habilidad (1–3): 3/6/9. */
+export const SKILL_TO_PROBLEM_LEVEL = (skillLevel: number): number =>
+  Math.min(10, Math.max(1, skillLevel * 3));
+
 export function todayKey(date: Date = new Date()): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

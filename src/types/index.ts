@@ -574,6 +574,8 @@ export interface GameState {
   sessionDate: string | null;
   /** Habilidad que se está practicando desde «Mi camino» (para mostrarla en el ejercicio). */
   pathSkillId: string | null;
+  /** Examen de repaso en curso (PIT-32): aislado del progreso, efímero (no se persiste). */
+  exam: ExamState | null;
 }
 
 export type SerializedAnswer =
@@ -779,6 +781,47 @@ export interface DailySessionSnapshot {
   done: number;
 }
 
+/** Una pregunta del examen de repaso: el problema ya generado y la habilidad de la que sale. */
+export interface ExamQuestion {
+  skillId: string;
+  skillName: string;
+  problem: Problem;
+}
+
+/**
+ * Examen de repaso (PIT-32): diez preguntas fijas de habilidades accesibles,
+ * sin corrección ni pistas durante la prueba. Vive solo en memoria (no forma
+ * parte de PersistedGameState) y nunca toca puntuación, dominio ni logros.
+ */
+export interface ExamState {
+  questions: ExamQuestion[];
+  index: number;
+  /** Respuestas registradas por índice de pregunta (una por pregunta). */
+  answers: Record<number, SerializedAnswer>;
+  /** true al terminar: activa el resumen con soluciones. */
+  finished: boolean;
+}
+
+/** Resultado local de un examen terminado (guardado solo en el dispositivo). */
+export interface ExamResultEntry {
+  skillId: string;
+  skillName: string;
+  /** Enunciado en texto (para repasar la pregunta en el resumen). */
+  question: string;
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+}
+
+export interface ExamResult {
+  id: string;
+  /** Fecha ISO en que se terminó el examen. */
+  date: string;
+  correct: number;
+  total: number;
+  entries: ExamResultEntry[];
+}
+
 export type GameAction =
   | { type: 'SET_PROBLEM'; payload: Problem }
   | { type: 'SET_ANSWER'; payload: string | Fraction | MixedNumber | RemainderAnswer }
@@ -812,6 +855,12 @@ export type GameAction =
   | { type: 'RESTORE_DAILY_SESSION'; payload: DailySessionSnapshot | null }
   | { type: 'CHECK_SESSION_DAY' }
   | { type: 'SET_PATH_SKILL'; payload: string | null }
+  // Examen de repaso (PIT-32): flujo aislado que no pasa por CHECK_ANSWER.
+  | { type: 'START_EXAM'; payload: ExamQuestion[] }
+  | { type: 'ANSWER_EXAM'; payload: { index: number; answer: SerializedAnswer } }
+  | { type: 'ADVANCE_EXAM' }
+  | { type: 'FINISH_EXAM' }
+  | { type: 'CANCEL_EXAM' }
   // Genera un problema de modo libre solo si no hay uno (idempotente: seguro
   // bajo el doble montaje de StrictMode y encolado tras RESTORE_DAILY_SESSION).
   | { type: 'ENSURE_PROBLEM' }

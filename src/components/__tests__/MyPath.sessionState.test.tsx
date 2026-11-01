@@ -71,7 +71,7 @@ describe('MyPath — sesión de hoy completada y recarga', () => {
     render(
       <AuthContext.Provider value={authValue}>
         <GameProvider>
-          <MyPath onStartSkill={vi.fn()} />
+          <MyPath onStartSkill={vi.fn()} onStartExam={vi.fn()} />
         </GameProvider>
       </AuthContext.Provider>,
     );
@@ -93,7 +93,7 @@ describe('MyPath — sesión de hoy completada y recarga', () => {
     render(
       <AuthContext.Provider value={authValue}>
         <GameProvider>
-          <MyPath onStartSkill={vi.fn()} />
+          <MyPath onStartSkill={vi.fn()} onStartExam={vi.fn()} />
         </GameProvider>
       </AuthContext.Provider>,
     );

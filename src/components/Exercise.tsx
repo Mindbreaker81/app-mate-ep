@@ -6,54 +6,25 @@ import type { Fraction, MixedNumber, Operation, RemainderAnswer } from '../types
 import { MathGlossary } from './MathGlossary';
 import { glossaryTermsForOperation } from '../utils/glossary';
 import {
-  allowsDecimalAnswer,
-  allowsNegativeAnswer,
-  angleTypeLabel,
-  compareOperatorLabel,
-  formatMixedNumber,
-  formatProblemAnswer,
-  isAngleProblem,
-  isCompareProblem,
-  isConversionProblem,
-  isEstimationProblem,
   isFactorizationProblem,
-  isFractionPercentProblem,
   isFractionProblem,
-  isIntegerArithmeticProblem,
-  isIntegerCompareProblem,
-  isIntegerOrderProblem,
   isMixedNumberConvertProblem,
   isMixedNumberProblem,
-  isMixedProblem,
   isMultipleChoiceProblem,
-  isOrderValuesProblem,
-  isPowerProblem,
-  isProbabilityCompareProblem,
-  isProbabilityProblem,
-  isProportionalityProblem,
-  isPromptProblem,
   isRemainderProblem,
-  isSquareRootProblem,
   normalizeFactorizationAnswer,
+  formatProblemAnswer,
 } from '../utils/problemUtils';
-import { formatMathNumber } from '../utils/mathUtils';
 import { celebrate } from '../utils/celebration';
 import { getSkillById } from '../utils/skillCatalog';
 import { buildHint, simplifiableFractionNote, typicalMistakeMessage } from '../utils/hints';
 import { problemSpeechText } from '../utils/problemText';
 import { ReadAloudButton } from './ReadAloudButton';
-import {
-  AnswerKeyboardProvider,
-  FractionInputs,
-  MixedNumberInputs,
-  NumericInput,
-  PromptInput,
-  RemainderInputs,
-} from './inputs/AnswerInputs';
-import { MathKeyboard, type MathKeyboardField, type MathKeyboardProps } from './inputs/MathKeyboard';
+import { AnswerKeyboardProvider } from './inputs/AnswerInputs';
+import { MathKeyboard } from './inputs/MathKeyboard';
 import { loadMathKeyboardPreference, saveMathKeyboardPreference } from '../utils/keyboardPreference';
-import type { FieldEditResult } from '../utils/answerEditing';
 import { AuthContext } from '../context/AuthContext';
+import { ProblemBody, buildMathKeyboardProps, type AnswerFieldsState } from './ProblemBody';
 
 export function Exercise({ active = true }: { active?: boolean }) {
   const { state, checkAnswer, nextProblem, setAnswer, dispatch } = useGame();
@@ -89,68 +60,22 @@ export function Exercise({ active = true }: { active?: boolean }) {
     saveMathKeyboardPreference(sessionUserId, open);
   };
 
-  /** Envuelve un setter de campo para aplicarle una edición del teclado. */
-  const fieldEdit = (setValue: (value: string) => void) => (next: FieldEditResult) => {
-    setValidationError(null);
-    setValue(next.value);
+  // Enunciado y controles compartidos con el examen (PIT-32): aquí responder
+  // corrige al momento (submitAnswer → checkAnswer del flujo normal).
+  const answerFields: AnswerFieldsState = {
+    userAnswer,
+    setAnswer,
+    fracAnswer,
+    setFracAnswer,
+    mixedAnswer,
+    setMixedAnswer,
+    remainderAnswer,
+    setRemainderAnswer,
+    setValidationError,
+    disabled: revealed,
   };
 
-  // Configuración del teclado según el tipo de respuesta del problema actual,
-  // con los mismos predicados que las ramas de render de arriba.
-  const buildKeyboardProps = (): MathKeyboardProps | null => {
-    if (!currentProblem || isMultipleChoiceProblem(currentProblem)) {
-      return null;
-    }
-    const fractionFields = (): MathKeyboardField[] => [
-      { id: 'numerator', label: 'Numerador', value: fracAnswer.numerator, onEdit: fieldEdit((value) => setFracAnswer((prev) => ({ ...prev, numerator: value }))) },
-      { id: 'denominator', label: 'Denominador', value: fracAnswer.denominator, onEdit: fieldEdit((value) => setFracAnswer((prev) => ({ ...prev, denominator: value }))) },
-    ];
-
-    if (isMixedNumberProblem(currentProblem) || (isMixedNumberConvertProblem(currentProblem) && 'whole' in currentProblem.answer)) {
-      return {
-        fields: [
-          { id: 'whole', label: 'Parte entera', value: mixedAnswer.whole, onEdit: fieldEdit((value) => setMixedAnswer((prev) => ({ ...prev, whole: value }))) },
-          { id: 'numerator', label: 'Numerador', value: mixedAnswer.numerator, onEdit: fieldEdit((value) => setMixedAnswer((prev) => ({ ...prev, numerator: value }))) },
-          { id: 'denominator', label: 'Denominador', value: mixedAnswer.denominator, onEdit: fieldEdit((value) => setMixedAnswer((prev) => ({ ...prev, denominator: value }))) },
-        ],
-        fieldSwitcher: 'slash',
-        disabled: revealed,
-      };
-    }
-    if (
-      isFractionProblem(currentProblem) ||
-      (isMixedNumberConvertProblem(currentProblem) && 'numerator' in currentProblem.answer) ||
-      (isConversionProblem(currentProblem) && currentProblem.operation === 'decimal-to-fraction') ||
-      (isFractionPercentProblem(currentProblem) && typeof currentProblem.answer !== 'number')
-    ) {
-      return { fields: fractionFields(), fieldSwitcher: 'slash', disabled: revealed };
-    }
-    if (isRemainderProblem(currentProblem)) {
-      return {
-        fields: [
-          { id: 'quotient', label: 'Cociente', value: remainderAnswer.quotient, onEdit: fieldEdit((value) => setRemainderAnswer((prev) => ({ ...prev, quotient: value }))) },
-          { id: 'remainder', label: 'Resto', value: remainderAnswer.remainder, onEdit: fieldEdit((value) => setRemainderAnswer((prev) => ({ ...prev, remainder: value }))) },
-        ],
-        fieldSwitcher: 'cycle',
-        disabled: revealed,
-      };
-    }
-    if (isFactorizationProblem(currentProblem)) {
-      return {
-        fields: [{ id: 'value', label: 'Factores primos', value: typeof userAnswer === 'string' ? userAnswer : '', onEdit: fieldEdit(setAnswer) }],
-        factorization: true,
-        disabled: revealed,
-      };
-    }
-    return {
-      fields: [{ id: 'value', label: 'Respuesta', value: typeof userAnswer === 'string' ? userAnswer : '', onEdit: fieldEdit(setAnswer) }],
-      decimal: allowsDecimalAnswer(currentProblem),
-      allowNegative: allowsNegativeAnswer(currentProblem),
-      disabled: revealed,
-    };
-  };
-
-  const keyboardProps = buildKeyboardProps();
+  const keyboardProps = buildMathKeyboardProps(currentProblem, answerFields);
 
   useEffect(() => {
     setFracAnswer({ numerator: '', denominator: '' });
@@ -294,35 +219,6 @@ export function Exercise({ active = true }: { active?: boolean }) {
     submitAnswer(userAnswer);
   };
 
-  const getOperationSymbol = (operation: string) => {
-    switch (operation) {
-      case 'addition':
-      case 'decimal-addition':
-        return '+';
-      case 'subtraction':
-      case 'decimal-subtraction':
-        return '-';
-      case 'multiplication':
-      case 'decimal-multiplication':
-        return '×';
-      case 'division':
-      case 'decimal-division':
-        return '÷';
-      case 'integer-addition':
-        return '+';
-      case 'integer-subtraction':
-        return '-';
-      case 'integer-multiplication':
-        return '×';
-      case 'integer-division':
-        return '÷';
-      case 'mixed':
-        return '…';
-      default:
-        return '+';
-    }
-  };
-
   const getTimerColor = () => {
     if (timeMode === 'no-limit') return 'text-gray-500';
     if (timeRemaining > 30) return 'text-green-600';
@@ -348,40 +244,6 @@ export function Exercise({ active = true }: { active?: boolean }) {
           Number.parseInt(fracAnswer.denominator, 10),
         )
       : null;
-
-  const renderMultipleChoice = (
-    prompt: string,
-    options: Array<{ key: string; label: string; value: string }>,
-  ) => (
-    <div className="space-y-6">
-      <div className="text-2xl font-semibold text-gray-800">{prompt}</div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {options.map((option) => {
-          const isSelected = userAnswer === option.value;
-          return (
-            <button
-              key={option.key}
-              type="button"
-              aria-pressed={isSelected}
-              onClick={() => {
-                setValidationError(null);
-                setAnswer(option.value);
-                submitAnswer(option.value);
-              }}
-              disabled={revealed}
-              className={`rounded-lg border-2 px-4 py-3 text-lg font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
-                isSelected
-                  ? 'border-blue-500 bg-blue-50 text-blue-800'
-                  : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-blue-300'
-              }`}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
 
   if (!currentProblem) {
     return (
@@ -427,185 +289,15 @@ export function Exercise({ active = true }: { active?: boolean }) {
           )}
 
           <div className="text-center mb-8">
-            {isMixedNumberProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-3xl font-semibold text-gray-800">
-                  {formatMixedNumber(currentProblem.num1)}{' '}
-                  {currentProblem.operation === 'mixed-number-addition' ? '+' : '-'}{' '}
-                  {formatMixedNumber(currentProblem.num2)}
-                </div>
-                <MixedNumberInputs value={mixedAnswer} onChange={setMixedAnswer} disabled={revealed} />
-              </div>
-            ) : isFractionProblem(currentProblem) ? (
-              <>
-                <span>{currentProblem.num1.numerator}/{currentProblem.num1.denominator}</span>
-                <span className="mx-2 text-blue-600 text-3xl">
-                  {currentProblem.operation === 'fraction-addition'
-                    ? '+'
-                    : currentProblem.operation === 'fraction-subtraction'
-                      ? '-'
-                      : currentProblem.operation === 'fraction-multiplication'
-                        ? '×'
-                        : '÷'}
-                </span>
-                <span>{currentProblem.num2.numerator}/{currentProblem.num2.denominator}</span>
-                <span className="mx-2">=</span>
-                <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={revealed} />
-              </>
-            ) : isRemainderProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-3xl font-semibold text-gray-800">
-                  {currentProblem.num1} ÷ {currentProblem.num2} = ? resto ?
-                </div>
-                <RemainderInputs value={remainderAnswer} onChange={setRemainderAnswer} disabled={revealed} />
-              </div>
-            ) : isIntegerCompareProblem(currentProblem) ? (
-              renderMultipleChoice(currentProblem.prompt, [
-                { key: 'lt', label: compareOperatorLabel('<'), value: '<' },
-                { key: 'gt', label: compareOperatorLabel('>'), value: '>' },
-              ])
-            ) : isIntegerOrderProblem(currentProblem) ? (
-              renderMultipleChoice(
-                `${currentProblem.prompt} (${currentProblem.values.join(', ')})`,
-                currentProblem.options.map((option, index) => ({ key: `${index}`, label: option, value: option })),
-              )
-            ) : isIntegerArithmeticProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-3xl font-semibold text-gray-800">{currentProblem.display}</div>
-                <PromptInput
-                  userAnswer={userAnswer}
-                  setAnswer={setAnswer}
-                  disabled={revealed}
-                  setValidationError={setValidationError}
-                  allowNegative
-                />
-              </div>
-            ) : isProbabilityProblem(currentProblem) ? (
-              renderMultipleChoice(
-                currentProblem.prompt,
-                currentProblem.options.map((option) => ({
-                  key: String(option),
-                  label: formatMathNumber(option),
-                  value: String(option),
-                })),
-              )
-            ) : isProportionalityProblem(currentProblem) || isProbabilityCompareProblem(currentProblem) ? (
-              renderMultipleChoice(
-                currentProblem.prompt,
-                currentProblem.options.map((option, index) => ({ key: `${index}`, label: option, value: option })),
-              )
-            ) : isCompareProblem(currentProblem) ? (
-              renderMultipleChoice(currentProblem.prompt, [
-                { key: 'lt', label: compareOperatorLabel('<'), value: '<' },
-                { key: 'gt', label: compareOperatorLabel('>'), value: '>' },
-                { key: 'eq', label: compareOperatorLabel('='), value: '=' },
-              ])
-            ) : isOrderValuesProblem(currentProblem) ? (
-              renderMultipleChoice(
-                `${currentProblem.prompt} (${currentProblem.values.join(', ')})`,
-                currentProblem.options.map((option, index) => ({ key: `${index}`, label: option, value: option })),
-              )
-            ) : isMixedProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-3xl font-semibold text-gray-800">{currentProblem.expression}</div>
-                <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={revealed} setValidationError={setValidationError} />
-              </div>
-            ) : isPowerProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-4xl font-semibold text-gray-800">
-                  {currentProblem.base}
-                  <sup className="text-2xl align-super ml-1">{currentProblem.exponent}</sup>
-                </div>
-                <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={revealed} setValidationError={setValidationError} />
-              </div>
-            ) : isSquareRootProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-4xl font-semibold text-gray-800">√{currentProblem.radicand}</div>
-                <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={revealed} setValidationError={setValidationError} />
-              </div>
-            ) : isEstimationProblem(currentProblem) ? (
-              renderMultipleChoice(
-                currentProblem.prompt,
-                currentProblem.options.map((option) => ({
-                  key: String(option),
-                  label: formatMathNumber(option),
-                  value: String(option),
-                })),
-              )
-            ) : isAngleProblem(currentProblem) ? (
-              renderMultipleChoice(
-                currentProblem.prompt,
-                currentProblem.options.map((option) => ({
-                  key: option,
-                  label: angleTypeLabel(option),
-                  value: option,
-                })),
-              )
-            ) : isMixedNumberConvertProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-2xl font-semibold text-gray-800">{currentProblem.prompt}</div>
-                {'whole' in currentProblem.answer ? (
-                  <MixedNumberInputs value={mixedAnswer} onChange={setMixedAnswer} disabled={revealed} />
-                ) : (
-                  <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={revealed} />
-                )}
-              </div>
-            ) : isConversionProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-2xl font-semibold text-gray-800">{currentProblem.prompt}</div>
-                {currentProblem.operation === 'decimal-to-fraction' ? (
-                  <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={revealed} />
-                ) : (
-                  <PromptInput
-                    userAnswer={userAnswer}
-                    setAnswer={setAnswer}
-                    disabled={revealed}
-                    setValidationError={setValidationError}
-                    decimal
-                  />
-                )}
-              </div>
-            ) : isFractionPercentProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-2xl font-semibold text-gray-800">{currentProblem.prompt}</div>
-                {typeof currentProblem.answer === 'number' ? (
-                  <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={revealed} setValidationError={setValidationError} />
-                ) : (
-                  <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={revealed} />
-                )}
-              </div>
-            ) : isPromptProblem(currentProblem) ? (
-              <div className="space-y-4">
-                <div className="text-2xl font-semibold text-gray-800">
-                  {isFactorizationProblem(currentProblem)
-                    ? `Descompón ${currentProblem.target} en factores primos`
-                    : currentProblem.prompt}
-                </div>
-                <PromptInput
-                  userAnswer={userAnswer}
-                  setAnswer={setAnswer}
-                  disabled={revealed}
-                  setValidationError={setValidationError}
-                  decimal={!isFactorizationProblem(currentProblem) && allowsDecimalAnswer(currentProblem)}
-                  factorization={isFactorizationProblem(currentProblem)}
-                  allowNegative={allowsNegativeAnswer(currentProblem)}
-                />
-              </div>
-            ) : 'num1' in currentProblem && typeof currentProblem.num1 === 'number' ? (
-              <>
-                <span>{formatMathNumber(currentProblem.num1)}</span>
-                <span className="mx-2 text-blue-600 text-3xl">{getOperationSymbol(currentProblem.operation)}</span>
-                <span>{formatMathNumber(currentProblem.num2)}</span>
-                <span className="mx-2">=</span>
-                <PromptInput
-                  userAnswer={userAnswer}
-                  setAnswer={setAnswer}
-                  disabled={revealed}
-                  setValidationError={setValidationError}
-                  decimal={allowsDecimalAnswer(currentProblem)}
-                />
-              </>
-            ) : null}
+            <ProblemBody
+              problem={currentProblem}
+              fields={answerFields}
+              onSelectOption={(value) => {
+                setValidationError(null);
+                setAnswer(value);
+                submitAnswer(value);
+              }}
+            />
             <div className="mt-4">
               {/* PIT-31: lectura voluntaria del enunciado (nunca de la solución). */}
               <ReadAloudButton text={problemSpeechText(currentProblem)} active={active} />

@@ -342,7 +342,7 @@ describe('GameContext — camino de aprendizaje', () => {
     const onStartSkill = vi.fn();
     renderWithProviders(
       <GameProvider>
-        <MyPath onStartSkill={onStartSkill} />
+        <MyPath onStartSkill={onStartSkill} onStartExam={vi.fn()} />
         <Harness />
       </GameProvider>,
     );

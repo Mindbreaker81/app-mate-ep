@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AchievementToast } from './AchievementToast';
 import { DailyGoalCard } from './DailyGoalCard';
 import { Exercise } from './Exercise';
+import { ExamPractice } from './ExamPractice';
 import { MyPath } from './MyPath';
 import { ScoreBoard } from './ScoreBoard';
 import { Achievements } from './Achievements';
@@ -34,7 +35,12 @@ export function Home() {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'path':
-        return <MyPath onStartSkill={() => setActiveTab('exercise')} />;
+        return (
+          <MyPath
+            onStartSkill={() => setActiveTab('exercise')}
+            onStartExam={() => setActiveTab('exercise')}
+          />
+        );
       case 'stats':
         return (
           <div className="space-y-6">
@@ -53,41 +59,53 @@ export function Home() {
     }
   };
 
-  // Bloque de ejercicio con su confirmación de reinicio.
+  // Bloque de ejercicio con su confirmación de reinicio. El examen (PIT-32)
+  // ocupa el panel con estado propio (state.exam); el Exercise queda montado
+  // pero oculto —igual que al cambiar de pestaña— para conservar respuestas
+  // parciales, pistas y temporizador al volver del examen.
   const exercisePanel = (
     <>
-      <Exercise active={activeTab === 'exercise'} />
+      {state.exam ? (
+        <ExamPractice active={activeTab === 'exercise'} onExit={() => setActiveTab('path')} />
+      ) : null}
+      <div
+        style={state.exam ? { display: 'none' } : undefined}
+        aria-hidden={state.exam ? true : undefined}
+      >
+        <Exercise active={activeTab === 'exercise' && !state.exam} />
+      </div>
       <div className="flex justify-center">
-        {confirmingReset ? (
-          <div className="flex items-center gap-3 bg-white rounded-lg shadow px-4 py-3">
-            <span className="font-semibold text-gray-700">¿Seguro? Se pierden puntos y racha.</span>
+        {!state.exam &&
+          (confirmingReset ? (
+            <div className="flex items-center gap-3 bg-white rounded-lg shadow px-4 py-3">
+              <span className="font-semibold text-gray-700">¿Seguro? Se pierden puntos y racha.</span>
+              <button
+                type="button"
+                onClick={() => {
+                  resetGame();
+                  setConfirmingReset(false);
+                }}
+                className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Sí, reiniciar
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingReset(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
             <button
               type="button"
-              onClick={() => {
-                resetGame();
-                setConfirmingReset(false);
-              }}
-              className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+              onClick={() => setConfirmingReset(true)}
+              className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 transition-colors"
             >
-              Sí, reiniciar
+              🔄 Reiniciar Juego
             </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingReset(false)}
-              className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Cancelar
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmingReset(true)}
-            className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 transition-colors"
-          >
-            🔄 Reiniciar Juego
-          </button>
-        )}
+          ))}
       </div>
     </>
   );

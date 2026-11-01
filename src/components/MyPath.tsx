@@ -12,6 +12,7 @@ import {
   recordSkillAttempt,
 } from '../utils/skillProgress';
 import { generateOperation } from '../utils/generators';
+import { buildExamQuestions } from '../utils/examSession';
 import { formatMathNumber } from '../utils/mathUtils';
 import { answersMatch, allowsNegativeAnswer, isPowerProblem, parseFullNumber } from '../utils/problemUtils';
 import { AnswerKeyboardProvider, useKeyboardInputProps } from './inputs/AnswerInputs';
@@ -73,9 +74,10 @@ const MODE_OPERATIONS: Record<string, string[]> = {
 
 interface MyPathProps {
   onStartSkill: () => void;
+  onStartExam: () => void;
 }
 
-export function MyPath({ onStartSkill }: MyPathProps) {
+export function MyPath({ onStartSkill, onStartExam }: MyPathProps) {
   const { state, dispatch } = useGame();
   const [showPlacement, setShowPlacement] = useState(false);
   const skillProgress = state.skillProgress ?? {};
@@ -105,6 +107,13 @@ export function MyPath({ onStartSkill }: MyPathProps) {
       dispatch({ type: 'SET_PRACTICE_MODE', payload: (practiceModeForSkill(first, state.grade) ?? 'all') as never });
       onStartSkill();
     }
+  };
+
+  // PIT-32: examen de repaso aislado — las preguntas se generan aquí y el
+  // flujo no toca puntuación, dominio ni sesión diaria.
+  const startExam = () => {
+    dispatch({ type: 'START_EXAM', payload: buildExamQuestions(skillProgress) });
+    onStartExam();
   };
 
   const areas = Object.values(SKILL_AREAS);
@@ -148,6 +157,25 @@ export function MyPath({ onStartSkill }: MyPathProps) {
               {sessionDone ? 'Completada 🎉' : sessionProgress > 0 ? 'Continuar' : 'Sesión de hoy'}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Repaso de examen (PIT-32): 10 preguntas, sin tiempo, soluciones al final */}
+      <div className="bg-white rounded-lg shadow-lg p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">📝 Repaso de examen</h2>
+            <p className="text-gray-600 text-sm">
+              Diez preguntas de tus habilidades, sin tiempo. Las soluciones salen al final y no cambian tu progreso.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={startExam}
+            className="shrink-0 whitespace-nowrap px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Empezar examen
+          </button>
         </div>
       </div>
 

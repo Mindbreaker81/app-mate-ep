@@ -43,6 +43,23 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   Sin autoplay ni lectura de la solución; cancela al cambiar de ejercicio,
   pestaña o al desmontar. Sin soporte de API el botón no aparece; sin voz en
   español se mantiene el texto y se avisa. Sin dependencias ni migración.
+- **Repaso de examen con resultados diferidos** (PIT-32, parte de PIT-22):
+  tarjeta «📝 Repaso de examen» en «Mi camino» que inicia diez preguntas de
+  las habilidades accesibles (round-robin barajado, nivel de problema según el
+  nivel real de cada habilidad). Sin tiempo, sin corrección ni pistas durante
+  la prueba y sin revelar la solución hasta terminar; las opciones múltiples
+  registran la elección y «Siguiente»/«Terminar examen» avanzan. El examen
+  vive en `state.exam` con acciones propias (`START/ANSWER/ADVANCE/FINISH/
+  CANCEL_EXAM`): nunca pasa por `CHECK_ANSWER`, así que puntuación, racha,
+  dominio, logros, sesión diaria e intentos normales no se tocan; se descarta
+  al reiniciar o al hidratar otro estado persistido. El ejercicio normal queda
+  montado pero oculto, conservando su estado. Al terminar, resumen con la
+  nota, cada pregunta, tu respuesta, la correcta y la explicación; el
+  resultado se guarda solo en localStorage por usuario
+  (`pitagoritas.examResults.<userId>`, últimos 20, idempotente por id), sin
+  migración ni envío remoto ni fuente `attempts`. Enunciado y controles
+  extraídos al componente compartido `ProblemBody` junto al teclado en
+  pantalla (PIT-18) y la voz de PIT-31, ambos disponibles en el examen.
 
 ## [4.1.0] - 2026-11-02
 

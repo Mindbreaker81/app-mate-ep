@@ -32,7 +32,7 @@ import { logger } from '../utils/logger';
 import { evaluateAchievements } from '../utils/achievementEngine';
 import { updateDailyProgress, updatePracticeDays } from '../utils/dailyGoal';
 import { getSkillById, skillIdForOperation } from '../utils/skillCatalog';
-import { DAILY_SESSION_SIZE, mergeSkillProgress, recordSkillAttempt, initializeSkillProgressFromAttempts, todayKey } from '../utils/skillProgress';
+import { DAILY_SESSION_SIZE, mergeSkillProgress, recordSkillAttempt, initializeSkillProgressFromAttempts, SKILL_TO_PROBLEM_LEVEL, todayKey } from '../utils/skillProgress';
 import { clearDailySession, loadDailySession, saveDailySession } from '../utils/dailySessionStorage';
 import { newMasteryAchievements } from '../utils/masteryAchievements';
 import {
@@ -352,10 +352,8 @@ const createInitialState = (): GameState => ({
   sessionDone: 0,
   sessionDate: null,
   pathSkillId: null,
+  exam: null,
 });
-
-/** Nivel de problema (1–10) a partir del nivel de habilidad (1–3): 3/6/9. */
-const SKILL_TO_PROBLEM_LEVEL = (skillLevel: number): number => Math.min(10, Math.max(1, skillLevel * 3));
 
 function createProblemForState(
   state: Pick<
@@ -536,6 +534,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         userAnswer: '',
         isCorrect: null,
         recentAchievement: null,
+        exam: null,
         ...getResetTimerState(state.timeMode),
       };
 
@@ -664,6 +663,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         daily: mergedDaily,
         practiceDays: mergedPracticeDays,
         skillProgress: mergedSkills,
+        // Llega el estado persistido (otra sesión o un merge remoto): el examen
+        // en memoria se descarta para no atribuirlo a la cuenta equivocada.
+        exam: null,
       };
     }
 
@@ -778,6 +780,48 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return action.payload === null
         ? { ...state, pathSkillId: null, dailySession: null, sessionDone: 0, sessionDate: null }
         : { ...state, pathSkillId: action.payload, dailySession: null, sessionDone: 0, sessionDate: null };
+
+    // — Examen de repaso (PIT-32): flujo aislado. Ninguna transición pasa por
+    // CHECK_ANSWER, así que puntuación, racha, dominio, logros, pistas e
+    // intentos normales no se tocan durante la prueba.
+    case 'START_EXAM':
+      return {
+        ...state,
+        exam: { questions: action.payload, index: 0, answers: {}, finished: false },
+      };
+
+    case 'ANSWER_EXAM':
+      if (!state.exam || state.exam.finished) {
+        return state;
+      }
+      return {
+        ...state,
+        exam: {
+          ...state.exam,
+          answers: { ...state.exam.answers, [action.payload.index]: action.payload.answer },
+        },
+      };
+
+    case 'ADVANCE_EXAM':
+      if (!state.exam) {
+        return state;
+      }
+      return {
+        ...state,
+        exam: {
+          ...state.exam,
+          index: Math.min(state.exam.index + 1, state.exam.questions.length - 1),
+        },
+      };
+
+    case 'FINISH_EXAM':
+      if (!state.exam) {
+        return state;
+      }
+      return { ...state, exam: { ...state.exam, finished: true } };
+
+    case 'CANCEL_EXAM':
+      return { ...state, exam: null };
 
     case 'ENSURE_PROBLEM':
       // Idempotente: si ya hay problema (p. ej. el restaurado de la sesión
