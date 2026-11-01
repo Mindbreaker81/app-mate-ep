@@ -15,6 +15,7 @@ import {
   isConversionProblem,
   isEstimationProblem,
   isFactorizationProblem,
+  isFractionPercentProblem,
   isFractionProblem,
   isIntegerArithmeticProblem,
   isIntegerCompareProblem,
@@ -487,6 +488,15 @@ export function Exercise({ active = true }: { active?: boolean }) {
                   setValidationError={setValidationError}
                   decimal
                 />
+              )}
+            </div>
+          ) : isFractionPercentProblem(currentProblem) ? (
+            <div className="space-y-4">
+              <div className="text-2xl font-semibold text-gray-800">{currentProblem.prompt}</div>
+              {typeof currentProblem.answer === 'number' ? (
+                <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={revealed} setValidationError={setValidationError} />
+              ) : (
+                <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={revealed} />
               )}
             </div>
           ) : isPromptProblem(currentProblem) ? (

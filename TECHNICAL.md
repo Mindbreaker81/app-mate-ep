@@ -495,8 +495,8 @@ onClick={async (e) => {
 | Curso | ID | Operaciones | Modos práctica |
 |-------|-----|-------------|----------------|
 | 4.º | `4t` | 7 | 8 |
-| 5.º | `5e` | 43 | 22 |
-| 6.º | `6e` | 64 | 29 |
+| 5.º | `5e` | 44 | 22 |
+| 6.º | `6e` | 65 | 29 |
 
 **Generadores 6.º:** `integers.ts`, `equations.ts`, `ratios.ts`, `probability.ts`,
 `geometryAdvanced.ts`, `scales.ts` (+ `statistics.ts` ampliado).

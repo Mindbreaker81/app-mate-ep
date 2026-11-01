@@ -15,6 +15,7 @@ import type {
   IntegerCompareProblem,
   IntegerOrderProblem,
   InverseProportionProblem,
+  FractionPercentProblem,
   MeanProblem,
   MedianProblem,
   MixedNumber,
@@ -48,7 +49,12 @@ import { formatFraction, fractionEquals, simplifyFraction } from './fractionUtil
 import { formatMathNumber, numbersEqual } from './mathUtils';
 
 export function isFractionProblem(problem: Problem | null): problem is FractionProblem {
-  return !!problem && problem.operation.startsWith('fraction-') && problem.operation !== 'fraction-to-decimal';
+  // Ojo: 'fraction-percent' también empieza por «fraction-» pero su respuesta
+  // es un porcentaje o una fracción equivalente; se maneja aparte.
+  return !!problem &&
+    problem.operation.startsWith('fraction-') &&
+    problem.operation !== 'fraction-to-decimal' &&
+    problem.operation !== 'fraction-percent';
 }
 
 export function isMixedNumberProblem(problem: Problem | null): problem is MixedNumberProblem {
@@ -218,6 +224,10 @@ export function isInverseProportionProblem(problem: Problem | null): problem is 
   return !!problem && problem.operation === 'inverse-proportion';
 }
 
+export function isFractionPercentProblem(problem: Problem | null): problem is FractionPercentProblem {
+  return !!problem && problem.operation === 'fraction-percent';
+}
+
 export function isMultipleChoiceProblem(
   problem: Problem | null,
 ): problem is
@@ -269,7 +279,8 @@ export function isPromptProblem(
   | SequenceProblem
   | FinanceProblem
   | TwoStepEquationProblem
-  | InverseProportionProblem {
+  | InverseProportionProblem
+  | FractionPercentProblem {
   return (
     isPercentageProblem(problem) ||
     isFactorizationProblem(problem) ||
@@ -294,7 +305,8 @@ export function isPromptProblem(
     isSequenceProblem(problem) ||
     isFinanceProblem(problem) ||
     isTwoStepEquationProblem(problem) ||
-    isInverseProportionProblem(problem)
+    isInverseProportionProblem(problem) ||
+    isFractionPercentProblem(problem)
   );
 }
 
@@ -412,6 +424,12 @@ export function formatProblemAnswer(problem: Problem): string {
   if (isConversionProblem(problem)) {
     return typeof problem.answer === 'number'
       ? formatMathNumber(problem.answer)
+      : formatFraction(problem.answer);
+  }
+
+  if (isFractionPercentProblem(problem)) {
+    return typeof problem.answer === 'number'
+      ? `${formatMathNumber(problem.answer)} %`
       : formatFraction(problem.answer);
   }
 
@@ -535,6 +553,25 @@ export function answersMatch(problem: Problem, userValue: string | Fraction | Mi
     }
     return typeof userValue === 'object' && 'numerator' in userValue && !('whole' in userValue) &&
       fractionEquals(problem.answer, userValue);
+  }
+
+  if (isFractionPercentProblem(problem)) {
+    if (typeof problem.answer === 'number') {
+      // Porcentaje: se acepta «75», «75%» y «75 %».
+      const percent = typeof userValue === 'string'
+        ? parseFullNumber(userValue.replace('%', '').trim())
+        : typeof userValue === 'number'
+          ? userValue
+          : null;
+      return percent !== null && numbersEqual(percent, problem.answer);
+    }
+    return typeof userValue === 'string'
+      ? (() => {
+          const parsed = parseFractionString(userValue);
+          return parsed !== null && fractionEquals(problem.answer, parsed);
+        })()
+      : typeof userValue === 'object' && 'numerator' in userValue && !('whole' in userValue) &&
+        fractionEquals(problem.answer, userValue);
   }
 
   if (isRemainderProblem(problem)) {

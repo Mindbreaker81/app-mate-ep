@@ -1,6 +1,7 @@
 import type {
   ConversionProblem,
   Fraction,
+  FractionPercentProblem,
   FractionProblem,
   MixedNumber,
   MixedNumberConvertProblem,
@@ -224,4 +225,64 @@ export function generateDecimalToFraction(levelConfig: LevelConfig): ConversionP
 function pickExactDenominator(maxDenominator = 100): number {
   const options = EXACT_DECIMAL_DENOMINATORS.filter((value) => value <= maxDenominator);
   return options[randomInt(0, Math.max(0, options.length - 1))];
+}
+
+/** Denominadores que dan porcentaje entero (dividen 100). */
+const PERCENT_FRIENDLY_DENOMINATORS = [2, 4, 5, 10, 20, 25, 50, 100] as const;
+
+/** Pares porcentaje → fracción simplificada, todos con valores exactos. */
+const PERCENT_FRACTION_PAIRS: Array<{ percent: number; fraction: Fraction }> = [
+  { percent: 4, fraction: { numerator: 1, denominator: 25 } },
+  { percent: 5, fraction: { numerator: 1, denominator: 20 } },
+  { percent: 8, fraction: { numerator: 2, denominator: 25 } },
+  { percent: 10, fraction: { numerator: 1, denominator: 10 } },
+  { percent: 20, fraction: { numerator: 1, denominator: 5 } },
+  { percent: 25, fraction: { numerator: 1, denominator: 4 } },
+  { percent: 35, fraction: { numerator: 7, denominator: 20 } },
+  { percent: 40, fraction: { numerator: 2, denominator: 5 } },
+  { percent: 50, fraction: { numerator: 1, denominator: 2 } },
+  { percent: 60, fraction: { numerator: 3, denominator: 5 } },
+  { percent: 70, fraction: { numerator: 7, denominator: 10 } },
+  { percent: 75, fraction: { numerator: 3, denominator: 4 } },
+  { percent: 80, fraction: { numerator: 4, denominator: 5 } },
+  { percent: 90, fraction: { numerator: 9, denominator: 10 } },
+];
+
+export function generateFractionPercent(levelConfig: LevelConfig): FractionPercentProblem {
+  const kinds = ['fraction-to-percent', 'percent-to-fraction', 'decimal-to-fraction'] as const;
+  const kind = kinds[randomInt(0, kinds.length - 1)];
+
+  if (kind === 'fraction-to-percent') {
+    const friendly = PERCENT_FRIENDLY_DENOMINATORS.filter((value) => value <= Math.max(4, levelConfig.maxDenominator));
+    const denominator = friendly[randomInt(0, friendly.length - 1)];
+    const numerator = randomInt(1, denominator - 1);
+    const fraction = simplifyFraction({ numerator, denominator });
+    const percent = (fraction.numerator / fraction.denominator) * 100;
+    return {
+      prompt: `¿Qué porcentaje es ${formatFraction(fraction)}? (escribe solo el número)`,
+      kind,
+      operation: 'fraction-percent',
+      answer: percent,
+      explanation: `Paso 1: ${fraction.numerator} ÷ ${fraction.denominator} = ${formatMathNumber(percent / 100)}.\nPaso 2: Multiplica por 100: ${formatMathNumber(percent)} %.`,
+    };
+  }
+
+  const pair = PERCENT_FRACTION_PAIRS[randomInt(0, PERCENT_FRACTION_PAIRS.length - 1)];
+  if (kind === 'percent-to-fraction') {
+    return {
+      prompt: `¿Qué fracción es ${pair.percent} %? (simplificada)`,
+      kind,
+      operation: 'fraction-percent',
+      answer: pair.fraction,
+      explanation: `Paso 1: ${pair.percent} % = ${pair.percent}/100.\nPaso 2: Simplifica: ${formatFraction(pair.fraction)}.`,
+    };
+  }
+
+  return {
+    prompt: `¿Qué fracción es ${formatMathNumber(pair.percent / 100)}? (simplificada)`,
+    kind,
+    operation: 'fraction-percent',
+    answer: pair.fraction,
+    explanation: `Paso 1: ${formatMathNumber(pair.percent / 100)} = ${pair.percent}/100.\nPaso 2: Simplifica: ${formatFraction(pair.fraction)}.`,
+  };
 }

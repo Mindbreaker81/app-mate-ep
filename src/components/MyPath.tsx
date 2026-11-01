@@ -52,7 +52,7 @@ const MODE_OPERATIONS: Record<string, string[]> = {
   factorization: ['factorization'],
   'word-problems': ['word-problem'],
   comparison: ['compare-fractions', 'compare-decimals', 'compare-fraction-decimal', 'order-values'],
-  conversions: ['mixed-number-addition', 'mixed-number-subtraction', 'mixed-number-convert', 'fraction-to-decimal', 'decimal-to-fraction'],
+  conversions: ['mixed-number-addition', 'mixed-number-subtraction', 'mixed-number-convert', 'fraction-to-decimal', 'decimal-to-fraction', 'fraction-percent'],
   'number-theory': ['factorization', 'gcd', 'lcm'],
   geometry: ['perimeter-rectangle', 'perimeter-square', 'area-rectangle', 'area-triangle', 'angle-type'],
   units: ['unit-conversion'],

@@ -11,6 +11,11 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 - **Modo libre «Ampliación ESO»** en 6.º (PIT-14): práctica el contenido T3
   (ecuaciones de dos pasos, proporcionalidad inversa) sin exigir prerrequisitos;
   en «Mi camino» siguen exigiéndose. Categoría propia «Ampliació ESO» (29 modos en 6.º).
+- **Nueva operación `fraction-percent`** (PIT-13): equivalencias fracción–decimal–porcentaje
+  con valores exactos (denominadores 2, 4, 5, 10, 20, 25, 50, 100): «¿qué porcentaje
+  es 2/5?», «¿qué fracción es 75 %?» y «¿qué fracción es 0.75?». Entra en la
+  habilidad «Fracción–decimal–porcentaje» de «Mi camino» y en el modo
+  «Conversiones» de 5.º y 6.º (44 operaciones en 5.º, 65 en 6.º).
 
 ## [4.0.0] - 2026-11-01
 

@@ -219,6 +219,7 @@ const FIFTH_GRADE_OPERATIONS: Operation[] = [
   'mixed-number-convert',
   'fraction-to-decimal',
   'decimal-to-fraction',
+  'fraction-percent',
   'compare-fractions',
   'compare-decimals',
   'compare-fraction-decimal',

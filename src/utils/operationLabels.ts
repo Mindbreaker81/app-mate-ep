@@ -63,6 +63,7 @@ export const operationLabels = {
   'probability-compare': 'Comparar probabilidades',
   'two-step-equation': 'Ecuaciones de dos pasos',
   'inverse-proportion': 'Proporcionalidad inversa',
+  'fraction-percent': 'Fracción, decimal y porcentaje',
 } as const;
 
 export function formatOperationLabel(operation: string): string {

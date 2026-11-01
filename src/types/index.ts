@@ -63,6 +63,7 @@ export const OPERATION_KEYS = [
   'probability-compare',
   'two-step-equation',
   'inverse-proportion',
+  'fraction-percent',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
@@ -433,6 +434,16 @@ export interface InverseProportionProblem {
   explanation: string;
 }
 
+/** Equivalencias fracción–decimal–porcentaje con valores exactos. */
+export interface FractionPercentProblem {
+  prompt: string;
+  kind: 'fraction-to-percent' | 'percent-to-fraction' | 'decimal-to-fraction';
+  operation: 'fraction-percent';
+  /** Porcentaje entero (fracción → %) o fracción simplificada (% o decimal → fracción). */
+  answer: number | Fraction;
+  explanation: string;
+}
+
 export type Problem =
   | NumericProblem
   | RemainderProblem
@@ -474,7 +485,8 @@ export type Problem =
   | FinanceProblem
   | ProbabilityCompareProblem
   | TwoStepEquationProblem
-  | InverseProportionProblem;
+  | InverseProportionProblem
+  | FractionPercentProblem;
 
 export interface Achievement {
   id: string;

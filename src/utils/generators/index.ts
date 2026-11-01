@@ -21,6 +21,7 @@ import {
   generateFractionMultiplication,
   generateFractionSubtraction,
   generateFractionToDecimal,
+  generateFractionPercent,
   generateMixedNumberAddition,
   generateMixedNumberConvert,
   generateMixedNumberSubtraction,
@@ -131,6 +132,7 @@ export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   'probability-compare': 0.6,
   'two-step-equation': 0.5,
   'inverse-proportion': 0.5,
+  'fraction-percent': 0.7,
 };
 
 export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
@@ -159,6 +161,7 @@ export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
     'mixed-number-convert',
     'fraction-to-decimal',
     'decimal-to-fraction',
+    'fraction-percent',
   ],
   'number-theory': ['factorization', 'gcd', 'lcm'],
   geometry: ['perimeter-rectangle', 'perimeter-square', 'area-rectangle', 'area-triangle', 'angle-type'],
@@ -347,6 +350,8 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
       return generateTwoStepEquationProblem(levelConfig);
     case 'inverse-proportion':
       return generateInverseProportionProblem(levelConfig);
+    case 'fraction-percent':
+      return generateFractionPercent(levelConfig);
     default: {
       const exhaustive: never = operation;
       throw new Error(`Operación no soportada: ${exhaustive}`);
@@ -429,7 +434,8 @@ export function getDifficulty(level: number, operation: Operation): 'easy' | 'me
     operation === 'finance' ||
     operation === 'probability-compare' ||
     operation === 'two-step-equation' ||
-    operation === 'inverse-proportion'
+    operation === 'inverse-proportion' ||
+    operation === 'fraction-percent'
   ) {
     return level >= 4 ? 'hard' : 'medium';
   }
