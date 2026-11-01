@@ -199,6 +199,13 @@ export const PRACTICE_MODES: PracticeModeConfig[] = [
     description: 'Conversiones con escalas en planos',
     category: 'sixth-grade-applied',
   },
+  {
+    mode: 'eso-extension',
+    label: 'Ampliación ESO',
+    icon: '🚀',
+    description: 'Puente a 1.º de ESO: ecuaciones de dos pasos y proporcionalidad inversa',
+    category: 'eso-extension',
+  },
 ];
 
 export const PRACTICE_MODE_CATEGORIES: Record<PracticeModeCategory, string> = {
@@ -208,6 +215,7 @@ export const PRACTICE_MODE_CATEGORIES: Record<PracticeModeCategory, string> = {
   application: 'Aplicación y contexto',
   'sixth-grade-core': '6.º núcleo',
   'sixth-grade-applied': '6.º aplicación',
+  'eso-extension': 'Ampliació ESO',
 };
 
 export function getPracticeModesForGrade(grade: GradeId): PracticeModeConfig[] {
@@ -245,6 +253,7 @@ export function groupPracticeModesByCategory(modes: PracticeModeConfig[]): Recor
     application: [],
     'sixth-grade-core': [],
     'sixth-grade-applied': [],
+    'eso-extension': [],
   };
 
   modes.forEach((mode) => {

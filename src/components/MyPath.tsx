@@ -66,6 +66,7 @@ const MODE_OPERATIONS: Record<string, string[]> = {
   scales: ['scale-conversion'],
   'number-sense': ['place-value', 'sequence', 'proportionality-check'],
   finance: ['finance'],
+  'eso-extension': ['two-step-equation', 'inverse-proportion'],
 };
 
 interface MyPathProps {

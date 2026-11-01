@@ -7,6 +7,11 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Añadido
+- **Modo libre «Ampliación ESO»** en 6.º (PIT-14): práctica el contenido T3
+  (ecuaciones de dos pasos, proporcionalidad inversa) sin exigir prerrequisitos;
+  en «Mi camino» siguen exigiéndose. Categoría propia «Ampliació ESO» (29 modos en 6.º).
+
 ## [4.0.0] - 2026-11-01
 
 ### Añadido

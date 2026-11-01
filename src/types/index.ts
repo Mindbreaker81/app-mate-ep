@@ -702,7 +702,8 @@ export type PracticeMode =
   | 'geometry-advanced'
   | 'scales'
   | 'number-sense'
-  | 'finance';
+  | 'finance'
+  | 'eso-extension';
 
 export interface PracticeModeConfig {
   mode: PracticeMode;
@@ -718,7 +719,8 @@ export type PracticeModeCategory =
   | 'advanced'
   | 'application'
   | 'sixth-grade-core'
-  | 'sixth-grade-applied';
+  | 'sixth-grade-applied'
+  | 'eso-extension';
 
 export type TimeMode = 'no-limit' | '30s' | '1min' | '2min';
 

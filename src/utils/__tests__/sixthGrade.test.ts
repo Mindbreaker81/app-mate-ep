@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ACHIEVEMENTS, GRADE_CONFIGS } from '../gameConfig';
 import { generateProblem } from '../problemGenerator';
-import { getPracticeModesForGrade } from '../practiceConfig';
+import { getPracticeModeConfig, getPracticeModesForGrade } from '../practiceConfig';
+import { contentStageFor } from '../contentStage';
 import {
   answersMatch,
   isIntegerArithmeticProblem,
@@ -17,8 +18,17 @@ describe('6th grade curriculum', () => {
     expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(64);
   });
 
-  it('includes 28 practice modes for 6th grade', () => {
-    expect(getPracticeModesForGrade('6e')).toHaveLength(28);
+  it('includes 29 practice modes for 6th grade', () => {
+    expect(getPracticeModesForGrade('6e')).toHaveLength(29);
+  });
+
+  it('el modo «Ampliación ESO» genera solo contenido T3 clasificado como eso-extension', () => {
+    expect(getPracticeModeConfig('eso-extension', '6e').label).toBe('Ampliación ESO');
+    for (let index = 0; index < 10; index += 1) {
+      const problem = generateProblem(5, 'eso-extension', '6e');
+      expect(['two-step-equation', 'inverse-proportion']).toContain(problem.operation);
+      expect(contentStageFor('6e', problem.operation, 'free')).toBe('eso-extension');
+    }
   });
 
   it('generates integer problems only in 6th grade', () => {

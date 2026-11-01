@@ -347,6 +347,7 @@ export const GRADE_CONFIGS: Record<'4t' | '5e' | '6e', GradeConfig> = {
       'scales',
       'number-sense',
       'finance',
+      'eso-extension',
     ],
   },
 };

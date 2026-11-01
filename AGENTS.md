@@ -57,7 +57,7 @@ npm run build          # typecheck + vite build
 
 ## Progreso y currículo
 
-- **Modo libre por curso** (`GradeId`): `4t` (7 ops, repaso), `5e` (43), `6e` (64 = 5º + 21 exclusivas). El selector de curso solo afecta al modo libre.
+- **Modo libre por curso** (`GradeId`): `4t` (7 ops, repaso), `5e` (43), `6e` (64 = 5º + 21 exclusivas). El selector de curso solo afecta al modo libre. En 6.º existe además el modo «Ampliación ESO» (PIT-14): práctica el contenido T3 (`two-step-equation`, `inverse-proportion`) en modo libre **sin exigir prerrequisitos**; en «Mi camino» esas habilidades siguen exigiéndolos. Su categoría propia es «Ampliació ESO» (no presentarla como «6.º»); `contentStage.ts` clasifica esos intentos como `eso-extension` por tier de la operación, independiente del modo.
 - **«Mi camino»** organiza las habilidades del **ciclo 5.º–6.º como un único ciclo** (Decret 175/2022); NO presentar T1/T2 como «5.º» y «6.º»:
   - **T1** = inicio del ciclo (5.º–6.º en conjunto)
   - **T2** = consolidación del ciclo (5.º–6.º en conjunto)

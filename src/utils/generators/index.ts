@@ -185,6 +185,8 @@ export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
   scales: ['scale-conversion'],
   'number-sense': ['place-value', 'sequence', 'proportionality-check'],
   finance: ['finance'],
+  // Ampliación T3 en modo libre (sin prerrequisitos; en «Mi camino» sí los exige).
+  'eso-extension': ['two-step-equation', 'inverse-proportion'],
 };
 
 function pickWeightedOperation(operations: Operation[]): Operation {
