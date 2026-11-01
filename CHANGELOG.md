@@ -7,6 +7,8 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [4.0.0] - 2026-11-01
+
 ### Añadido
 - **Catálogo de habilidades** (`skillCatalog.ts`): progreso persistido por habilidad,
   niveles y repaso espaciado
