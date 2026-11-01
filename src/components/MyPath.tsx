@@ -13,7 +13,9 @@ import {
 } from '../utils/skillProgress';
 import { generateOperation } from '../utils/generators';
 import { formatMathNumber } from '../utils/mathUtils';
-import { answersMatch, isPowerProblem, parseFullNumber } from '../utils/problemUtils';
+import { answersMatch, allowsNegativeAnswer, isPowerProblem, parseFullNumber } from '../utils/problemUtils';
+import { AnswerKeyboardProvider, useKeyboardInputProps } from './inputs/AnswerInputs';
+import { MathKeyboard } from './inputs/MathKeyboard';
 
 const STATE_LABELS: Record<SkillState, { label: string; classes: string }> = {
   locked: { label: '🔒 Bloqueada', classes: 'bg-gray-100 text-gray-500 border-gray-200' },
@@ -311,9 +313,12 @@ export function PlacementTest({
   const [answer, setAnswer] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, boolean[]>>({});
+  // Teclado opcional en la colocación también (PIT-18): cerrado por defecto.
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const questionId = useId();
   const progressId = useId();
   const errorId = useId();
+  const fieldProps = useKeyboardInputProps('value');
 
   if (index >= questions.length) {
     // Resultado: progreso inicial a partir de los resultados por habilidad (se repiten todos).
@@ -365,63 +370,86 @@ export function PlacementTest({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <span id={progressId} className="text-sm text-gray-500">
-          Prueba de colocación · pregunta {index + 1} de {questions.length}
-        </span>
-        <button type="button" onClick={onCancel} className="text-sm text-gray-500 underline hover:text-gray-700">
-          Cancelar
-        </button>
-      </div>
-      <div
-        className="h-2 bg-gray-200 rounded-full overflow-hidden mb-6"
-        role="progressbar"
-        aria-label="Progreso de la prueba de colocación"
-        aria-valuemin={0}
-        aria-valuemax={questions.length}
-        aria-valuenow={index}
-      >
-        <div className="h-full bg-indigo-500" style={{ width: `${(index / questions.length) * 100}%` }} />
-      </div>
-      <p id={questionId} className="text-2xl font-semibold text-gray-800 text-center mb-6" aria-live="polite">
-        {prompt}
-      </p>
-      <form
-        className="flex justify-center gap-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          submit();
-        }}
-      >
-        <input
-          type="text"
-          inputMode="decimal"
-          aria-labelledby={questionId}
-          aria-describedby={error ? `${progressId} ${errorId}` : progressId}
-          aria-invalid={error ? true : undefined}
-          className="h-12 w-32 rounded-lg border-2 border-indigo-400 text-center text-2xl"
-          value={answer}
-          onChange={(event) => {
-            setAnswer(event.target.value);
-            if (error) {
-              setError(null);
-            }
-          }}
-          autoFocus
-        />
-        <button
-          type="submit"
-          className="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+    <AnswerKeyboardProvider>
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <span id={progressId} className="text-sm text-gray-500">
+            Prueba de colocación · pregunta {index + 1} de {questions.length}
+          </span>
+          <button type="button" onClick={onCancel} className="text-sm text-gray-500 underline hover:text-gray-700">
+            Cancelar
+          </button>
+        </div>
+        <div
+          className="h-2 bg-gray-200 rounded-full overflow-hidden mb-6"
+          role="progressbar"
+          aria-label="Progreso de la prueba de colocación"
+          aria-valuemin={0}
+          aria-valuemax={questions.length}
+          aria-valuenow={index}
         >
-          Enviar
-        </button>
-      </form>
-      {error && (
-        <p id={errorId} role="alert" className="text-red-600 text-sm text-center mt-3">
-          {error}
+          <div className="h-full bg-indigo-500" style={{ width: `${(index / questions.length) * 100}%` }} />
+        </div>
+        <p id={questionId} className="text-2xl font-semibold text-gray-800 text-center mb-6" aria-live="polite">
+          {prompt}
         </p>
-      )}
-    </div>
+        <form
+          className="flex justify-center gap-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submit();
+          }}
+        >
+          <input
+            type="text"
+            inputMode="decimal"
+            aria-labelledby={questionId}
+            aria-describedby={error ? `${progressId} ${errorId}` : progressId}
+            aria-invalid={error ? true : undefined}
+            className="h-12 w-32 rounded-lg border-2 border-indigo-400 text-center text-2xl"
+            value={answer}
+            onChange={(event) => {
+              setAnswer(event.target.value);
+              if (error) {
+                setError(null);
+              }
+            }}
+            autoFocus
+            {...fieldProps}
+          />
+          <button
+            type="submit"
+            className="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Enviar
+          </button>
+        </form>
+        <div className="flex justify-center mt-3">
+          <button
+            type="button"
+            aria-expanded={keyboardOpen}
+            aria-controls="teclado-colocacion"
+            onClick={() => setKeyboardOpen(!keyboardOpen)}
+            className="text-sm font-semibold text-indigo-600 underline hover:text-indigo-800"
+          >
+            ⌨️ Teclado {keyboardOpen ? '(cerrar)' : ''}
+          </button>
+        </div>
+        {keyboardOpen && (
+          <div id="teclado-colocacion" className="flex justify-center mt-2">
+            <MathKeyboard
+              fields={[{ id: 'value', label: 'Respuesta', value: answer, onEdit: (next) => { setAnswer(next.value); setError(null); } }]}
+              decimal
+              allowNegative={allowsNegativeAnswer(current)}
+            />
+          </div>
+        )}
+        {error && (
+          <p id={errorId} role="alert" className="text-red-600 text-sm text-center mt-3">
+            {error}
+          </p>
+        )}
+        </div>
+    </AnswerKeyboardProvider>
   );
 }

@@ -7,6 +7,16 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Añadido
+- **Teclado matemático opcional en pantalla** (PIT-18): el niño lo abre con el
+  botón «⌨️ Teclado» y no sustituye al teclado nativo. Dígitos, borrado que
+  respeta cursor y selección, coma decimal cuando el problema la admite, ± solo
+  en operaciones con negativos, «x» en factorización, «/» para pasar de
+  numerador a denominador y cambio de campo en cociente/resto. Botones de 44 px
+  con nombres accesibles que no envían el formulario. También disponible en la
+  prueba de colocación. Preferencia guardada localmente por usuario
+  (`pitagoritas.mathKeyboard.<userId>`), sin migración.
+
 ## [4.1.0] - 2026-11-02
 
 ### Añadido
