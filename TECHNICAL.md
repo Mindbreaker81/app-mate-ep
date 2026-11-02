@@ -496,7 +496,7 @@ onClick={async (e) => {
 |-------|-----|-------------|----------------|
 | 4.º | `4t` | 7 | 8 |
 | 5.º | `5e` | 45 | 22 |
-| 6.º | `6e` | 67 | 29 |
+| 6.º | `6e` | 68 | 29 |
 
 **Generadores 6.º:** `integers.ts`, `equations.ts`, `ratios.ts`, `probability.ts`,
 `geometryAdvanced.ts`, `scales.ts` (+ `statistics.ts` ampliado). `numberLine.ts`
@@ -506,8 +506,8 @@ alternativa textual sin la solución y se reutilizan en PIT-16/PIT-17.
 
 **Modo «Ampliación ESO» (PIT-14):** modo libre adicional de 6.º (categoría
 propia «Ampliació ESO», no presentada como «6.º») que práctica el contenido T3
-(`two-step-equation`, `inverse-proportion`) sin exigir prerrequisitos; en «Mi
-camino» esas habilidades siguen exigiéndolos. `contentStage.ts` ya clasificaba
+(`two-step-equation`, `inverse-proportion`, `power-general`) sin exigir
+prerrequisitos; en «Mi camino» esas habilidades siguen exigiéndolos. `contentStage.ts` ya clasificaba
 esos intentos como `eso-extension` por tier de la operación, así que los informes
 no cambian.
 

@@ -25,6 +25,7 @@ const SIXTH_ONLY_EXACT = [
   'two-step-equation',
   'inverse-proportion',
   'number-line-integer',
+  'power-general',
 ];
 
 const SIXTH_ONLY_PREFIXES = ['integer-'];

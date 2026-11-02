@@ -66,6 +66,7 @@ export const operationLabels = {
   'fraction-percent': 'Fracción, decimal y porcentaje',
   'number-line-decimal': 'Recta numérica: décimas y centésimas',
   'number-line-integer': 'Recta numérica: enteros',
+  'power-general': 'Potencias (exponentes 0–5)',
 } as const;
 
 export function formatOperationLabel(operation: string): string {

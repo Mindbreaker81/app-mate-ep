@@ -274,6 +274,7 @@ const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [
   'two-step-equation',
   'inverse-proportion',
   'number-line-integer',
+  'power-general',
 ];
 
 const SIXTH_GRADE_OPERATIONS: Operation[] = [...FIFTH_GRADE_OPERATIONS, ...SIXTH_GRADE_ONLY_OPERATIONS];

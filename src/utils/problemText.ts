@@ -18,6 +18,7 @@ import {
   isMixedNumberProblem,
   isMixedProblem,
   isOrderValuesProblem,
+  isPowerGeneralProblem,
   isPowerProblem,
   isProbabilityCompareProblem,
   isProbabilityProblem,
@@ -275,6 +276,10 @@ function baseSpeechText(problem: Problem): string {
   }
   if (isPowerProblem(problem)) {
     return `${problem.base} al ${problem.exponent === 2 ? 'cuadrado' : 'cubo'}`;
+  }
+  if (isPowerGeneralProblem(problem)) {
+    const word = problem.exponent === 2 ? 'al cuadrado' : problem.exponent === 3 ? 'al cubo' : `elevado a ${problem.exponent}`;
+    return `${problem.base} ${word}`;
   }
   if (isSquareRootProblem(problem)) {
     return `raíz cuadrada de ${problem.radicand}`;

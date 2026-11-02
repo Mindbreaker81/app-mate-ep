@@ -66,6 +66,7 @@ export const OPERATION_KEYS = [
   'fraction-percent',
   'number-line-decimal',
   'number-line-integer',
+  'power-general',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
@@ -436,6 +437,15 @@ export interface InverseProportionProblem {
   explanation: string;
 }
 
+/** Puente T3 (Ampliació ESO): potencia con cualquier exponente natural 0–5. */
+export interface PowerGeneralProblem {
+  base: number;
+  exponent: number;
+  operation: 'power-general';
+  answer: number;
+  explanation: string;
+}
+
 /** Equivalencias fracción–decimal–porcentaje con valores exactos. */
 export interface FractionPercentProblem {
   prompt: string;
@@ -507,7 +517,8 @@ export type Problem =
   | TwoStepEquationProblem
   | InverseProportionProblem
   | FractionPercentProblem
-  | NumberLineProblem;
+  | NumberLineProblem
+  | PowerGeneralProblem;
 
 export interface Achievement {
   id: string;

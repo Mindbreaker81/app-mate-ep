@@ -19,7 +19,7 @@ Una aplicación web interactiva para que niños de **4.º, 5.º y 6.º de Primar
 - **Persistencia en la nube**: Datos guardados en Supabase con seguridad RLS
 
 ### 📝 Ejercicios y Operaciones
-- **67 tipos de operaciones** en 6.º de Primaria (45 en 5.º, 7 en 4.º)
+- **68 tipos de operaciones** en 6.º de Primaria (45 en 5.º, 7 en 4.º)
 - **4.º:** suma, resta, multiplicación, división, fracciones (+/−) y operaciones mixtas
 - **5.º:** decimales, fracciones (×/÷), mixtas, equivalencias fracción–decimal–porcentaje, recta numérica con décimas y centésimas, potencias, raíces, porcentajes, estimación, factorización, MCD/MCM, problemas verbales, geometría, medidas (superficie y volumen), estadística, valor posicional, secuencias, proporcionalidad y finanzas
 - **6.º:** enteros negativos, recta numérica de enteros, ecuaciones (de uno y dos pasos), razones, proporcionalidad directa e inversa, probabilidad, círculo/volumen, escalas y todo el contenido de 5.º

@@ -90,7 +90,8 @@ describe('catálogo de insignias por dominio', () => {
 
   it('los conjuntos de área están versionados y reproducen el catálogo actual', () => {
     // Versiones explícitas: suben cuando el conjunto cambia (PIT-15 añadió
-    // «recta-enteros» a cálculo y «recta-decimales» a número).
+    // «recta-enteros» a cálculo y «recta-decimales» a número; PIT-23 añade
+    // las habilidades T3 a «ampliacion»).
     const expectedVersions: Record<string, number> = {
       calculo: 2,
       numero: 2,
@@ -98,7 +99,7 @@ describe('catálogo de insignias por dominio', () => {
       aplicaciones: 1,
       medidas: 1,
       datos: 1,
-      ampliacion: 1,
+      ampliacion: 2,
     };
     for (const set of MASTERY_AREA_SETS) {
       expect(set.version).toBe(expectedVersions[set.areaId]);

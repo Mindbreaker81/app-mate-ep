@@ -242,6 +242,23 @@ describe('Invariantes de generadores por curso y nivel', () => {
     }
   });
 
+  it('power-general es exacto, entero seguro y nunca genera 0^0', () => {
+    for (const levelConfig of LEVELS) {
+      for (let i = 0; i < 40; i += 1) {
+        const problem = generateOperationForTest('power-general', levelConfig.id, levelConfig);
+        if (problem.operation !== 'power-general') {
+          continue;
+        }
+        expect(problem.base).toBeGreaterThanOrEqual(0);
+        expect(problem.exponent).toBeGreaterThanOrEqual(0);
+        expect(problem.exponent).toBeLessThanOrEqual(5);
+        expect(problem.base === 0 && problem.exponent === 0, `0^0 generado en nivel ${levelConfig.id}`).toBe(false);
+        expect(problem.answer).toBe(problem.base ** problem.exponent);
+        expect(Number.isSafeInteger(problem.answer)).toBe(true);
+      }
+    }
+  });
+
   it('la probabilidad da resultados exactos y acepta fracción equivalente', () => {
     const config = LEVELS[5];
     for (let i = 0; i < 40; i += 1) {

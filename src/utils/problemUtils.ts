@@ -27,6 +27,7 @@ import type {
   OrderValuesProblem,
   PlaceValueProblem,
   PercentageProblem,
+  PowerGeneralProblem,
   ProbabilityCompareProblem,
   ProbabilityProblem,
   Problem,
@@ -88,6 +89,10 @@ export function isMixedProblem(problem: Problem | null): problem is Extract<Prob
 
 export function isPowerProblem(problem: Problem | null): problem is Extract<Problem, { operation: 'power' }> {
   return !!problem && problem.operation === 'power';
+}
+
+export function isPowerGeneralProblem(problem: Problem | null): problem is PowerGeneralProblem {
+  return !!problem && problem.operation === 'power-general';
 }
 
 export function isSquareRootProblem(problem: Problem | null): problem is SquareRootProblem {
