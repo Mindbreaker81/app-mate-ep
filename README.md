@@ -329,7 +329,7 @@ pitagoritas/
 
 Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de cambios.
 
-**Última versión:** 4.1.0 (ver [CHANGELOG.md](./CHANGELOG.md))
+**Última versión:** 4.2.0 (ver [CHANGELOG.md](./CHANGELOG.md))
 
 ## 📄 Licencia
 

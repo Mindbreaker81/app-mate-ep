@@ -7,6 +7,8 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [4.2.0] - 2026-11-02
+
 ### Corregido
 - **«El más frecuente» sin gráfico (PIT-17)**: en pictogramas y gráficos de
   barras con pregunta de «el más frecuente» se mostraban las opciones pero
