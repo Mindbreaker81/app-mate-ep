@@ -8,6 +8,16 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ## [Sin publicar]
 
 ### Añadido
+- **Recta numérica visual** (PIT-15, MVP de lectura sin arrastre): dos
+  operaciones nuevas — décimas y centésimas (5.º y 6.º, T1) y enteros con
+  negativos (solo 6.º, T2). La recta es SVG directo con marco accesible
+  reutilizable (título, descripción y alternativa textual que explica la
+  escala sin revelar el resultado); todas las marcas llevan su valor salvo la
+  del punto, que solo se dibuja como punto. Respuesta numérica con el teclado
+  o el teclado en pantalla (± en enteros, coma en decimales); valores
+  calculados con enteros escalados, sin errores de coma flotante. Nuevas
+  habilidades «La recta numérica» en «Mi camino» y modo «Sentido numérico»
+  (45 operaciones en 5.º, 67 en 6.º).
 - **Teclado matemático opcional en pantalla** (PIT-18): el niño lo abre con el
   botón «⌨️ Teclado» y no sustituye al teclado nativo. Dígitos, borrado que
   respeta cursor y selección, coma decimal cuando el problema la admite, ± solo

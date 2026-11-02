@@ -20,6 +20,7 @@ import {
   isMixedNumberProblem,
   isMixedProblem,
   isMultipleChoiceProblem,
+  isNumberLineProblem,
   isOrderValuesProblem,
   isPowerProblem,
   isProbabilityCompareProblem,
@@ -30,6 +31,7 @@ import {
   isSquareRootProblem,
 } from '../utils/problemUtils';
 import { formatMathNumber } from '../utils/mathUtils';
+import { NumberLine } from './visuals/NumberLine';
 import {
   FractionInputs,
   MixedNumberInputs,
@@ -294,6 +296,19 @@ export function ProblemBody({
           ) : (
             <FractionInputs value={fracAnswer} onChange={setFracAnswer} disabled={disabled} />
           )}
+        </div>
+      ) : isNumberLineProblem(problem) ? (
+        <div className="space-y-4">
+          <div className="text-2xl font-semibold text-gray-800 text-center">{problem.prompt}</div>
+          <NumberLine problem={problem} />
+          <PromptInput
+            userAnswer={userAnswer}
+            setAnswer={setAnswer}
+            disabled={disabled}
+            setValidationError={setValidationError}
+            decimal={allowsDecimalAnswer(problem)}
+            allowNegative={allowsNegativeAnswer(problem)}
+          />
         </div>
       ) : isPromptProblem(problem) ? (
         <div className="space-y-4">
