@@ -25,10 +25,11 @@ Garantías:
 - Sin fila de `game_state` para el niño devuelve 0 filas: el servicio
   distingue «sin datos» de «sin permisos» y de «migración no aplicada».
 
-> **Estado: PENDIENTE DE APLICAR** en Supabase. Requiere aprobación expresa;
-> no ejecutar `supabase db push` ni el SQL contra la base de datos sin ella.
-> La app convive sin la migración: el panel muestra el aviso «migración
-> pendiente» en lugar de inventar el dominio.
+> **Estado: aplicada** en Supabase cloud el 2026-11-02 (aprobada por el usuario;
+> `supabase db push --linked` tras dry-run). Comprobado: el rol anónimo recibe
+> «permission denied» y un niño autenticado recibe `not_admin`. Si se despliega en
+> otro entorno sin ella, el panel muestra el aviso «migración pendiente» en lugar
+> de inventar el dominio.
 
 ### Archivo de migración
 

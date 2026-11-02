@@ -5,7 +5,7 @@ App web para que niños de Primaria practiquen matemáticas. Autor: Edmundo Rosa
 ## Stack y arquitectura
 
 - **React 19 + TypeScript 5.8 (strict) + Vite 7 + Tailwind 3**. PWA (`vite-plugin-pwa`). Despliegue en Vercel (`dist/`).
-- **Backend:** Supabase (Auth + PostgreSQL con RLS). Migraciones versionadas en `supabase/migrations/` (0001–0008). `attempts.operation` es texto libre y el progreso de habilidades vive en el JSON `game_state.data`: **las operaciones nuevas no necesitan migración**.
+- **Backend:** Supabase (Auth + PostgreSQL con RLS). Migraciones versionadas en `supabase/migrations/` (0001–0009). `attempts.operation` es texto libre y el progreso de habilidades vive en el JSON `game_state.data`: **las operaciones nuevas no necesitan migración**.
 - **Estado:** `src/context/` (`AuthContext`, `GameContext`). Los intentos se guardan de inmediato en Supabase con cola local offline; el estado de juego (logros, récords, habilidades) va en `game_state` por usuario.
 - **Generadores de problemas:** `src/utils/generators/` (un archivo por familia + `index.ts` como orquestador). `src/utils/problemGenerator.ts` es solo un reexport.
 - **Camino de aprendizaje:** `skillCatalog.ts` (habilidades por área/tier con prerrequisitos), `skillProgress.ts` (motor de dominio: ventana de 12, mín. 10 intentos, ≥80 %, 2 días; repaso 1/3/7/14 d; nivel sube con 3 aciertos seguidos y baja con 2 fallos), `skillReport.ts`, `MyPath.tsx` (pestaña "Mi camino", sesión diaria, prueba de colocación). `contentStage.ts` deriva el tramo del contenido de un intento (repaso 4.º / ciclo 5.º–6.º T1-T2 / ampliación ESO T3) a partir de la operación, para que los informes no lo atribuyan al curso elegido.

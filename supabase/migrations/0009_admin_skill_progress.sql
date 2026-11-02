@@ -5,8 +5,7 @@
 -- data->'skills' y updated_at del niño pedido: ni PIN, ni logros, ni el resto
 -- de data, ni el estado de otros usuarios. No escribe nada.
 --
--- ESTADO: pendiente de aplicar. Requiere aprobación expresa antes de
--- ejecutarse en Supabase (ver DATABASE_MIGRATION.md).
+-- ESTADO: aplicada en Supabase cloud el 2026-11-02 (ver DATABASE_MIGRATION.md).
 
 create or replace function public.admin_get_skill_progress(target_user_id uuid)
 returns table (
