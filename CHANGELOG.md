@@ -8,6 +8,17 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ## [Sin publicar]
 
 ### Añadido
+- **Geometría visual: coordenadas, simetrías y traslaciones** (PIT-16): tres
+  operaciones nuevas en T2 (5.º y 6.º, modo «Geometría Visual») sobre la
+  cuadrícula del primer cuadrante 0–10: leer la coordenada x o y de un punto,
+  elegir la figura resultante de una simetría (recta vertical u horizontal)
+  o de una traslación entera, y clasificar una figura por su número de lados
+  (categorías excluyentes). Sin rotaciones, sin cuatro cuadrantes y sin
+  arrastre. Todo es SVG directo reutilizando el marco accesible: los ejes
+  llevan todos los números, las opciones de figuras se dibujan con letra
+  A/B/C y la alternativa textual lista los vértices de cada opción sin
+  señalar la correcta. Nueva habilidad «Coordenadas, simetrías y
+  traslaciones» en «Mi camino» (50 operaciones en 5.º, 75 en 6.º, 30 modos).
 - **Panel familiar: dominio y resumen semanal** (PIT-30): nueva vista
   `SkillMasteryView` en el detalle del niño del panel de administración.
   Muestra el dominio real por habilidad calculado con el mismo motor que

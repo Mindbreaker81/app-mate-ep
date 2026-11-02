@@ -495,8 +495,8 @@ onClick={async (e) => {
 | Curso | ID | Operaciones | Modos práctica |
 |-------|-----|-------------|----------------|
 | 4.º | `4t` | 7 | 8 |
-| 5.º | `5e` | 47 | 22 |
-| 6.º | `6e` | 72 | 29 |
+| 5.º | `5e` | 50 | 23 |
+| 6.º | `6e` | 75 | 30 |
 
 **Generadores 6.º:** `integers.ts`, `equations.ts`, `ratios.ts`, `probability.ts`,
 `geometryAdvanced.ts`, `scales.ts` (+ `statistics.ts` ampliado). `numberLine.ts`
@@ -507,6 +507,13 @@ alternativa textual sin la solución y se reutilizan en PIT-16/PIT-17.
 en el modo «Estadística» (frecuencias enteras, símbolos completos con leyenda
 1/2/5, «el más frecuente» solo con máximo único); los renderiza `ProblemBody`
 con `BarChart`/`Pictogram` (SVG + tabla equivalente accesible).
+`geometryVisual.ts` (PIT-16) genera el modo «Geometría Visual»
+(`coordinate-value`, `plane-transform`, `shape-classification`): primer
+cuadrante 0–10 con vértices enteros, simetrías sobre rectas verticales o
+horizontales del primer cuadrante, traslaciones enteras y clasificación
+excluyente por número de lados; se renderiza con `CoordinateGrid`/
+`GeometryDiagram` y las opciones de figuras llevan letra A/B/C con vértices
+en la alternativa textual.
 
 **Modo «Ampliación ESO» (PIT-14):** modo libre adicional de 6.º (categoría
 propia «Ampliació ESO», no presentada como «6.º») que práctica el contenido T3

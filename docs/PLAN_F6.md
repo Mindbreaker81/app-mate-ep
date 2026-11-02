@@ -127,6 +127,16 @@ Funciones puras de reflexión/traslación y clasificación, identidad de figuras
 
 Confirmar primer cuadrante y las tres familias como límite inicial. Rotaciones y plano con cuatro cuadrantes se posponen.
 
+**Resultado de implementación (2026-11-02):** las tres operaciones (`coordinate-value`,
+`plane-transform`, `shape-classification`) en el modo «Geometría Visual» (5.º y 6.º,
+T2, habilidad única `geometria-visual` con prerrequisitos `geometria-basica` y
+`recta-decimales`). Simetrías SOLO sobre rectas verticales/horizontales del primer
+cuadrante (los ejes sacarían la figura del cuadrante) y opciones de figuras como
+letras A/B/C con vértices listados en la alternativa textual; clasificación
+excluyente por número de lados. Render en `ProblemBody` con `CoordinateGrid`/
+`GeometryDiagram`. Insignia de área «medidas» sube a v2. Recuentos: 5.º 50,
+6.º 75 (25 exclusivas); 30 modos.
+
 ## PIT-17 — Gráficos de barras y pictogramas
 
 **Estimación:** M. **Orden:** 3. **Dependencias de implementación:** PIT-15.
