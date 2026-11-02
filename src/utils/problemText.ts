@@ -27,6 +27,9 @@ import {
   isRemainderProblem,
   isSquareRootProblem,
   isDataChartProblem,
+  isCoordinateValueProblem,
+  isPlaneTransformProblem,
+  isShapeClassificationProblem,
 } from './problemUtils';
 import { formatMathNumber } from './mathUtils';
 import { numberLineAltText } from './generators/numberLine';
@@ -260,6 +263,12 @@ function speechOptions(problem: Problem): string[] {
   if (isDataChartProblem(problem)) {
     return (problem.options ?? []).map((option) => verbalizeMathText(option));
   }
+  if (isPlaneTransformProblem(problem)) {
+    return [...problem.options];
+  }
+  if (isShapeClassificationProblem(problem)) {
+    return problem.options.map((option) => verbalizeMathText(option));
+  }
   return [];
 }
 
@@ -303,6 +312,21 @@ function baseSpeechText(problem: Problem): string {
       .map((category, index) => `${category}: ${problem.values[index]}`)
       .join(', ');
     return `Gráfico: ${problem.title}. Datos: ${data}. ${verbalizeMathText(problem.prompt)}`;
+  }
+  if (isCoordinateValueProblem(problem)) {
+    // Misma información que la alternativa textual del SVG, sin el resultado.
+    return `Cuadrícula de 0 a 10. Punto ${problem.pointLabel} marcado. ${verbalizeMathText(problem.prompt)}`;
+  }
+  if (isPlaneTransformProblem(problem)) {
+    // La figura y las opciones A/B/C se describen, pero no cuál es la correcta.
+    const line = problem.mirrorLine
+      ? ` Recta de ${problem.mirrorLine.axis === 'x' ? 'simetría vertical' : 'simetría horizontal'} en ${problem.mirrorLine.value}.`
+      : ` Traslación de ${problem.translation?.x ?? 0} casillas en horizontal y ${problem.translation?.y ?? 0} en vertical.`;
+    return `Figura original con ${problem.vertices.length} vértices en la cuadrícula.${line} ${verbalizeMathText(problem.prompt)} Opciones: A, B y C.`;
+  }
+  if (isShapeClassificationProblem(problem)) {
+    // No se dice el número de vértices: contar lados es justo la tarea.
+    return 'Figura cerrada dibujada en la cuadrícula. Recorre su borde y cuenta los lados. ' + verbalizeMathText(problem.prompt);
   }
   if (isOrderValuesProblem(problem) || isIntegerOrderProblem(problem)) {
     const values = problem.values.map((value) => verbalizeMathText(value)).join(', ');

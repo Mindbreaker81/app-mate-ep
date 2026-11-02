@@ -19,6 +19,9 @@ import type {
   FractionPercentProblem,
   NumberLineProblem,
   DataChartProblem,
+  CoordinateValueProblem,
+  PlaneTransformProblem,
+  ShapeClassificationProblem,
   MeanProblem,
   MedianProblem,
   MixedNumber,
@@ -253,6 +256,18 @@ export function isDataChartProblem(problem: Problem | null): problem is DataChar
   return !!problem && (problem.operation === 'bar-chart-reading' || problem.operation === 'pictogram-reading');
 }
 
+export function isCoordinateValueProblem(problem: Problem | null): problem is CoordinateValueProblem {
+  return !!problem && problem.operation === 'coordinate-value';
+}
+
+export function isPlaneTransformProblem(problem: Problem | null): problem is PlaneTransformProblem {
+  return !!problem && problem.operation === 'plane-transform';
+}
+
+export function isShapeClassificationProblem(problem: Problem | null): problem is ShapeClassificationProblem {
+  return !!problem && problem.operation === 'shape-classification';
+}
+
 export function isMultipleChoiceProblem(
   problem: Problem | null,
 ): problem is
@@ -265,7 +280,9 @@ export function isMultipleChoiceProblem(
   | ProbabilityProblem
   | ProportionalityProblem
   | ProbabilityCompareProblem
-  | DataChartProblem {
+  | DataChartProblem
+  | PlaneTransformProblem
+  | ShapeClassificationProblem {
   return (
     isEstimationProblem(problem) ||
     isCompareProblem(problem) ||
@@ -277,7 +294,10 @@ export function isMultipleChoiceProblem(
     isProportionalityProblem(problem) ||
     isProbabilityCompareProblem(problem) ||
     // Los gráficos de datos solo son de opción múltiple en «el más frecuente».
-    (isDataChartProblem(problem) && problem.question === 'most-frequent')
+    (isDataChartProblem(problem) && problem.question === 'most-frequent') ||
+    // Geometría visual: transformación (por figura) y clasificación (por lados).
+    isPlaneTransformProblem(problem) ||
+    isShapeClassificationProblem(problem)
   );
 }
 
@@ -609,6 +629,11 @@ export function answersMatch(problem: Problem, userValue: string | Fraction | Mi
 
   if (isDataChartProblem(problem) && typeof problem.answer === 'string') {
     // «El más frecuente»: la respuesta es la opción tocada.
+    return userValue === problem.answer;
+  }
+
+  if (isPlaneTransformProblem(problem) || isShapeClassificationProblem(problem)) {
+    // Figuras y clasificaciones: la respuesta es la opción tocada.
     return userValue === problem.answer;
   }
 

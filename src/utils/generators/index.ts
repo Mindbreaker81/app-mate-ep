@@ -28,6 +28,11 @@ import {
 } from './fractions';
 import { generateNumberLineDecimal, generateNumberLineInteger } from './numberLine';
 import { generateBarChartReading, generatePictogramReading } from './dataCharts';
+import {
+  generateCoordinateValue,
+  generatePlaneTransform,
+  generateShapeClassification,
+} from './geometryVisual';
 import { generateEstimationProblem } from './estimation';
 import {
   generateAngleType,
@@ -148,6 +153,9 @@ export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   'algebra-substitution': 0.5,
   'bar-chart-reading': 0.7,
   'pictogram-reading': 0.7,
+  'coordinate-value': 0.7,
+  'plane-transform': 0.5,
+  'shape-classification': 0.6,
 };
 
 export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
@@ -201,6 +209,7 @@ export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
     'triangle-angle-sum',
   ],
   scales: ['scale-conversion'],
+  'geometry-visual': ['coordinate-value', 'plane-transform', 'shape-classification'],
   'number-sense': ['place-value', 'sequence', 'proportionality-check', 'number-line-decimal', 'number-line-integer'],
   finance: ['finance'],
   // Ampliación T3 en modo libre (sin prerrequisitos; en «Mi camino» sí los exige).
@@ -381,6 +390,12 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
       return generateBarChartReading(levelConfig);
     case 'pictogram-reading':
       return generatePictogramReading(levelConfig);
+    case 'coordinate-value':
+      return generateCoordinateValue();
+    case 'plane-transform':
+      return generatePlaneTransform();
+    case 'shape-classification':
+      return generateShapeClassification();
     default: {
       const exhaustive: never = operation;
       throw new Error(`Operación no soportada: ${exhaustive}`);
@@ -471,7 +486,10 @@ export function getDifficulty(level: number, operation: Operation): 'easy' | 'me
     operation === 'power-of-ten' ||
     operation === 'algebra-substitution' ||
     operation === 'bar-chart-reading' ||
-    operation === 'pictogram-reading'
+    operation === 'pictogram-reading' ||
+    operation === 'coordinate-value' ||
+    operation === 'plane-transform' ||
+    operation === 'shape-classification'
   ) {
     return level >= 4 ? 'hard' : 'medium';
   }

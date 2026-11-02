@@ -259,6 +259,15 @@ export const SKILLS: Skill[] = [
     icon: '📊',
   },
   {
+    id: 'geometria-visual',
+    name: 'Coordenadas, simetrías y traslaciones',
+    areaId: 'medidas',
+    tier: 2,
+    operations: ['coordinate-value', 'plane-transform', 'shape-classification'],
+    prerequisites: ['geometria-basica', 'recta-decimales'],
+    icon: '🔷',
+  },
+  {
     id: 'teoria-numeros',
     name: 'Divisibilidad, MCD y MCM',
     areaId: 'numero',

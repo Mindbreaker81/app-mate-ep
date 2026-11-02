@@ -77,10 +77,11 @@ export const MASTERY_AREA_SETS: MasteryAreaSet[] = [
     version: 1,
     skillIds: ['porcentajes', 'problemas', 'razones-proporciones', 'finanzas'],
   },
+  // v2 de «medidas»: entra «geometria-visual» (PIT-16).
   {
     areaId: 'medidas',
-    version: 1,
-    skillIds: ['unidades', 'geometria-basica', 'geometria-avanzada'],
+    version: 2,
+    skillIds: ['unidades', 'geometria-basica', 'geometria-avanzada', 'geometria-visual'],
   },
   // v2 de «datos»: entra «graficos-datos» (PIT-17).
   { areaId: 'datos', version: 2, skillIds: ['estadistica', 'probabilidad', 'graficos-datos'] },

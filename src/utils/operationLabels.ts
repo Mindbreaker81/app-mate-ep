@@ -71,6 +71,9 @@ export const operationLabels = {
   'algebra-substitution': 'Expresiones algebraicas (ax + b)',
   'bar-chart-reading': 'Gráficos de barras',
   'pictogram-reading': 'Pictogramas',
+  'coordinate-value': 'Coordenadas en el plano',
+  'plane-transform': 'Simetrías y traslaciones',
+  'shape-classification': 'Clasificación de figuras',
 } as const;
 
 export function formatOperationLabel(operation: string): string {

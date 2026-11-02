@@ -91,13 +91,14 @@ describe('catálogo de insignias por dominio', () => {
   it('los conjuntos de área están versionados y reproducen el catálogo actual', () => {
     // Versiones explícitas: suben cuando el conjunto cambia (PIT-15 añadió
     // «recta-enteros» a cálculo y «recta-decimales» a número; PIT-23 añade
-    // las habilidades T3 a «ampliacion»; PIT-17 añadió «graficos-datos» a datos).
+    // las habilidades T3 a «ampliacion»; PIT-17 añadió «graficos-datos» a
+    // datos; PIT-16 añade «geometria-visual» a medidas).
     const expectedVersions: Record<string, number> = {
       calculo: 2,
       numero: 2,
       fracciones: 1,
       aplicaciones: 1,
-      medidas: 1,
+      medidas: 2,
       datos: 2,
       ampliacion: 4,
     };

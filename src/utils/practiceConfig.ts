@@ -200,6 +200,13 @@ export const PRACTICE_MODES: PracticeModeConfig[] = [
     category: 'sixth-grade-applied',
   },
   {
+    mode: 'geometry-visual',
+    label: 'Geometría Visual',
+    icon: '🔷',
+    description: 'Coordenadas en el plano, simetrías, traslaciones y clasificación de figuras',
+    category: 'application',
+  },
+  {
     mode: 'eso-extension',
     label: 'Ampliación ESO',
     icon: '🚀',

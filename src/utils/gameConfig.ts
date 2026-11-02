@@ -251,6 +251,9 @@ const FIFTH_GRADE_OPERATIONS: Operation[] = [
   'number-line-decimal',
   'bar-chart-reading',
   'pictogram-reading',
+  'coordinate-value',
+  'plane-transform',
+  'shape-classification',
 ];
 
 const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [
@@ -319,6 +322,7 @@ export const GRADE_CONFIGS: Record<'4t' | '5e' | '6e', GradeConfig> = {
       'rounding',
       'number-sense',
       'finance',
+      'geometry-visual',
     ],
   },
   '6e': {
@@ -355,6 +359,7 @@ export const GRADE_CONFIGS: Record<'4t' | '5e' | '6e', GradeConfig> = {
       'scales',
       'number-sense',
       'finance',
+      'geometry-visual',
       'eso-extension',
     ],
   },

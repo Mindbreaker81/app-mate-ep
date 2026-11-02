@@ -78,6 +78,9 @@ export function buildHint(problem: Problem, level: 1 | 2): string | null {
     'number-line-integer': ['Cuenta las marcas desde el principio de la recta.', 'Si el punto está a la izquierda del 0 el número es negativo; a la derecha, positivo.'],
     'bar-chart-reading': ['Mira hasta dónde llega la barra y compárala con las líneas del eje.', 'Si la barra queda entre dos líneas, cuenta las marcas de una en una.'],
     'pictogram-reading': ['Cuenta los símbolos completos de cada fila.', 'Multiplica los símbolos por el valor de cada símbolo que dice la leyenda.'],
+    'coordinate-value': ['Cuenta las casillas desde el eje hasta el punto.', 'La coordenada x se lee en horizontal (eje de abajo) y la y en vertical (eje de al lado).'],
+    'plane-transform': ['Comprueba dónde cae cada vértice, no solo la figura entera.', 'En una simetría, cada vértice salta al otro lado de la recta a la misma distancia; en una traslación, todos se mueven el mismo paso.'],
+    'shape-classification': ['Recorre el borde de la figura y cuenta los lados uno a uno.', 'Cada lado es un tramo recto entre dos esquinas.'],
   };
 
   const hints = HINTS[operation];

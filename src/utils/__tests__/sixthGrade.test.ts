@@ -14,12 +14,19 @@ import {
 } from '../problemUtils';
 
 describe('6th grade curriculum', () => {
-  it('exposes 72 operations in 6th grade config', () => {
-    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(72);
+  it('exposes 75 operations in 6th grade config', () => {
+    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(75);
   });
 
-  it('includes 29 practice modes for 6th grade', () => {
-    expect(getPracticeModesForGrade('6e')).toHaveLength(29);
+  it('includes 30 practice modes for 6th grade', () => {
+    expect(getPracticeModesForGrade('6e')).toHaveLength(30);
+  });
+
+  it('el modo «Geometría visual» genera solo sus tres operaciones', () => {
+    for (let index = 0; index < 10; index += 1) {
+      const problem = generateProblem(3, 'geometry-visual', '6e');
+      expect(['coordinate-value', 'plane-transform', 'shape-classification']).toContain(problem.operation);
+    }
   });
 
   it('el modo «Ampliación ESO» genera solo contenido T3 clasificado como eso-extension', () => {

@@ -71,6 +71,9 @@ export const OPERATION_KEYS = [
   'algebra-substitution',
   'bar-chart-reading',
   'pictogram-reading',
+  'coordinate-value',
+  'plane-transform',
+  'shape-classification',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
@@ -574,7 +577,65 @@ export type Problem =
   | PowerGeneralProblem
   | PowerOfTenProblem
   | AlgebraSubstitutionProblem
-  | DataChartProblem;
+  | DataChartProblem
+  | CoordinateValueProblem
+  | PlaneTransformProblem
+  | ShapeClassificationProblem;
+
+/** Punto entero del primer cuadrante (cuadrícula 0–10, PIT-16). */
+export interface GridPoint {
+  x: number;
+  y: number;
+}
+
+/** Lectura de la coordenada x o y de un punto en la cuadrícula (PIT-16, sin arrastre). */
+export interface CoordinateValueProblem {
+  prompt: string;
+  operation: 'coordinate-value';
+  /** Punto etiquetado (enteros, primer cuadrante). */
+  point: GridPoint;
+  /** Etiqueta corta del punto (p. ej. «P»). */
+  pointLabel: string;
+  /** Coordenada que se pregunta. */
+  axis: 'x' | 'y';
+  answer: number;
+  explanation: string;
+}
+
+/**
+ * Elección de la figura resultante de una simetría (recta vertical u
+ * horizontal del primer cuadrante) o una traslación entera (PIT-16). Las
+ * opciones son figuras con vértices; solo una coincide con la transformación.
+ */
+export interface PlaneTransformProblem {
+  prompt: string;
+  operation: 'plane-transform';
+  transform: 'reflection-vertical' | 'reflection-horizontal' | 'translation';
+  /** Figura original (vértices enteros dentro de la cuadrícula). */
+  vertices: GridPoint[];
+  /** Recta de simetría x = value o y = value (solo reflejos). */
+  mirrorLine?: { axis: 'x' | 'y'; value: number };
+  /** Desplazamiento entero (solo traslación). */
+  translation?: GridPoint;
+  /** Letras de las opciones (A/B/C), tal como se tocan. */
+  options: string[];
+  /** Figuras candidatas, en el mismo orden que `options`. */
+  optionFigures: GridPoint[][];
+  /** Letra de la opción correcta. */
+  answer: string;
+  explanation: string;
+}
+
+/** Clasificación de una figura por su número de lados (categorías excluyentes, PIT-16). */
+export interface ShapeClassificationProblem {
+  prompt: string;
+  operation: 'shape-classification';
+  /** Polígono de 3–6 vértices enteros en el primer cuadrante. */
+  vertices: GridPoint[];
+  options: string[];
+  answer: string;
+  explanation: string;
+}
 
 export interface Achievement {
   id: string;
@@ -805,6 +866,7 @@ export type PracticeMode =
   | 'scales'
   | 'number-sense'
   | 'finance'
+  | 'geometry-visual'
   | 'eso-extension';
 
 export interface PracticeModeConfig {
