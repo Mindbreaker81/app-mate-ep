@@ -8,6 +8,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ## [Sin publicar]
 
 ### Añadido
+- **Acceso del administrador al dominio por habilidad** (PIT-29): migración
+  0009 (`supabase/migrations/0009_admin_skill_progress.sql`, **pendiente de
+  aplicar**) con el RPC `admin_get_skill_progress`, `security definer` de
+  solo lectura que exige `is_admin()` y devuelve únicamente
+  `game_state.data->'skills'` y `updated_at` del niño pedido (nada de PIN,
+  logros ni el resto de `data`); `execute` solo para `authenticated`.
+  `adminService.fetchChildSkillProgress` consume el RPC distinguiendo
+  migración no aplicada, sin permisos, niño inexistente y vacío.
 - **Recta numérica visual** (PIT-15, MVP de lectura sin arrastre): dos
   operaciones nuevas — décimas y centésimas (5.º y 6.º, T1) y enteros con
   negativos (solo 6.º, T2). La recta es SVG directo con marco accesible

@@ -1,6 +1,54 @@
 # Migración de base de datos — Pitagoritas
 
-Este documento describe los cambios de base de datos necesarios para las expansiones curriculares v2.0 y v3.0, el usuario administrador (v3.1), el estado de juego por usuario (v3.2) y la procedencia del intento (v3.3).
+Este documento describe los cambios de base de datos necesarios para las expansiones curriculares v2.0 y v3.0, el usuario administrador (v3.1), el estado de juego por usuario (v3.2), la procedencia del intento (v3.3) y el acceso del administrador al dominio por habilidad (PIT-29).
+
+## Migración 0009 — Dominio por habilidad para el administrador (PIT-29)
+
+### Resumen
+
+Añade el RPC `admin_get_skill_progress(target_user_id uuid)` para que el
+panel familiar (PIT-30) muestre el dominio real de «Mi camino». El admin ya
+lee perfiles e intentos (0006), pero `game_state` solo permite acceso al
+propietario (0007): este RPC `security definer` de **solo lectura** devuelve
+únicamente `data->'skills'` y `updated_at` del niño pedido.
+
+Garantías:
+
+- `is_admin()` obligatorio; cualquier otro usuario autenticado recibe el
+  error `not_admin` (incluido un niño pidiendo el progreso de otro).
+- `user_not_found` si el objetivo no es un perfil de niño (o es el propio
+  admin).
+- Solo expone `skills` y `updated_at`: ni PIN, ni logros, ni el resto de
+  `game_state.data`, ni filas de otros usuarios.
+- No escribe: función `stable` de consulta. `execute` concedido solo a
+  `authenticated` (revocado de `PUBLIC` y `anon`).
+- Sin fila de `game_state` para el niño devuelve 0 filas: el servicio
+  distingue «sin datos» de «sin permisos» y de «migración no aplicada».
+
+> **Estado: PENDIENTE DE APLICAR** en Supabase. Requiere aprobación expresa;
+> no ejecutar `supabase db push` ni el SQL contra la base de datos sin ella.
+> La app convive sin la migración: el panel muestra el aviso «migración
+> pendiente» en lugar de inventar el dominio.
+
+### Archivo de migración
+
+`supabase/migrations/0009_admin_skill_progress.sql`
+
+### Cómo aplicarla (solo tras aprobación)
+
+Igual que las anteriores: SQL Editor del Dashboard o `supabase db push`.
+
+### Verificación
+
+```sql
+-- Como admin autenticado, devuelve una fila por niño con game_state:
+select * from public.admin_get_skill_progress('UUID_DEL_NIÑO');
+
+-- Como usuario no admin autenticado: ERROR: not_admin
+-- Como anon: permiso denegado para ejecutar la función
+```
+
+Después, en la app: panel admin → niño → sección «Dominio por habilidad».
 
 ## v3.3 — Procedencia del intento (`attempts.source`)
 

@@ -14,7 +14,7 @@ vi.mock('../../lib/supabaseClient', () => ({
   },
 }));
 
-import { fetchAllAttempts, listChildren, resetChildPin } from '../adminService';
+import { fetchAllAttempts, fetchChildSkillProgress, listChildren, resetChildPin } from '../adminService';
 
 describe('adminService', () => {
   beforeEach(() => {
@@ -118,6 +118,154 @@ describe('adminService', () => {
     it('devuelve null si la consulta falla', async () => {
       supabaseState.select.mockResolvedValue({ data: null, error: { message: 'boom' } });
       expect(await fetchAllAttempts()).toBeNull();
+    });
+  });
+
+  describe('fetchChildSkillProgress', () => {
+    const skillProgress = {
+      'sumas-restas': {
+        state: 'dominated',
+        recentResults: [true, true],
+        streakCorrect: 0,
+        streakWrong: 0,
+        activeDays: ['2026-10-30', '2026-10-31'],
+        reviewDueDate: '2026-11-05',
+        reviewCount: 0,
+        level: 3,
+        updatedAt: '2026-10-31T10:00:00Z',
+      },
+    };
+
+    it('llama al RPC con el id del niño y devuelve skills y updatedAt', async () => {
+      supabaseState.rpc.mockResolvedValue({
+        data: [{ skills: skillProgress, updated_at: '2026-10-31T12:00:00Z' }],
+        error: null,
+      });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(supabaseState.rpc).toHaveBeenCalledWith('admin_get_skill_progress', {
+        target_user_id: 'uuid-1',
+      });
+      expect(result).toEqual({
+        ok: true,
+        progress: { skills: skillProgress, updatedAt: '2026-10-31T12:00:00Z' },
+      });
+    });
+
+    it('devuelve skills vacías cuando el niño aún no tiene fila en game_state', async () => {
+      supabaseState.rpc.mockResolvedValue({ data: [], error: null });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(result).toEqual({ ok: true, progress: { skills: {}, updatedAt: null } });
+    });
+
+    it('devuelve skills vacías cuando la fila no tiene progreso guardado', async () => {
+      supabaseState.rpc.mockResolvedValue({
+        data: [{ skills: null, updated_at: '2026-10-31T12:00:00Z' }],
+        error: null,
+      });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(result).toEqual({ ok: true, progress: { skills: {}, updatedAt: '2026-10-31T12:00:00Z' } });
+    });
+
+    it('descarta entradas de skills malformadas', async () => {
+      supabaseState.rpc.mockResolvedValue({
+        data: [
+          {
+            skills: { ...skillProgress, 'entrada-rota': 'no-es-un-objeto', 'sin-ventana': { state: 'practicing' } },
+            updated_at: '2026-10-31T12:00:00Z',
+          },
+        ],
+        error: null,
+      });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(result).toEqual({
+        ok: true,
+        progress: { skills: skillProgress, updatedAt: '2026-10-31T12:00:00Z' },
+      });
+    });
+
+    it('detecta la migración 0009 no aplicada (función ausente en PostgREST)', async () => {
+      supabaseState.rpc.mockResolvedValue({
+        data: null,
+        error: {
+          code: 'PGRST202',
+          message:
+            'Could not find the function public.admin_get_skill_progress(target_user_id) in the schema cache',
+        },
+      });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'migration-missing',
+        message: expect.stringContaining('migración 0009'),
+      });
+    });
+
+    it('detecta la función ausente en Postgres (42883)', async () => {
+      supabaseState.rpc.mockResolvedValue({
+        data: null,
+        error: { code: '42883', message: 'function public.admin_get_skill_progress(uuid) does not exist' },
+      });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(result).toEqual({ ok: false, reason: 'migration-missing', message: expect.any(String) });
+    });
+
+    it('mapea not_admin a sin permisos', async () => {
+      supabaseState.rpc.mockResolvedValue({ data: null, error: { code: 'P0001', message: 'not_admin' } });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'not-authorized',
+        message: 'No tienes permisos de administrador.',
+      });
+    });
+
+    it('mapea permiso denegado (42501) a sin permisos', async () => {
+      supabaseState.rpc.mockResolvedValue({
+        data: null,
+        error: { code: '42501', message: 'permission denied for function admin_get_skill_progress' },
+      });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(result).toEqual({ ok: false, reason: 'not-authorized', message: expect.any(String) });
+    });
+
+    it('mapea user_not_found a niño no encontrado', async () => {
+      supabaseState.rpc.mockResolvedValue({ data: null, error: { code: 'P0001', message: 'user_not_found' } });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'child-not-found',
+        message: 'Este niño ya no existe o no es una cuenta de niño.',
+      });
+    });
+
+    it('devuelve un mensaje genérico ante errores desconocidos', async () => {
+      supabaseState.rpc.mockResolvedValue({ data: null, error: { message: 'network down' } });
+
+      const result = await fetchChildSkillProgress('uuid-1');
+
+      expect(result).toEqual({
+        ok: false,
+        reason: 'unknown',
+        message: 'No pudimos cargar el dominio de este niño. Inténtalo de nuevo.',
+      });
     });
   });
 
