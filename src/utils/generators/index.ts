@@ -42,7 +42,12 @@ import {
   generateLcmProblem,
 } from './numberTheory';
 import { generatePercentageProblem } from './percentages';
-import { generatePowerGeneralProblem, generatePowerProblem, generateSquareRootProblem } from './powers';
+import {
+  generatePowerGeneralProblem,
+  generatePowerOfTenProblem,
+  generatePowerProblem,
+  generateSquareRootProblem,
+} from './powers';
 import { generateRoundDecimal } from './rounding';
 import { pickRandom, type LevelConfig } from './shared';
 import { generateSimpleEquation } from './equations';
@@ -137,6 +142,7 @@ export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   'number-line-decimal': 0.7,
   'number-line-integer': 0.6,
   'power-general': 0.5,
+  'power-of-ten': 0.5,
 };
 
 export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
@@ -193,7 +199,7 @@ export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
   'number-sense': ['place-value', 'sequence', 'proportionality-check', 'number-line-decimal', 'number-line-integer'],
   finance: ['finance'],
   // Ampliación T3 en modo libre (sin prerrequisitos; en «Mi camino» sí los exige).
-  'eso-extension': ['two-step-equation', 'inverse-proportion', 'power-general'],
+  'eso-extension': ['two-step-equation', 'inverse-proportion', 'power-general', 'power-of-ten'],
 };
 
 function pickWeightedOperation(operations: Operation[]): Operation {
@@ -362,6 +368,8 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
       return generateNumberLineInteger(levelConfig);
     case 'power-general':
       return generatePowerGeneralProblem(levelConfig);
+    case 'power-of-ten':
+      return generatePowerOfTenProblem();
     default: {
       const exhaustive: never = operation;
       throw new Error(`Operación no soportada: ${exhaustive}`);
@@ -448,7 +456,8 @@ export function getDifficulty(level: number, operation: Operation): 'easy' | 'me
     operation === 'fraction-percent' ||
     operation === 'number-line-decimal' ||
     operation === 'number-line-integer' ||
-    operation === 'power-general'
+    operation === 'power-general' ||
+    operation === 'power-of-ten'
   ) {
     return level >= 4 ? 'hard' : 'medium';
   }

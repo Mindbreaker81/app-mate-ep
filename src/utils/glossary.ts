@@ -65,6 +65,7 @@ export const OPERATION_GLOSSARY_TERMS: Partial<Record<Operation, string[]>> = {
   sequence: ['secuencia'],
   power: ['potencia', 'exponente'],
   'power-general': ['potencia', 'exponente'],
+  'power-of-ten': ['potencia', 'exponente'],
   'square-root': ['raiz-cuadrada'],
   'fraction-addition': ['fraccion', 'numerador', 'denominador'],
   'fraction-subtraction': ['fraccion', 'numerador', 'denominador'],

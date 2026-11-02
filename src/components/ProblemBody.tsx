@@ -23,6 +23,7 @@ import {
   isNumberLineProblem,
   isOrderValuesProblem,
   isPowerGeneralProblem,
+  isPowerOfTenProblem,
   isPowerProblem,
   isProbabilityCompareProblem,
   isProbabilityProblem,
@@ -234,7 +235,7 @@ export function ProblemBody({
           <div className="text-3xl font-semibold text-gray-800">{problem.expression}</div>
           <NumericInput userAnswer={userAnswer} setAnswer={setAnswer} disabled={disabled} setValidationError={setValidationError} />
         </div>
-      ) : isPowerProblem(problem) || isPowerGeneralProblem(problem) ? (
+      ) : isPowerProblem(problem) || isPowerGeneralProblem(problem) || isPowerOfTenProblem(problem) ? (
         <div className="space-y-4">
           <div className="text-4xl font-semibold text-gray-800">
             {problem.base}

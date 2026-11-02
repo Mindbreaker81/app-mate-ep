@@ -14,8 +14,8 @@ import {
 } from '../problemUtils';
 
 describe('6th grade curriculum', () => {
-  it('exposes 68 operations in 6th grade config', () => {
-    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(68);
+  it('exposes 69 operations in 6th grade config', () => {
+    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(69);
   });
 
   it('includes 29 practice modes for 6th grade', () => {
@@ -26,7 +26,7 @@ describe('6th grade curriculum', () => {
     expect(getPracticeModeConfig('eso-extension', '6e').label).toBe('Ampliación ESO');
     for (let index = 0; index < 10; index += 1) {
       const problem = generateProblem(5, 'eso-extension', '6e');
-      expect(['two-step-equation', 'inverse-proportion', 'power-general']).toContain(problem.operation);
+      expect(['two-step-equation', 'inverse-proportion', 'power-general', 'power-of-ten']).toContain(problem.operation);
       expect(contentStageFor('6e', problem.operation, 'free')).toBe('eso-extension');
     }
   });

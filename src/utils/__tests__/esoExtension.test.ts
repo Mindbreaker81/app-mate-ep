@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PowerGeneralProblem } from '../../types';
+import type { PowerGeneralProblem, PowerOfTenProblem } from '../../types';
 import { GRADE_CONFIGS, LEVELS } from '../gameConfig';
 import { generateOperationForTest, generateProblem } from '../generators';
 import { contentStageFor } from '../contentStage';
@@ -11,6 +11,7 @@ import {
   answersMatch,
   formatProblemAnswer,
   isPowerGeneralProblem,
+  isPowerOfTenProblem,
 } from '../problemUtils';
 
 describe('power-general (T3 ampliación ESO)', () => {
@@ -110,6 +111,92 @@ describe('power-general (T3 ampliación ESO)', () => {
 
   it('tiene pista gradual', () => {
     const problem = generateOperationForTest('power-general', 5, LEVELS[4]);
+    expect(buildHint(problem, 1)).not.toBeNull();
+    expect(buildHint(problem, 2)).not.toBeNull();
+  });
+});
+
+describe('power-of-ten (T3 ampliación ESO)', () => {
+  it('da siempre 10^n exacto: base 10, exponente 0–6 y entero seguro', () => {
+    for (const levelConfig of LEVELS) {
+      for (let i = 0; i < 40; i += 1) {
+        const problem = generateOperationForTest('power-of-ten', levelConfig.id, levelConfig);
+        expect(isPowerOfTenProblem(problem)).toBe(true);
+        const power = problem as PowerOfTenProblem;
+        expect(power.base).toBe(10);
+        expect(power.exponent).toBeGreaterThanOrEqual(0);
+        expect(power.exponent).toBeLessThanOrEqual(6);
+        expect(power.answer).toBe(10 ** power.exponent);
+        expect(Number.isSafeInteger(power.answer)).toBe(true);
+      }
+    }
+  });
+
+  it('cubre todos los exponentes 0–6 incluidos los casos 10^0 = 1 y 10^1 = 10', () => {
+    const exponents = new Set<number>();
+    for (let i = 0; i < 300; i += 1) {
+      const problem = generateOperationForTest('power-of-ten', 8, LEVELS[7]) as PowerOfTenProblem;
+      exponents.add(problem.exponent);
+      if (problem.exponent === 0) {
+        expect(problem.answer).toBe(1);
+      }
+      if (problem.exponent === 1) {
+        expect(problem.answer).toBe(10);
+      }
+    }
+    expect(exponents).toEqual(new Set([0, 1, 2, 3, 4, 5, 6]));
+  });
+
+  it('pertenece a una habilidad T3 propia con prerrequisitos', () => {
+    expect(skillIdForOperation('power-of-ten')).toBe('potencias-de-diez');
+    const skill = getSkillById('potencias-de-diez');
+    expect(skill).not.toBeNull();
+    expect(skill?.tier).toBe(3);
+    expect(skill?.operations).toEqual(['power-of-ten']);
+    expect(skill?.prerequisites).toContain('potencias-raices');
+  });
+
+  it('se clasifica como eso-extension con cualquier curso y source', () => {
+    expect(contentStageFor('6e', 'power-of-ten')).toBe('eso-extension');
+    expect(contentStageFor('5e', 'power-of-ten', 'free')).toBe('eso-extension');
+    expect(contentStageFor('4t', 'power-of-ten', 'path')).toBe('eso-extension');
+  });
+
+  it('se genera en el modo libre «Ampliación ESO» de 6.º pero no en 4.º/5.º', () => {
+    expect(GRADE_CONFIGS['6e'].availableOperations).toContain('power-of-ten');
+    expect(GRADE_CONFIGS['5e'].availableOperations).not.toContain('power-of-ten');
+    expect(GRADE_CONFIGS['4t'].availableOperations).not.toContain('power-of-ten');
+    expect(practiceModeForOperation('power-of-ten')).toBe('eso-extension');
+
+    const seen = new Set<string>();
+    for (let i = 0; i < 120; i += 1) {
+      seen.add(generateProblem(5, 'eso-extension', '6e').operation);
+    }
+    expect(seen.has('power-of-ten')).toBe(true);
+    for (const bad of seen) {
+      expect(contentStageFor('6e', bad, 'free')).toBe('eso-extension');
+    }
+  });
+
+  it('acepta la respuesta formateada y verbaliza el exponente real', () => {
+    for (let i = 0; i < 40; i += 1) {
+      const problem = generateOperationForTest('power-of-ten', 6, LEVELS[5]) as PowerOfTenProblem;
+      expect(answersMatch(problem, formatProblemAnswer(problem))).toBe(true);
+      expect(answersMatch(problem, String(problem.answer))).toBe(true);
+      expect(answersMatch(problem, String(problem.answer * 10))).toBe(false);
+      const speech = problemSpeechText(problem);
+      if (problem.exponent === 2) {
+        expect(speech).toBe('10 al cuadrado');
+      } else if (problem.exponent === 3) {
+        expect(speech).toBe('10 al cubo');
+      } else {
+        expect(speech).toBe(`10 elevado a ${problem.exponent}`);
+      }
+    }
+  });
+
+  it('tiene pista gradual', () => {
+    const problem = generateOperationForTest('power-of-ten', 5, LEVELS[4]);
     expect(buildHint(problem, 1)).not.toBeNull();
     expect(buildHint(problem, 2)).not.toBeNull();
   });

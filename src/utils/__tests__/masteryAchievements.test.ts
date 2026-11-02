@@ -99,7 +99,7 @@ describe('catálogo de insignias por dominio', () => {
       aplicaciones: 1,
       medidas: 1,
       datos: 1,
-      ampliacion: 2,
+      ampliacion: 3,
     };
     for (const set of MASTERY_AREA_SETS) {
       expect(set.version).toBe(expectedVersions[set.areaId]);

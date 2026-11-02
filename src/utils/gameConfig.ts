@@ -275,6 +275,7 @@ const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [
   'inverse-proportion',
   'number-line-integer',
   'power-general',
+  'power-of-ten',
 ];
 
 const SIXTH_GRADE_OPERATIONS: Operation[] = [...FIFTH_GRADE_OPERATIONS, ...SIXTH_GRADE_ONLY_OPERATIONS];

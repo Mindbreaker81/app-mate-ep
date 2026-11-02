@@ -26,6 +26,7 @@ const SIXTH_ONLY_EXACT = [
   'inverse-proportion',
   'number-line-integer',
   'power-general',
+  'power-of-ten',
 ];
 
 const SIXTH_ONLY_PREFIXES = ['integer-'];

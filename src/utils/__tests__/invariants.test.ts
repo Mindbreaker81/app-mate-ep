@@ -259,6 +259,22 @@ describe('Invariantes de generadores por curso y nivel', () => {
     }
   });
 
+  it('power-of-ten es exacto: 10^n con exponente 0–6 y entero seguro', () => {
+    for (const levelConfig of LEVELS) {
+      for (let i = 0; i < 40; i += 1) {
+        const problem = generateOperationForTest('power-of-ten', levelConfig.id, levelConfig);
+        if (problem.operation !== 'power-of-ten') {
+          continue;
+        }
+        expect(problem.base).toBe(10);
+        expect(problem.exponent).toBeGreaterThanOrEqual(0);
+        expect(problem.exponent).toBeLessThanOrEqual(6);
+        expect(problem.answer).toBe(10 ** problem.exponent);
+        expect(Number.isSafeInteger(problem.answer)).toBe(true);
+      }
+    }
+  });
+
   it('la probabilidad da resultados exactos y acepta fracción equivalente', () => {
     const config = LEVELS[5];
     for (let i = 0; i < 40; i += 1) {

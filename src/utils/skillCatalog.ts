@@ -332,6 +332,15 @@ export const SKILLS: Skill[] = [
     prerequisites: ['potencias-raices'],
     icon: 'ⁿ',
   },
+  {
+    id: 'potencias-de-diez',
+    name: 'Potencias de base 10',
+    areaId: 'ampliacion',
+    tier: 3,
+    operations: ['power-of-ten'],
+    prerequisites: ['potencias-raices'],
+    icon: '🔟',
+  },
 ];
 
 export const SKILL_IDS = SKILLS.map((skill) => skill.id);

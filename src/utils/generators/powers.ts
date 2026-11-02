@@ -1,4 +1,4 @@
-import type { PowerGeneralProblem, PowerProblem, SquareRootProblem } from '../../types';
+import type { PowerGeneralProblem, PowerOfTenProblem, PowerProblem, SquareRootProblem } from '../../types';
 import { pickRandom, randomInt, type LevelConfig } from './shared';
 
 const SUPERSCRIPT_DIGITS = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
@@ -78,6 +78,34 @@ export function generatePowerGeneralProblem(levelConfig: LevelConfig): PowerGene
     base,
     exponent,
     operation: 'power-general',
+    answer,
+    explanation,
+  };
+}
+
+// — Puente T3: potencias de base 10 (Ampliació ESO) —
+
+/** Exponentes 0–6 con 0 y 1 menos frecuentes; 10^6 = 1 000 000 sigue siendo seguro. */
+const POWER_OF_TEN_EXPONENTS = [0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6];
+
+export function generatePowerOfTenProblem(): PowerOfTenProblem {
+  const exponent = pickRandom(POWER_OF_TEN_EXPONENTS);
+  const answer = 10 ** exponent;
+  const powerText = `10${superscriptExponent(exponent)}`;
+
+  let explanation: string;
+  if (exponent === 0) {
+    explanation = `Paso 1: Todo número distinto de 0 elevado a 0 vale 1.\nPaso 2: ${powerText} = 1.`;
+  } else if (exponent === 1) {
+    explanation = `Paso 1: Elevar a 1 deja el número igual.\nPaso 2: ${powerText} = 10.`;
+  } else {
+    explanation = `Paso 1: 10 elevado a ${exponent} es un 1 seguido de ${exponent} ceros.\nPaso 2: ${powerText} = ${answer}.`;
+  }
+
+  return {
+    base: 10,
+    exponent,
+    operation: 'power-of-ten',
     answer,
     explanation,
   };

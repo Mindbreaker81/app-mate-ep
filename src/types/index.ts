@@ -67,6 +67,7 @@ export const OPERATION_KEYS = [
   'number-line-decimal',
   'number-line-integer',
   'power-general',
+  'power-of-ten',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
@@ -446,6 +447,15 @@ export interface PowerGeneralProblem {
   explanation: string;
 }
 
+/** Puente T3 (Ampliació ESO): potencia de base 10 con exponente 0–6. */
+export interface PowerOfTenProblem {
+  base: 10;
+  exponent: number;
+  operation: 'power-of-ten';
+  answer: number;
+  explanation: string;
+}
+
 /** Equivalencias fracción–decimal–porcentaje con valores exactos. */
 export interface FractionPercentProblem {
   prompt: string;
@@ -518,7 +528,8 @@ export type Problem =
   | InverseProportionProblem
   | FractionPercentProblem
   | NumberLineProblem
-  | PowerGeneralProblem;
+  | PowerGeneralProblem
+  | PowerOfTenProblem;
 
 export interface Achievement {
   id: string;

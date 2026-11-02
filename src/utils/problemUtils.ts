@@ -28,6 +28,7 @@ import type {
   PlaceValueProblem,
   PercentageProblem,
   PowerGeneralProblem,
+  PowerOfTenProblem,
   ProbabilityCompareProblem,
   ProbabilityProblem,
   Problem,
@@ -93,6 +94,10 @@ export function isPowerProblem(problem: Problem | null): problem is Extract<Prob
 
 export function isPowerGeneralProblem(problem: Problem | null): problem is PowerGeneralProblem {
   return !!problem && problem.operation === 'power-general';
+}
+
+export function isPowerOfTenProblem(problem: Problem | null): problem is PowerOfTenProblem {
+  return !!problem && problem.operation === 'power-of-ten';
 }
 
 export function isSquareRootProblem(problem: Problem | null): problem is SquareRootProblem {

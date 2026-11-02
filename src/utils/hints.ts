@@ -63,6 +63,7 @@ export function buildHint(problem: Problem, level: 1 | 2): string | null {
     lcm: ['Piensa en los múltiplos de cada número.', 'El menor múltiplo compartido es el MCM.'],
     power: ['Una potencia es una multiplicación repetida.', 'Multiplica la base por sí misma tantas veces como dice el exponente.'],
     'power-general': ['El exponente dice cuántas veces se multiplica la base por sí misma.', 'Exponente 0 da 1 y exponente 1 deja la base igual; para el resto, multiplica la base paso a paso.'],
+    'power-of-ten': ['Diez elevado a n es un 1 seguido de n ceros.', '10⁰ = 1 y 10¹ = 10; para el resto, cuenta los ceros que acompañan al 1.'],
     'square-root': ['Busca qué número multiplicado por sí mismo da el radicando.', 'Prueba con las tablas: n × n.'],
     'integer-addition': ['Piensa en una recta numérica: avanzar o retroceder.', 'Sumas de signos iguales: suma y conserva el signo; de signos distintos, resta y gana el signo del mayor.'],
     'integer-subtraction': ['Restar es sumar el opuesto.', 'Convierte a − b en a + (−b) y aplica las reglas de la suma.'],
