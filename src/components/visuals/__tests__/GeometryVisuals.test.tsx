@@ -94,21 +94,29 @@ describe('CoordinateGrid', () => {
 });
 
 describe('GeometryDiagram', () => {
-  it('dibuja la original, la recta de simetría y las opciones con letra, sin marcar la correcta', () => {
+  it('dibuja la original marcada en su cuadrícula y cada opción en mini-cuadrícula separada', () => {
     render(<GeometryDiagram problem={transformProblem} />);
 
-    const svg = screen.getByRole('img', { name: /Cuadrícula de coordenadas/ });
-    // Original + 3 opciones.
-    expect(svg.querySelectorAll('[data-visual-role="shape"]')).toHaveLength(4);
+    // Cuadrícula principal: SOLO la figura original, claramente marcada.
+    const main = screen.getByRole('img', { name: /Cuadrícula de coordenadas/ });
+    expect(main.querySelectorAll('[data-visual-role="shape"]')).toHaveLength(1);
+    expect(within(main).getAllByText('Original').length).toBeGreaterThan(0);
     // Recta de simetría dibujada.
-    expect(svg.querySelector('[data-visual-role="mirror"]')).not.toBeNull();
-    // Las letras de las opciones están en el dibujo.
+    expect(main.querySelector('[data-visual-role="mirror"]')).not.toBeNull();
+    // Las opciones NO se dibujan encima de la original (nada de solapes).
     for (const label of ['A', 'B', 'C']) {
-      expect(within(svg).getAllByText(label).length).toBeGreaterThan(0);
+      expect(within(main).queryByText(label)).toBeNull();
     }
-    // Alternativa textual con los vértices de cada opción (equivalente, sin revelar).
-    expect(screen.getByText(/Opción A:/)).toBeTruthy();
-    expect(screen.getByText(/Figura original/)).toBeTruthy();
+
+    // Cada opción en su propia mini-cuadrícula, con su letra e figura completa.
+    for (const letter of ['A', 'B', 'C']) {
+      const mini = screen.getByRole('img', { name: `Opción ${letter}` });
+      expect(mini.querySelectorAll('[data-visual-role="shape"]')).toHaveLength(1);
+      expect(within(mini).getAllByText(letter).length).toBeGreaterThan(0);
+    }
+    // El texto de las opciones es distinguible del de la original.
+    expect(screen.getByText(/Opción A \(mini-cuadrícula A\):/)).toBeTruthy();
+    expect(screen.getByText(/Figura original \(marcada como «Original»\)/)).toBeTruthy();
   });
 
   it('la alternativa con los vértices de las opciones está oculta hasta pulsar «Ver tabla»', () => {
@@ -117,7 +125,7 @@ describe('GeometryDiagram', () => {
     // Accesible pero no visible por defecto: facilitaría la respuesta.
     const hidden = container.querySelector('.sr-only');
     expect(hidden).toBeTruthy();
-    expect(hidden?.textContent).toContain('Opción A:');
+    expect(hidden?.textContent).toContain('Opción A (mini-cuadrícula A):');
     expect(screen.getByRole('button', { name: 'Ver tabla' }).getAttribute('aria-expanded')).toBe('false');
 
     fireEvent.click(screen.getByRole('button', { name: 'Ver tabla' }));

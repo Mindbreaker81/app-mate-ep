@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { VisualProblemFrame } from './VisualProblemFrame';
 
@@ -5,6 +6,8 @@ import { VisualProblemFrame } from './VisualProblemFrame';
  * Cuadrícula de coordenadas del primer cuadrante, 0–10 (PIT-16). SVG directo
  * sobre el marco accesible reutilizable; los ejes llevan TODOS los números y
  * el contenido (puntos, figuras) va como children SIN escribir sus valores.
+ * `GridLines` (contenido) y `MiniGrid` (SVG autónomo para las opciones de
+ * transformación) comparten el dibujo de la cuadrícula.
  */
 
 const UNIT = 40;
@@ -18,26 +21,13 @@ export function gridToSvg(point: { x: number; y: number }): { x: number; y: numb
   return { x: MARGIN + point.x * UNIT, y: MARGIN + SIZE - point.y * UNIT };
 }
 
-export function CoordinateGrid({
-  description,
-  alternative,
-  children,
-}: {
-  description: string;
-  alternative: ReactNode;
-  children: ReactNode;
-}) {
+/** Contenido de la cuadrícula: líneas, ejes y números («all» o «sparse» 0/5/10). */
+export function GridLines({ numbers = 'all' }: { numbers?: 'all' | 'sparse' }) {
   const gridLines = Array.from({ length: 11 }, (_, index) => index);
+  const labeledNumbers = numbers === 'all' ? gridLines : [0, 5, 10];
 
   return (
-    <VisualProblemFrame
-      title="Cuadrícula de coordenadas"
-      description={description}
-      alternative={alternative}
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      maxHeight={380}
-    >
-      {/* Líneas de la cuadrícula. */}
+    <>
       {gridLines.map((index) => {
         const vertical = gridToSvg({ x: index, y: 0 });
         const horizontal = gridToSvg({ x: 0, y: index });
@@ -48,8 +38,7 @@ export function CoordinateGrid({
           </g>
         );
       })}
-      {/* Ejes con todos los números visibles. */}
-      {gridLines.map((index) => {
+      {labeledNumbers.map((index) => {
         const xTick = gridToSvg({ x: index, y: 0 });
         const yTick = gridToSvg({ x: 0, y: index });
         return (
@@ -71,7 +60,49 @@ export function CoordinateGrid({
       <text x={MARGIN + 8} y={MARGIN - 8} fontSize={14} fill="#374151">
         y
       </text>
+    </>
+  );
+}
+
+export function CoordinateGrid({
+  description,
+  alternative,
+  children,
+}: {
+  description: string;
+  alternative: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <VisualProblemFrame
+      title="Cuadrícula de coordenadas"
+      description={description}
+      alternative={alternative}
+      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+      maxHeight={380}
+    >
+      <GridLines />
       {children}
     </VisualProblemFrame>
+  );
+}
+
+/** Mini-cuadrícula autónoma (una figura de opción, con su letra dentro). */
+export function MiniGrid({
+  label,
+  children,
+}: {
+  /** Etiqueta accesible de la figura (p. ej. «Opción A»). */
+  label: string;
+  children: ReactNode;
+}) {
+  const titleId = useId();
+
+  return (
+    <svg role="img" aria-labelledby={titleId} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" style={{ maxHeight: 140 }}>
+      <title id={titleId}>{label}</title>
+      <GridLines numbers="sparse" />
+      {children}
+    </svg>
   );
 }

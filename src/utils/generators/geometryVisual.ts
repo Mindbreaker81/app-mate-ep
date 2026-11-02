@@ -76,7 +76,7 @@ function generateDistractors(transform: PlaneTransformProblem['transform'], corr
   const distractors: Figure[] = [];
   const candidates: Figure[] = [];
   if (transform === 'translation') {
-    // Traslaciones «casi» iguales: una casilla de diferencia en cada eje.
+    // Traslaciones «casi» iguales: uno o dos pasos de diferencia en cada eje.
     for (const [dx, dy] of [
       [1, 0],
       [0, 1],
@@ -84,12 +84,18 @@ function generateDistractors(transform: PlaneTransformProblem['transform'], corr
       [0, -1],
       [1, 1],
       [-1, -1],
+      [2, 0],
+      [0, 2],
+      [-2, 0],
+      [0, -2],
+      [2, -2],
+      [-2, 2],
     ] as const) {
       candidates.push(correct.map((vertex) => ({ x: vertex.x + dx, y: vertex.y + dy })));
     }
   } else {
     // Simetría con la recta desplazada (el reflejo «casi» correcto).
-    for (const offset of [-1, 1, -2, 2, -3, 3]) {
+    for (const offset of [-1, 1, -2, 2, -3, 3, -4, 4]) {
       candidates.push(
         correct.map((vertex) => ({
           x: vertex.x + 2 * offset,

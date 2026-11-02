@@ -11,6 +11,10 @@ function verticesKey(vertices: GridPoint[]): string {
   return vertices.map((vertex) => `${vertex.x},${vertex.y}`).join('|');
 }
 
+function figureInBounds(figure: GridPoint[]): boolean {
+  return figure.every((vertex) => vertex.x >= 0 && vertex.x <= 10 && vertex.y >= 0 && vertex.y <= 10);
+}
+
 /** Transformación esperada, calculada de forma independiente en el test. */
 function expectedVertices(problem: ReturnType<typeof generatePlaneTransform>): GridPoint[] {
   if (problem.transform === 'translation') {
@@ -103,6 +107,22 @@ describe('generatePlaneTransform', () => {
     expect(answersMatch(problem, problem.answer)).toBe(true);
     const wrong = problem.options.find((label) => label !== problem.answer)!;
     expect(answersMatch(problem, wrong)).toBe(false);
+  });
+
+  it('cada figura de opción es un polígono completo dentro de la cuadrícula (caben sin salirse)', () => {
+    for (let index = 0; index < 60; index += 1) {
+      const problem = generatePlaneTransform();
+      // Options y optionFigures siempre alineados: 3 letras, 3 figuras.
+      expect(problem.options).toEqual(['A', 'B', 'C']);
+      expect(problem.optionFigures).toHaveLength(problem.options.length);
+      for (const figure of problem.optionFigures) {
+        // Misma forma que la original (sin figuras degeneradas) y dentro de 0–10.
+        expect(figure).toHaveLength(problem.vertices.length);
+        expect(figureInBounds(figure)).toBe(true);
+      }
+      // La original también cabe.
+      expect(figureInBounds(problem.vertices)).toBe(true);
+    }
   });
 });
 

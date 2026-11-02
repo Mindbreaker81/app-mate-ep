@@ -172,4 +172,25 @@ describe('ProblemBody con gráficos de datos', () => {
     fireEvent.click(uva);
     expect(onSelectOption).toHaveBeenCalledWith('uva');
   });
+
+  it('«el más frecuente» en pictograma dibuja el gráfico junto a las opciones', () => {
+    const onSelectOption = vi.fn();
+    render(
+      <ProblemBody problem={mostFrequentProblem} fields={fieldsFor()} onSelectOption={onSelectOption} />,
+    );
+    // El pictograma debe estar dibujado: sin él la pregunta no se puede responder.
+    expect(screen.getByRole('img', { name: /Fruta favorita del cole/ })).toBeTruthy();
+    expect(screen.queryByLabelText('Tu respuesta')).toBeNull();
+    for (const option of ['manzana', 'pera', 'uva']) {
+      expect(screen.getByRole('button', { name: option })).toBeTruthy();
+    }
+  });
+
+  it('«el más frecuente» en barras dibuja el gráfico junto a las opciones', () => {
+    const barMostFrequent: DataChartProblem = { ...barProblem, question: 'most-frequent', answer: 'uva', questionIndexes: [2] };
+    render(<ProblemBody problem={barMostFrequent} fields={fieldsFor()} onSelectOption={() => {}} />);
+    expect(screen.getByRole('img', { name: /Fruta favorita del cole/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'uva' })).toBeTruthy();
+    expect(screen.queryByLabelText('Tu respuesta')).toBeNull();
+  });
 });
