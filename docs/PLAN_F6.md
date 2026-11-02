@@ -158,6 +158,13 @@ Invariantes de sumas, diferencias, escalas, leyendas y opciones; componentes con
 
 Confirmar símbolos completos como MVP; escalas partidas o medias figuras quedan fuera.
 
+**Resultado de implementación (2026-11-02):** `bar-chart-reading` y `pictogram-reading`
+generados en `dataCharts.ts` dentro del modo «Estadística» (5.º y 6.º, T2, habilidad
+única `graficos-datos` con prerrequisito `sumas-restas`); render en `ProblemBody`
+con `BarChart`/`Pictogram` (SVG + tabla equivalente, leyenda visible, eje de 2 en 2,
+barras sin etiqueta de valor). Insignia de área «datos» sube a v2.
+Recuentos: 5.º 47, 6.º 72 (con PIT-23).
+
 ## PIT-18 — Teclado matemático en pantalla
 
 **Estimación:** M. **Orden:** 1. **Dependencias de implementación:** ninguna nueva dentro de F6.

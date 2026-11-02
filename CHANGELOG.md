@@ -28,6 +28,16 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   logros ni el resto de `data`); `execute` solo para `authenticated`.
   `adminService.fetchChildSkillProgress` consume el RPC distinguiendo
   migración no aplicada, sin permisos, niño inexistente y vacío.
+- **Gráficos de barras y pictogramas** (PIT-17): dos operaciones nuevas de
+  lectura de datos en T2 (5.º y 6.º, modo «Estadística») con preguntas de
+  frecuencia, total, diferencia y «el más frecuente» (solo cuando el máximo
+  es único, respondido por opciones). Pictogramas de símbolos completos con
+  leyenda explícita (1 símbolo = 1, 2 o 5 elementos); barras proporcionales
+  desde cero con eje de 2 en 2 y sin etiqueta de valor en las barras, para
+  que se lean contra el eje. Ambos gráficos son SVG directo con tabla
+  equivalente accesible que no revela la solución, y quedan cubiertos por la
+  nueva habilidad «Gráficos de barras y pictogramas» en «Mi camino» (47
+  operaciones en 5.º, 72 en 6.º con PIT-23).
 - **Recta numérica visual** (PIT-15, MVP de lectura sin arrastre): dos
   operaciones nuevas — décimas y centésimas (5.º y 6.º, T1) y enteros con
   negativos (solo 6.º, T2). La recta es SVG directo con marco accesible
@@ -37,7 +47,7 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   o el teclado en pantalla (± en enteros, coma en decimales); valores
   calculados con enteros escalados, sin errores de coma flotante. Nuevas
   habilidades «La recta numérica» en «Mi camino» y modo «Sentido numérico»
-  (45 operaciones en 5.º, 67 en 6.º).
+  (45 operaciones en 5.º, 67 en 6.º; tras PIT-23 y PIT-17 son 47 y 72).
 - **Expresiones algebraicas** (PIT-23): operación nueva
   `algebra-substitution` (evaluar ax + b con enteros pequeños; negativos a
   partir del nivel 5, con botón ±) con la habilidad T3 «Expresiones
