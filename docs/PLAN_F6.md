@@ -176,7 +176,10 @@ barras sin etiqueta de valor). Insignia de área «datos» sube a v2.
 Recuentos: 5.º 47, 6.º 72 (con PIT-23). Corrección de la e2e móvil: la tabla
 equivalente va oculta por defecto (`sr-only` + botón «Ver tabla» con
 aria-expanded) porque a la vista facilitaba la respuesta; leyenda con
-singular/plural correcto.
+singular/plural correcto. Segunda corrección de la e2e: el gráfico se dibuja
+siempre en «el más frecuente» (antes solo se veían las opciones) y en
+`plane-transform` la original va marcada y cada opción en mini-cuadrícula
+separada (antes se solapaban y las letras se salían de la cuadrícula).
 
 ## PIT-18 — Teclado matemático en pantalla
 

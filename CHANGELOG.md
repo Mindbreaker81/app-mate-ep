@@ -8,6 +8,16 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ## [Sin publicar]
 
 ### Corregido
+- **«El más frecuente» sin gráfico (PIT-17)**: en pictogramas y gráficos de
+  barras con pregunta de «el más frecuente» se mostraban las opciones pero
+  NO el gráfico, así que la pregunta no se podía responder. Ahora el
+  gráfico se dibuja siempre, también con opción múltiple.
+- **Transformaciones amontonadas (PIT-16)**: en `plane-transform` se dibujaban
+  la original y las tres opciones sobre la misma cuadrícula: se solapaban y
+  la letra de alguna opción quedaba fuera. Ahora la original va marcada
+  (etiqueta «Original» y trazo grueso distinto, también en la alternativa
+  textual) y cada opción se dibuja en su propia mini-cuadrícula con la
+  letra dentro; el generador garantiza que las tres figuras caben en 0–10.
 - **Gráficos visuales (PIT-15/16/17)**: la tabla o texto equivalente de los
   ejercicios visuales ya no se muestra debajo del gráfico con todos los
   valores (en el móvil, con la tabla a la vista, el ejercicio se respondía
