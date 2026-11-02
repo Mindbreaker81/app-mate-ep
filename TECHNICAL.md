@@ -495,11 +495,14 @@ onClick={async (e) => {
 | Curso | ID | Operaciones | Modos práctica |
 |-------|-----|-------------|----------------|
 | 4.º | `4t` | 7 | 8 |
-| 5.º | `5e` | 44 | 22 |
-| 6.º | `6e` | 65 | 29 |
+| 5.º | `5e` | 45 | 22 |
+| 6.º | `6e` | 67 | 29 |
 
 **Generadores 6.º:** `integers.ts`, `equations.ts`, `ratios.ts`, `probability.ts`,
-`geometryAdvanced.ts`, `scales.ts` (+ `statistics.ts` ampliado).
+`geometryAdvanced.ts`, `scales.ts` (+ `statistics.ts` ampliado). `numberLine.ts`
+(PIT-15) genera las rectas numéricas con enteros escalados por 10^escala; los
+componentes visuales (`VisualProblemFrame`, `NumberLine`) son SVG directo con
+alternativa textual sin la solución y se reutilizan en PIT-16/PIT-17.
 
 **Modo «Ampliación ESO» (PIT-14):** modo libre adicional de 6.º (categoría
 propia «Ampliació ESO», no presentada como «6.º») que práctica el contenido T3
