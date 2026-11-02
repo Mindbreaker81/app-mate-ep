@@ -21,6 +21,7 @@ import {
   isMixedProblem,
   isMultipleChoiceProblem,
   isNumberLineProblem,
+  isDataChartProblem,
   isOrderValuesProblem,
   isPowerGeneralProblem,
   isPowerOfTenProblem,
@@ -34,6 +35,8 @@ import {
 } from '../utils/problemUtils';
 import { formatMathNumber } from '../utils/mathUtils';
 import { NumberLine } from './visuals/NumberLine';
+import { BarChart } from './visuals/BarChart';
+import { Pictogram } from './visuals/Pictogram';
 import {
   FractionInputs,
   MixedNumberInputs,
@@ -303,6 +306,28 @@ export function ProblemBody({
         <div className="space-y-4">
           <div className="text-2xl font-semibold text-gray-800 text-center">{problem.prompt}</div>
           <NumberLine problem={problem} />
+          <PromptInput
+            userAnswer={userAnswer}
+            setAnswer={setAnswer}
+            disabled={disabled}
+            setValidationError={setValidationError}
+            decimal={allowsDecimalAnswer(problem)}
+            allowNegative={allowsNegativeAnswer(problem)}
+          />
+        </div>
+      ) : isDataChartProblem(problem) && problem.question === 'most-frequent' ? (
+        renderMultipleChoice(
+          problem.prompt,
+          (problem.options ?? problem.categories).map((option) => ({
+            key: option,
+            label: option,
+            value: option,
+          })),
+        )
+      ) : isDataChartProblem(problem) ? (
+        <div className="space-y-4">
+          <div className="text-2xl font-semibold text-gray-800 text-center">{problem.prompt}</div>
+          {problem.operation === 'pictogram-reading' ? <Pictogram problem={problem} /> : <BarChart problem={problem} />}
           <PromptInput
             userAnswer={userAnswer}
             setAnswer={setAnswer}
