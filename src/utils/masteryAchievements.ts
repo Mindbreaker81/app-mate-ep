@@ -82,7 +82,8 @@ export const MASTERY_AREA_SETS: MasteryAreaSet[] = [
     version: 1,
     skillIds: ['unidades', 'geometria-basica', 'geometria-avanzada'],
   },
-  { areaId: 'datos', version: 1, skillIds: ['estadistica', 'probabilidad'] },
+  // v2 de «datos»: entra «graficos-datos» (PIT-17).
+  { areaId: 'datos', version: 2, skillIds: ['estadistica', 'probabilidad', 'graficos-datos'] },
   {
     areaId: 'ampliacion',
     version: 4,

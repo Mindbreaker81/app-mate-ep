@@ -69,6 +69,8 @@ export const OPERATION_KEYS = [
   'power-general',
   'power-of-ten',
   'algebra-substitution',
+  'bar-chart-reading',
+  'pictogram-reading',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
@@ -496,6 +498,35 @@ export interface NumberLineProblem {
   explanation: string;
 }
 
+/**
+ * Lectura de gráficos de datos (PIT-17): barras y pictogramas con preguntas.
+ * El payload separa datos (categorías y frecuencias enteras), representación
+ * (título, símbolo, leyenda) y pregunta; el render es determinista.
+ */
+export interface DataChartProblem {
+  prompt: string;
+  operation: 'bar-chart-reading' | 'pictogram-reading';
+  /** Título del gráfico (p. ej. «Deporte favorito de la clase»). */
+  title: string;
+  /** Unidad de los datos (p. ej. «votos»). */
+  unit: string;
+  categories: string[];
+  /** Frecuencia entera de cada categoría. */
+  values: number[];
+  /** Elementos que representa cada símbolo completo (solo pictograma). */
+  symbolValue: 1 | 2 | 5;
+  /** Símbolo del pictograma (p. ej. un emoji). */
+  symbol: string;
+  question: 'frequency' | 'total' | 'difference' | 'most-frequent';
+  /** Índices de categorías implicadas: 1 para frequency, 2 para difference. */
+  questionIndexes: number[];
+  /** Frecuencia, suma o diferencia (number); categoría ganadora (string). */
+  answer: number | string;
+  /** Opciones textuales para «el más frecuente». */
+  options?: string[];
+  explanation: string;
+}
+
 export type Problem =
   | NumericProblem
   | RemainderProblem
@@ -542,7 +573,8 @@ export type Problem =
   | NumberLineProblem
   | PowerGeneralProblem
   | PowerOfTenProblem
-  | AlgebraSubstitutionProblem;
+  | AlgebraSubstitutionProblem
+  | DataChartProblem;
 
 export interface Achievement {
   id: string;

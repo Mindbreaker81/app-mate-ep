@@ -18,6 +18,7 @@ import type {
   InverseProportionProblem,
   FractionPercentProblem,
   NumberLineProblem,
+  DataChartProblem,
   MeanProblem,
   MedianProblem,
   MixedNumber,
@@ -248,6 +249,10 @@ export function isAlgebraSubstitutionProblem(problem: Problem | null): problem i
   return !!problem && problem.operation === 'algebra-substitution';
 }
 
+export function isDataChartProblem(problem: Problem | null): problem is DataChartProblem {
+  return !!problem && (problem.operation === 'bar-chart-reading' || problem.operation === 'pictogram-reading');
+}
+
 export function isMultipleChoiceProblem(
   problem: Problem | null,
 ): problem is
@@ -259,7 +264,8 @@ export function isMultipleChoiceProblem(
   | IntegerOrderProblem
   | ProbabilityProblem
   | ProportionalityProblem
-  | ProbabilityCompareProblem {
+  | ProbabilityCompareProblem
+  | DataChartProblem {
   return (
     isEstimationProblem(problem) ||
     isCompareProblem(problem) ||
@@ -269,7 +275,9 @@ export function isMultipleChoiceProblem(
     isIntegerOrderProblem(problem) ||
     isProbabilityProblem(problem) ||
     isProportionalityProblem(problem) ||
-    isProbabilityCompareProblem(problem)
+    isProbabilityCompareProblem(problem) ||
+    // Los gráficos de datos solo son de opción múltiple en «el más frecuente».
+    (isDataChartProblem(problem) && problem.question === 'most-frequent')
   );
 }
 
@@ -597,6 +605,11 @@ export function answersMatch(problem: Problem, userValue: string | Fraction | Mi
         })()
       : typeof userValue === 'object' && 'numerator' in userValue && !('whole' in userValue) &&
         fractionEquals(problem.answer, userValue);
+  }
+
+  if (isDataChartProblem(problem) && typeof problem.answer === 'string') {
+    // «El más frecuente»: la respuesta es la opción tocada.
+    return userValue === problem.answer;
   }
 
   if (isRemainderProblem(problem)) {

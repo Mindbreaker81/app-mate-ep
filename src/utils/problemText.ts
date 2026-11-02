@@ -26,6 +26,7 @@ import {
   isProportionalityProblem,
   isRemainderProblem,
   isSquareRootProblem,
+  isDataChartProblem,
 } from './problemUtils';
 import { formatMathNumber } from './mathUtils';
 import { numberLineAltText } from './generators/numberLine';
@@ -256,6 +257,9 @@ function speechOptions(problem: Problem): string[] {
   if (isEstimationProblem(problem) || isProbabilityProblem(problem)) {
     return problem.options.map((option) => numberSpeech(option));
   }
+  if (isDataChartProblem(problem)) {
+    return (problem.options ?? []).map((option) => verbalizeMathText(option));
+  }
   return [];
 }
 
@@ -292,6 +296,13 @@ function baseSpeechText(problem: Problem): string {
   if (isNumberLineProblem(problem)) {
     // Misma información que la alternativa textual del SVG, sin el resultado.
     return `${numberLineAltText(problem)} ¿Qué número marca el punto?`;
+  }
+  if (isDataChartProblem(problem)) {
+    // Misma información que la tabla textual equivalente, sin el resultado.
+    const data = problem.categories
+      .map((category, index) => `${category}: ${problem.values[index]}`)
+      .join(', ');
+    return `Gráfico: ${problem.title}. Datos: ${data}. ${verbalizeMathText(problem.prompt)}`;
   }
   if (isOrderValuesProblem(problem) || isIntegerOrderProblem(problem)) {
     const values = problem.values.map((value) => verbalizeMathText(value)).join(', ');

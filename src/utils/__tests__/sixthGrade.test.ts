@@ -14,8 +14,8 @@ import {
 } from '../problemUtils';
 
 describe('6th grade curriculum', () => {
-  it('exposes 70 operations in 6th grade config', () => {
-    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(70);
+  it('exposes 72 operations in 6th grade config', () => {
+    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(72);
   });
 
   it('includes 29 practice modes for 6th grade', () => {
@@ -68,7 +68,8 @@ describe('6th grade curriculum', () => {
 
   it('generates extended statistics in statistics mode', () => {
     const problem = generateProblem(5, 'statistics', '6e');
-    expect(['mean', 'median', 'mode', 'range']).toContain(problem.operation);
+    // PIT-17: el modo «Estadística» incluye también la lectura de gráficos.
+    expect(['mean', 'median', 'mode', 'range', 'bar-chart-reading', 'pictogram-reading']).toContain(problem.operation);
   });
 
   it('generates probability with valid options', () => {

@@ -249,6 +249,8 @@ const FIFTH_GRADE_OPERATIONS: Operation[] = [
   'proportionality-check',
   'finance',
   'number-line-decimal',
+  'bar-chart-reading',
+  'pictogram-reading',
 ];
 
 const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [

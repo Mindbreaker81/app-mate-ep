@@ -27,6 +27,7 @@ import {
   generateMixedNumberSubtraction,
 } from './fractions';
 import { generateNumberLineDecimal, generateNumberLineInteger } from './numberLine';
+import { generateBarChartReading, generatePictogramReading } from './dataCharts';
 import { generateEstimationProblem } from './estimation';
 import {
   generateAngleType,
@@ -145,6 +146,8 @@ export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   'power-general': 0.5,
   'power-of-ten': 0.5,
   'algebra-substitution': 0.5,
+  'bar-chart-reading': 0.7,
+  'pictogram-reading': 0.7,
 };
 
 export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
@@ -178,7 +181,7 @@ export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
   'number-theory': ['factorization', 'gcd', 'lcm'],
   geometry: ['perimeter-rectangle', 'perimeter-square', 'area-rectangle', 'area-triangle', 'angle-type'],
   units: ['unit-conversion'],
-  statistics: ['mean', 'median', 'mode', 'range'],
+  statistics: ['mean', 'median', 'mode', 'range', 'bar-chart-reading', 'pictogram-reading'],
   rounding: ['round-decimal'],
   integers: [
     'integer-addition',
@@ -374,6 +377,10 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
       return generatePowerOfTenProblem();
     case 'algebra-substitution':
       return generateAlgebraSubstitutionProblem(levelConfig);
+    case 'bar-chart-reading':
+      return generateBarChartReading(levelConfig);
+    case 'pictogram-reading':
+      return generatePictogramReading(levelConfig);
     default: {
       const exhaustive: never = operation;
       throw new Error(`Operación no soportada: ${exhaustive}`);
@@ -462,7 +469,9 @@ export function getDifficulty(level: number, operation: Operation): 'easy' | 'me
     operation === 'number-line-integer' ||
     operation === 'power-general' ||
     operation === 'power-of-ten' ||
-    operation === 'algebra-substitution'
+    operation === 'algebra-substitution' ||
+    operation === 'bar-chart-reading' ||
+    operation === 'pictogram-reading'
   ) {
     return level >= 4 ? 'hard' : 'medium';
   }

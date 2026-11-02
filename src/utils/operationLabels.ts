@@ -69,6 +69,8 @@ export const operationLabels = {
   'power-general': 'Potencias (exponentes 0–5)',
   'power-of-ten': 'Potencias de 10',
   'algebra-substitution': 'Expresiones algebraicas (ax + b)',
+  'bar-chart-reading': 'Gráficos de barras',
+  'pictogram-reading': 'Pictogramas',
 } as const;
 
 export function formatOperationLabel(operation: string): string {

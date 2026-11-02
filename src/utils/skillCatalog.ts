@@ -250,6 +250,15 @@ export const SKILLS: Skill[] = [
     icon: '🎲',
   },
   {
+    id: 'graficos-datos',
+    name: 'Gráficos de barras y pictogramas',
+    areaId: 'datos',
+    tier: 2,
+    operations: ['bar-chart-reading', 'pictogram-reading'],
+    prerequisites: ['sumas-restas'],
+    icon: '📊',
+  },
+  {
     id: 'teoria-numeros',
     name: 'Divisibilidad, MCD y MCM',
     areaId: 'numero',

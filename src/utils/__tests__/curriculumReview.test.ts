@@ -41,7 +41,7 @@ function isSixthOnlyOperation(operation: string): boolean {
 
 describe('curriculum isolation 5e vs 6e', () => {
   it('5th grade keeps 43 operations without sixth-grade exclusives', () => {
-    expect(GRADE_CONFIGS['5e'].availableOperations).toHaveLength(45);
+    expect(GRADE_CONFIGS['5e'].availableOperations).toHaveLength(47);
     GRADE_CONFIGS['5e'].availableOperations.forEach((operation) => {
       expect(isSixthOnlyOperation(operation)).toBe(false);
     });

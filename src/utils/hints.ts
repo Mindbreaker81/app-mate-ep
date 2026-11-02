@@ -76,6 +76,8 @@ export function buildHint(problem: Problem, level: 1 | 2): string | null {
     'scale-conversion': ['La escala te dice cuántas unidades reales vale cada unidad del plano.', 'Multiplica o divide por el denominador de la escala.'],
     'number-line-decimal': ['Cuenta las marcas desde el 0 y fíjate cuánto vale cada una.', 'Cada marca vale una décima (o una centésima): multiplica el paso por las marcas que hay hasta el punto.'],
     'number-line-integer': ['Cuenta las marcas desde el principio de la recta.', 'Si el punto está a la izquierda del 0 el número es negativo; a la derecha, positivo.'],
+    'bar-chart-reading': ['Mira hasta dónde llega la barra y compárala con las líneas del eje.', 'Si la barra queda entre dos líneas, cuenta las marcas de una en una.'],
+    'pictogram-reading': ['Cuenta los símbolos completos de cada fila.', 'Multiplica los símbolos por el valor de cada símbolo que dice la leyenda.'],
   };
 
   const hints = HINTS[operation];
