@@ -8,6 +8,18 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ## [Sin publicar]
 
 ### Añadido
+- **Panel familiar: dominio y resumen semanal** (PIT-30): nueva vista
+  `SkillMasteryView` en el detalle del niño del panel de administración.
+  Muestra el dominio real por habilidad calculado con el mismo motor que
+  «Mi camino» (`deriveSkillState` + prerrequisitos: Bloqueada, Sin empezar,
+  En práctica, Dominada, Repaso pendiente — la ausencia de datos no es
+  suspenso), los repasos que le tocan con su fecha, y un resumen de la
+  semana en curso que distingue la procedencia del intento (modo libre,
+  camino, sesión diaria) y el tramo del contenido (repaso de 4.º, ciclo
+  5.º–6.º, ampliación ESO). Si la migración 0009 aún no está aplicada o
+  faltan permisos, el panel lo indica en lugar de inventar el dominio;
+  al cambiar de niño se ignoran las respuestas tardías de la carga
+  anterior.
 - **Acceso del administrador al dominio por habilidad** (PIT-29): migración
   0009 (`supabase/migrations/0009_admin_skill_progress.sql`, **pendiente de
   aplicar**) con el RPC `admin_get_skill_progress`, `security definer` de

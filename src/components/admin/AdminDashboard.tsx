@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { fetchAllAttempts, listChildren, type AttemptRecord, type ChildOverview } from '../../services/adminService';
+import {
+  fetchAllAttempts,
+  fetchChildSkillProgress,
+  listChildren,
+  type AttemptRecord,
+  type ChildOverview,
+  type FetchSkillProgressResult,
+} from '../../services/adminService';
 import { fetchUserStats } from '../../services/statsService';
 import type { DetailedStats } from '../../types';
 import { buildChildReport, type ChildReport } from '../../utils/childReport';
@@ -12,6 +19,7 @@ import { PinResetDialog } from './PinResetDialog';
 import { ChangePasswordForm } from './ChangePasswordForm';
 import { ChildReportView } from './ChildReportView';
 import { ChildTrendView } from './ChildTrendView';
+import { SkillMasteryView } from './SkillMasteryView';
 
 function formatDate(iso: string | null): string {
   if (!iso) return 'Sin actividad';
@@ -47,6 +55,8 @@ export function AdminDashboard() {
   const [selectedStats, setSelectedStats] = useState<DetailedStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [pinResetUsername, setPinResetUsername] = useState<string | null>(null);
+  const [skillProgressResult, setSkillProgressResult] = useState<FetchSkillProgressResult | null>(null);
+  const [loadingSkillProgress, setLoadingSkillProgress] = useState(false);
 
   const loadChildren = useCallback(async () => {
     setLoadError(false);
@@ -62,6 +72,30 @@ export function AdminDashboard() {
   useEffect(() => {
     void loadChildren();
   }, [loadChildren]);
+
+  // Dominio por habilidad del niño seleccionado (RPC de PIT-29). Al cambiar de
+  // niño o volver a la lista la limpieza marca la carga como cancelada y la
+  // respuesta tardía del niño anterior se ignora.
+  useEffect(() => {
+    if (!selected) {
+      setSkillProgressResult(null);
+      setLoadingSkillProgress(false);
+      return;
+    }
+    let cancelled = false;
+    setLoadingSkillProgress(true);
+    setSkillProgressResult(null);
+    void fetchChildSkillProgress(selected.id).then((result) => {
+      if (cancelled) {
+        return;
+      }
+      setSkillProgressResult(result);
+      setLoadingSkillProgress(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selected]);
 
   const reports = useMemo(() => {
     const map = new Map<string, ChildReport>();
@@ -140,6 +174,22 @@ export function AdminDashboard() {
             <h2 className="text-2xl font-bold text-gray-800">
               {selected.avatar ?? '🙂'} {selected.username}
             </h2>
+            {loadingSkillProgress && <p className="text-gray-600">Cargando dominio por habilidad...</p>}
+            {!loadingSkillProgress && skillProgressResult && !skillProgressResult.ok && (
+              <p
+                role="alert"
+                className="bg-amber-50 border-l-4 border-amber-400 text-amber-800 rounded-lg px-4 py-3 text-sm font-medium"
+              >
+                {skillProgressResult.message}
+              </p>
+            )}
+            {!loadingSkillProgress && skillProgressResult?.ok && (
+              <SkillMasteryView
+                skills={skillProgressResult.progress.skills}
+                updatedAt={skillProgressResult.progress.updatedAt}
+                attempts={attempts ? attempts.filter((a) => a.userId === selected.id) : null}
+              />
+            )}
             {reports.has(selected.id) && <ChildReportView report={reports.get(selected.id)!} />}
             {attempts && (
               <ChildTrendView trend={buildWeeklyTrend(attempts.filter((a) => a.userId === selected.id))} />

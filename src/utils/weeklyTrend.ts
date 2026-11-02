@@ -10,7 +10,8 @@ export interface WeeklyBucket {
   accuracy: number | null;
 }
 
-function mondayOf(date: Date): Date {
+/** Lunes (fecha local) de la semana a la que pertenece `date`. */
+export function mondayOf(date: Date): Date {
   const day = date.getDay(); // 0 = domingo
   const offset = day === 0 ? 6 : day - 1;
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() - offset);

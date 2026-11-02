@@ -1,10 +1,11 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const adminServiceState = vi.hoisted(() => ({
   listChildren: vi.fn(),
   resetChildPin: vi.fn(),
   fetchAllAttempts: vi.fn(),
+  fetchChildSkillProgress: vi.fn(),
 }));
 
 const statsServiceState = vi.hoisted(() => ({
@@ -15,6 +16,7 @@ vi.mock('../../../services/adminService', () => ({
   listChildren: adminServiceState.listChildren,
   resetChildPin: adminServiceState.resetChildPin,
   fetchAllAttempts: adminServiceState.fetchAllAttempts,
+  fetchChildSkillProgress: adminServiceState.fetchChildSkillProgress,
 }));
 
 vi.mock('../../../services/statsService', () => ({
@@ -33,6 +35,18 @@ const child = {
   correctAttempts: 15,
   lastActivity: '2026-07-18T10:00:00Z',
 };
+
+const child2 = {
+  id: 'uuid-2',
+  username: 'lucia',
+  avatar: '🐰',
+  createdAt: '2026-01-02T00:00:00Z',
+  totalAttempts: 5,
+  correctAttempts: 5,
+  lastActivity: '2026-07-19T10:00:00Z',
+};
+
+const emptyMastery = { ok: true as const, progress: { skills: {}, updatedAt: null } };
 
 const renderDashboard = (overrides: Partial<AuthContextValue> = {}) => {
   const signOut = vi.fn();
@@ -68,6 +82,7 @@ describe('AdminDashboard', () => {
     adminServiceState.listChildren.mockResolvedValue([child]);
     adminServiceState.resetChildPin.mockResolvedValue({ ok: true });
     adminServiceState.fetchAllAttempts.mockResolvedValue([]);
+    adminServiceState.fetchChildSkillProgress.mockResolvedValue(emptyMastery);
     statsServiceState.fetchUserStats.mockResolvedValue(null);
   });
 
@@ -195,6 +210,83 @@ describe('AdminDashboard', () => {
     expect(createObjectURL).toHaveBeenCalled();
     const blob = createObjectURL.mock.calls[0][0] as unknown as Blob;
     expect(blob.type).toContain('text/csv');
+  });
+
+  it('muestra el dominio por habilidad del niño seleccionado (PIT-30)', async () => {
+    adminServiceState.fetchChildSkillProgress.mockResolvedValue({
+      ok: true,
+      progress: {
+        updatedAt: '2026-10-31T12:00:00Z',
+        skills: {
+          'sumas-restas': {
+            state: 'dominated',
+            recentResults: [true, true, true, true, true, true, true, true, true, true],
+            streakCorrect: 0,
+            streakWrong: 0,
+            activeDays: ['2026-10-30', '2026-10-31'],
+            reviewDueDate: '2026-12-01',
+            reviewCount: 0,
+            level: 3,
+            updatedAt: '2026-10-31T10:00:00Z',
+          },
+        },
+      },
+    });
+
+    renderDashboard();
+
+    fireEvent.click(await screen.findByRole('button', { name: /nico/i }));
+
+    expect(await screen.findByText(/Dominio por habilidad/)).toBeInTheDocument();
+    expect(await screen.findByText('Dominada')).toBeInTheDocument();
+    expect(adminServiceState.fetchChildSkillProgress).toHaveBeenCalledWith('uuid-1');
+  });
+
+  it('avisa claramente cuando la migración 0009 aún no está aplicada', async () => {
+    adminServiceState.fetchChildSkillProgress.mockResolvedValue({
+      ok: false,
+      reason: 'migration-missing',
+      message: 'El dominio por habilidad todavía no está disponible: falta aplicar la migración 0009 en Supabase.',
+    });
+
+    renderDashboard();
+
+    fireEvent.click(await screen.findByRole('button', { name: /nico/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/migración 0009/);
+  });
+
+  it('ignora la respuesta tardía del niño anterior al cambiar de niño', async () => {
+    adminServiceState.listChildren.mockResolvedValue([child, child2]);
+    let resolveSlow: (value: unknown) => void = () => {};
+    const slowPromise = new Promise((resolve) => {
+      resolveSlow = resolve;
+    });
+    adminServiceState.fetchChildSkillProgress.mockImplementation((id: string) =>
+      id === 'uuid-1' ? slowPromise : Promise.resolve(emptyMastery),
+    );
+
+    renderDashboard();
+
+    // Abre a nico: su carga queda en vuelo.
+    fireEvent.click(await screen.findByRole('button', { name: /nico/i }));
+    expect(await screen.findByText('Cargando dominio por habilidad...')).toBeInTheDocument();
+
+    // Vuelve y abre a lucia: su dominio llega primero.
+    fireEvent.click(screen.getByRole('button', { name: /volver a la lista/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /lucia/i }));
+    expect(await screen.findByText(/Dominio por habilidad/)).toBeInTheDocument();
+
+    // La respuesta tardía de nico llega después: no debe pisar la vista de lucia.
+    await act(async () => {
+      resolveSlow({ ok: false, reason: 'unknown', message: 'MENSAJE_TARDIO_DE_NICO' });
+      await slowPromise;
+    });
+
+    expect(screen.queryByText('MENSAJE_TARDIO_DE_NICO')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /lucia/i })).toBeInTheDocument();
+    expect(screen.getByText(/Dominio por habilidad/)).toBeInTheDocument();
   });
 
   it('permite cerrar sesión', async () => {
