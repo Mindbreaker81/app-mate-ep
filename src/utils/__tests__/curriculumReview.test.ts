@@ -24,6 +24,7 @@ const SIXTH_ONLY_EXACT = [
   'scale-conversion',
   'two-step-equation',
   'inverse-proportion',
+  'number-line-integer',
 ];
 
 const SIXTH_ONLY_PREFIXES = ['integer-'];
@@ -37,7 +38,7 @@ function isSixthOnlyOperation(operation: string): boolean {
 
 describe('curriculum isolation 5e vs 6e', () => {
   it('5th grade keeps 43 operations without sixth-grade exclusives', () => {
-    expect(GRADE_CONFIGS['5e'].availableOperations).toHaveLength(44);
+    expect(GRADE_CONFIGS['5e'].availableOperations).toHaveLength(45);
     GRADE_CONFIGS['5e'].availableOperations.forEach((operation) => {
       expect(isSixthOnlyOperation(operation)).toBe(false);
     });

@@ -41,24 +41,28 @@ export interface MasteryAreaSet {
 
 export const MASTERY_AREA_SETS: MasteryAreaSet[] = [
   {
+    // v2: entra «recta-enteros» (PIT-15).
     areaId: 'calculo',
-    version: 1,
+    version: 2,
     skillIds: [
       'sumas-restas',
       'multiplicacion-division',
       'division-con-resto',
       'operaciones-mixtas',
       'enteros',
+      'recta-enteros',
     ],
   },
   {
+    // v2: entra «recta-decimales» (PIT-15).
     areaId: 'numero',
-    version: 1,
+    version: 2,
     skillIds: [
       'decimales',
       'estimacion-redondeo',
       'potencias-raices',
       'valor-posicional',
+      'recta-decimales',
       'secuencias',
       'teoria-numeros',
     ],

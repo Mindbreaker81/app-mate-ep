@@ -166,6 +166,15 @@ export const SKILLS: Skill[] = [
     icon: '🔎',
   },
   {
+    id: 'recta-decimales',
+    name: 'La recta numérica: décimas y centésimas',
+    areaId: 'numero',
+    tier: 1,
+    operations: ['number-line-decimal'],
+    prerequisites: [],
+    icon: '📏',
+  },
+  {
     id: 'secuencias',
     name: 'Secuencias',
     areaId: 'numero',
@@ -258,6 +267,15 @@ export const SKILLS: Skill[] = [
     operations: ['integer-addition', 'integer-subtraction', 'integer-multiplication', 'integer-division', 'integer-compare', 'integer-order'],
     prerequisites: ['operaciones-mixtas', 'decimales'],
     icon: '🌡️',
+  },
+  {
+    id: 'recta-enteros',
+    name: 'La recta numérica: enteros',
+    areaId: 'calculo',
+    tier: 2,
+    operations: ['number-line-integer'],
+    prerequisites: ['enteros'],
+    icon: '📏',
   },
   {
     id: 'razones-proporciones',

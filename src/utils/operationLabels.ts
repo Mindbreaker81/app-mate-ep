@@ -64,6 +64,8 @@ export const operationLabels = {
   'two-step-equation': 'Ecuaciones de dos pasos',
   'inverse-proportion': 'Proporcionalidad inversa',
   'fraction-percent': 'Fracción, decimal y porcentaje',
+  'number-line-decimal': 'Recta numérica: décimas y centésimas',
+  'number-line-integer': 'Recta numérica: enteros',
 } as const;
 
 export function formatOperationLabel(operation: string): string {

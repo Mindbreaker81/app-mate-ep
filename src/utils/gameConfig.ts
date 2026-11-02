@@ -248,6 +248,7 @@ const FIFTH_GRADE_OPERATIONS: Operation[] = [
   'sequence',
   'proportionality-check',
   'finance',
+  'number-line-decimal',
 ];
 
 const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [
@@ -272,6 +273,7 @@ const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [
   'probability-compare',
   'two-step-equation',
   'inverse-proportion',
+  'number-line-integer',
 ];
 
 const SIXTH_GRADE_OPERATIONS: Operation[] = [...FIFTH_GRADE_OPERATIONS, ...SIXTH_GRADE_ONLY_OPERATIONS];

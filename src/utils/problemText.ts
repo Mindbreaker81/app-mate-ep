@@ -12,6 +12,7 @@ import {
   isFactorizationProblem,
   isFractionProblem,
   isIntegerArithmeticProblem,
+  isNumberLineProblem,
   isIntegerCompareProblem,
   isIntegerOrderProblem,
   isMixedNumberProblem,
@@ -25,6 +26,7 @@ import {
   isSquareRootProblem,
 } from './problemUtils';
 import { formatMathNumber } from './mathUtils';
+import { numberLineAltText } from './generators/numberLine';
 
 /**
  * Verbalización de enunciados para la lectura en voz alta (PIT-31).
@@ -280,6 +282,10 @@ function baseSpeechText(problem: Problem): string {
   if (isFactorizationProblem(problem)) {
     // Misma consigna que se muestra en pantalla.
     return `Descompón ${problem.target} en factores primos`;
+  }
+  if (isNumberLineProblem(problem)) {
+    // Misma información que la alternativa textual del SVG, sin el resultado.
+    return `${numberLineAltText(problem)} ¿Qué número marca el punto?`;
   }
   if (isOrderValuesProblem(problem) || isIntegerOrderProblem(problem)) {
     const values = problem.values.map((value) => verbalizeMathText(value)).join(', ');

@@ -64,6 +64,8 @@ export const OPERATION_KEYS = [
   'two-step-equation',
   'inverse-proportion',
   'fraction-percent',
+  'number-line-decimal',
+  'number-line-integer',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
@@ -444,6 +446,24 @@ export interface FractionPercentProblem {
   explanation: string;
 }
 
+/** Lectura de la posición de un punto en una recta numérica (PIT-15, sin arrastre). */
+export interface NumberLineProblem {
+  prompt: string;
+  operation: 'number-line-decimal' | 'number-line-integer';
+  /** Valor de la primera marca. */
+  start: number;
+  /** Valor del paso entre marcas. */
+  step: number;
+  /** Número de marcas de la recta (incluidos extremos). */
+  tickCount: number;
+  /** Índice (0-based) de la marca donde está el punto. Su valor no se etiqueta. */
+  pointIndex: number;
+  /** Decimales del paso (0 = enteros, 1 = décimas, 2 = centésimas). */
+  scale: number;
+  answer: number;
+  explanation: string;
+}
+
 export type Problem =
   | NumericProblem
   | RemainderProblem
@@ -486,7 +506,8 @@ export type Problem =
   | ProbabilityCompareProblem
   | TwoStepEquationProblem
   | InverseProportionProblem
-  | FractionPercentProblem;
+  | FractionPercentProblem
+  | NumberLineProblem;
 
 export interface Achievement {
   id: string;

@@ -14,8 +14,8 @@ import {
 } from '../problemUtils';
 
 describe('6th grade curriculum', () => {
-  it('exposes 64 operations in 6th grade config', () => {
-    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(65);
+  it('exposes 67 operations in 6th grade config', () => {
+    expect(GRADE_CONFIGS['6e'].availableOperations).toHaveLength(67);
   });
 
   it('includes 29 practice modes for 6th grade', () => {

@@ -16,6 +16,7 @@ import type {
   IntegerOrderProblem,
   InverseProportionProblem,
   FractionPercentProblem,
+  NumberLineProblem,
   MeanProblem,
   MedianProblem,
   MixedNumber,
@@ -228,6 +229,10 @@ export function isFractionPercentProblem(problem: Problem | null): problem is Fr
   return !!problem && problem.operation === 'fraction-percent';
 }
 
+export function isNumberLineProblem(problem: Problem | null): problem is NumberLineProblem {
+  return !!problem && (problem.operation === 'number-line-decimal' || problem.operation === 'number-line-integer');
+}
+
 export function isMultipleChoiceProblem(
   problem: Problem | null,
 ): problem is
@@ -327,7 +332,8 @@ export function allowsDecimalAnswer(problem: Problem): boolean {
     problem.operation === 'finance' ||
     problem.operation === 'circle-area' ||
     problem.operation === 'circle-circumference' ||
-    problem.operation === 'scale-conversion'
+    problem.operation === 'scale-conversion' ||
+    problem.operation === 'number-line-decimal'
   );
 }
 
@@ -337,6 +343,7 @@ const NEGATIVE_ANSWER_OPERATIONS = new Set([
   'integer-multiplication',
   'integer-division',
   'simple-equation',
+  'number-line-integer',
 ]);
 
 /** Operaciones cuya respuesta puede ser negativa (necesitan botón ± en móvil). */

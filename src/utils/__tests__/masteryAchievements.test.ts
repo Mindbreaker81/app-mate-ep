@@ -89,8 +89,19 @@ describe('catálogo de insignias por dominio', () => {
   });
 
   it('los conjuntos de área están versionados y reproducen el catálogo actual', () => {
+    // Versiones explícitas: suben cuando el conjunto cambia (PIT-15 añadió
+    // «recta-enteros» a cálculo y «recta-decimales» a número).
+    const expectedVersions: Record<string, number> = {
+      calculo: 2,
+      numero: 2,
+      fracciones: 1,
+      aplicaciones: 1,
+      medidas: 1,
+      datos: 1,
+      ampliacion: 1,
+    };
     for (const set of MASTERY_AREA_SETS) {
-      expect(set.version).toBe(1);
+      expect(set.version).toBe(expectedVersions[set.areaId]);
       const catalogSkillIds = SKILLS.filter((skill) => skill.areaId === set.areaId).map(
         (skill) => skill.id,
       );

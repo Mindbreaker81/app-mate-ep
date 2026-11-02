@@ -26,6 +26,7 @@ import {
   generateMixedNumberConvert,
   generateMixedNumberSubtraction,
 } from './fractions';
+import { generateNumberLineDecimal, generateNumberLineInteger } from './numberLine';
 import { generateEstimationProblem } from './estimation';
 import {
   generateAngleType,
@@ -133,6 +134,8 @@ export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   'two-step-equation': 0.5,
   'inverse-proportion': 0.5,
   'fraction-percent': 0.7,
+  'number-line-decimal': 0.7,
+  'number-line-integer': 0.6,
 };
 
 export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
@@ -186,7 +189,7 @@ export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
     'triangle-angle-sum',
   ],
   scales: ['scale-conversion'],
-  'number-sense': ['place-value', 'sequence', 'proportionality-check'],
+  'number-sense': ['place-value', 'sequence', 'proportionality-check', 'number-line-decimal', 'number-line-integer'],
   finance: ['finance'],
   // Ampliación T3 en modo libre (sin prerrequisitos; en «Mi camino» sí los exige).
   'eso-extension': ['two-step-equation', 'inverse-proportion'],
@@ -352,6 +355,10 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
       return generateInverseProportionProblem(levelConfig);
     case 'fraction-percent':
       return generateFractionPercent(levelConfig);
+    case 'number-line-decimal':
+      return generateNumberLineDecimal(levelConfig);
+    case 'number-line-integer':
+      return generateNumberLineInteger(levelConfig);
     default: {
       const exhaustive: never = operation;
       throw new Error(`Operación no soportada: ${exhaustive}`);
@@ -435,7 +442,9 @@ export function getDifficulty(level: number, operation: Operation): 'easy' | 'me
     operation === 'probability-compare' ||
     operation === 'two-step-equation' ||
     operation === 'inverse-proportion' ||
-    operation === 'fraction-percent'
+    operation === 'fraction-percent' ||
+    operation === 'number-line-decimal' ||
+    operation === 'number-line-integer'
   ) {
     return level >= 4 ? 'hard' : 'medium';
   }
