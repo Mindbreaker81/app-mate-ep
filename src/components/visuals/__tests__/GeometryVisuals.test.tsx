@@ -111,6 +111,20 @@ describe('GeometryDiagram', () => {
     expect(screen.getByText(/Figura original/)).toBeTruthy();
   });
 
+  it('la alternativa con los vértices de las opciones está oculta hasta pulsar «Ver tabla»', () => {
+    const { container } = render(<GeometryDiagram problem={transformProblem} />);
+
+    // Accesible pero no visible por defecto: facilitaría la respuesta.
+    const hidden = container.querySelector('.sr-only');
+    expect(hidden).toBeTruthy();
+    expect(hidden?.textContent).toContain('Opción A:');
+    expect(screen.getByRole('button', { name: 'Ver tabla' }).getAttribute('aria-expanded')).toBe('false');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver tabla' }));
+    expect(container.querySelector('.sr-only')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Ocultar tabla' }).getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('dibuja el polígono a clasificar con alternativa que no cuenta los lados', () => {
     render(<GeometryDiagram problem={classificationProblem} />);
     const svg = screen.getByRole('img', { name: /Cuadrícula de coordenadas/ });

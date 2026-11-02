@@ -35,6 +35,41 @@ const pictogramProblem: DataChartProblem = {
   explanation: '3 símbolos × 2 = 6.',
 };
 
+const unitPictogramProblem: DataChartProblem = {
+  prompt: '¿Cuántos votos reúne «pera»?',
+  operation: 'pictogram-reading',
+  title: 'Fruta favorita del cole',
+  unit: 'votos',
+  symbol: '🍎',
+  symbolValue: 1,
+  categories: ['manzana', 'pera', 'uva'],
+  values: [2, 3, 5],
+  question: 'frequency',
+  questionIndexes: [1],
+  answer: 3,
+  explanation: '3 símbolos × 1 = 3.',
+};
+
+/** La tabla equivalente: oculta con sr-only por defecto, accesible por rol y nombre. */
+function expectTableHiddenByDefault() {
+  const table = screen.getByRole('table', { name: /Tabla de datos/ });
+  expect(table.closest('.sr-only')).toBeTruthy();
+  const toggle = screen.getByRole('button', { name: 'Ver tabla' });
+  expect(toggle.getAttribute('aria-expanded')).toBe('false');
+}
+
+/** Al pulsar «Ver tabla» la tabla se hace visible con todos los valores. */
+function expectTableRevealsValues() {
+  fireEvent.click(screen.getByRole('button', { name: 'Ver tabla' }));
+  const table = screen.getByRole('table', { name: /Tabla de datos/ });
+  expect(table.closest('.sr-only')).toBeNull();
+  for (const value of ['3', '7', '5']) {
+    expect(within(table).getByText(value)).toBeTruthy();
+  }
+  const toggle = screen.getByRole('button', { name: 'Ocultar tabla' });
+  expect(toggle.getAttribute('aria-expanded')).toBe('true');
+}
+
 const mostFrequentProblem: DataChartProblem = {
   prompt: '¿Cuál es la categoría que más votos reúne?',
   operation: 'pictogram-reading',
@@ -79,9 +114,14 @@ describe('BarChart', () => {
     for (const value of ['3', '7', '5']) {
       expect(within(svg).queryByText(value)).toBeNull();
     }
-    // Categorías bajo las barras y tabla textual equivalente.
+    // Categorías bajo las barras y tabla textual equivalente (oculta por defecto).
     expect(within(svg).getAllByText('manzana').length).toBeGreaterThan(0);
-    expect(screen.getByText(/Tabla de datos/)).toBeTruthy();
+    expectTableHiddenByDefault();
+  });
+
+  it('«Ver tabla» muestra la tabla de datos con todos los valores', () => {
+    render(<BarChart problem={barProblem} />);
+    expectTableRevealsValues();
   });
 
   it('todas las barras parten de la misma base (misma escala)', () => {
@@ -103,9 +143,15 @@ describe('Pictogram', () => {
 
     // Símbolos completos: 4/2 + 2/2 + 6/2 = 6 símbolos, sin medias figuras.
     expect(container.querySelectorAll('[data-visual-role="symbol"]')).toHaveLength(6);
-    // Leyenda explícita.
+    // Leyenda explícita, con singular/plural correcto.
     expect(screen.getByText(/1 🍇 = 2 votos/)).toBeTruthy();
-    expect(screen.getByText(/Tabla de datos/)).toBeTruthy();
+    expectTableHiddenByDefault();
+  });
+
+  it('la leyenda usa singular cuando cada símbolo vale 1', () => {
+    render(<Pictogram problem={unitPictogramProblem} />);
+    expect(screen.getByText(/1 🍎 = 1 voto/)).toBeTruthy();
+    expect(screen.queryByText(/1 voto(s)? de error|1 votos/)).toBeNull();
   });
 });
 

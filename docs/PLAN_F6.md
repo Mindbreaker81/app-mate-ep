@@ -173,7 +173,10 @@ generados en `dataCharts.ts` dentro del modo «Estadística» (5.º y 6.º, T2, 
 única `graficos-datos` con prerrequisito `sumas-restas`); render en `ProblemBody`
 con `BarChart`/`Pictogram` (SVG + tabla equivalente, leyenda visible, eje de 2 en 2,
 barras sin etiqueta de valor). Insignia de área «datos» sube a v2.
-Recuentos: 5.º 47, 6.º 72 (con PIT-23).
+Recuentos: 5.º 47, 6.º 72 (con PIT-23). Corrección de la e2e móvil: la tabla
+equivalente va oculta por defecto (`sr-only` + botón «Ver tabla» con
+aria-expanded) porque a la vista facilitaba la respuesta; leyenda con
+singular/plural correcto.
 
 ## PIT-18 — Teclado matemático en pantalla
 

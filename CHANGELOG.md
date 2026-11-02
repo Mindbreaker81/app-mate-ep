@@ -7,6 +7,15 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Corregido
+- **Gráficos visuales (PIT-15/16/17)**: la tabla o texto equivalente de los
+  ejercicios visuales ya no se muestra debajo del gráfico con todos los
+  valores (en el móvil, con la tabla a la vista, el ejercicio se respondía
+  sin leer el gráfico). Ahora queda oculta (sr-only para lectores de
+  pantalla) y quien la necesite la abre con el botón «Ver tabla»
+  (aria-expanded); al abrirla ocupa todo el ancho disponible. Además, la
+  leyenda del pictograma usa singular cuando toca («1 🍎 = 1 voto»).
+
 ### Añadido
 - **Geometría visual: coordenadas, simetrías y traslaciones** (PIT-16): tres
   operaciones nuevas en T2 (5.º y 6.º, modo «Geometría Visual») sobre la

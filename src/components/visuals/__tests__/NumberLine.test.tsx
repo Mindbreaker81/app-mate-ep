@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { NumberLine } from '../NumberLine';
 import { VisualProblemFrame } from '../VisualProblemFrame';
@@ -29,8 +29,8 @@ const integerProblem: NumberLineProblem = {
 };
 
 describe('VisualProblemFrame', () => {
-  it('expone título y descripción accesibles y una alternativa textual visible', () => {
-    render(
+  it('expone título y descripción accesibles y la alternativa oculta tras «Ver tabla»', () => {
+    const { container } = render(
       <VisualProblemFrame
         title="Recta numérica"
         description="Recta de 0 a 0.5 con marcas cada 0.1"
@@ -44,8 +44,32 @@ describe('VisualProblemFrame', () => {
     expect(svg).toBeTruthy();
     // La descripción está vinculada como <desc>, no como atributo que filtre datos.
     expect(svg.querySelector('desc')?.textContent).toContain('marcas cada 0.1');
-    // La alternativa es texto visible equivalente.
-    expect(screen.getByText(/cada marca vale 0\.1/)).toBeTruthy();
+    // La alternativa es accesible (sigue en el DOM, oculta visualmente con sr-only).
+    const hidden = container.querySelector('.sr-only');
+    expect(hidden).toBeTruthy();
+    expect(hidden?.textContent).toContain('cada marca vale 0.1');
+    // Botón «Ver tabla» con estado, cerrado por defecto.
+    const toggle = screen.getByRole('button', { name: 'Ver tabla' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('«Ver tabla» muestra la alternativa y pasa a «Ocultar tabla»', () => {
+    const { container } = render(
+      <VisualProblemFrame
+        title="Recta numérica"
+        description="Recta de 0 a 0.5 con marcas cada 0.1"
+        alternative="La recta empieza en 0 y cada marca vale 0.1."
+      >
+        <rect x={0} y={0} width={10} height={10} />
+      </VisualProblemFrame>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver tabla' }));
+    const visible = container.querySelector('.space-y-3 > div:last-child');
+    expect(visible?.className).not.toContain('sr-only');
+    expect(visible?.textContent).toContain('cada marca vale 0.1');
+    const toggle = screen.getByRole('button', { name: 'Ocultar tabla' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
   });
 });
 

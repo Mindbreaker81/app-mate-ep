@@ -12,17 +12,23 @@ const ROW_HEIGHT = 56;
 const WIDTH = 640;
 const MARGIN = { top: 8, left: 140 };
 
+/** Singular/plural del unit en la leyenda: «1 voto», «2 votos». */
+function unitLabel(symbolValue: number, unit: string): string {
+  return symbolValue === 1 ? unit.replace(/s$/, '') : unit;
+}
+
 export function Pictogram({ problem }: { problem: DataChartProblem }) {
   const height = MARGIN.top + problem.categories.length * ROW_HEIGHT + 16;
+  const legendUnit = unitLabel(problem.symbolValue, problem.unit);
 
   return (
     <VisualProblemFrame
       title={problem.title}
-      description={`Pictograma: cada ${problem.symbol} representa ${problem.symbolValue} ${problem.unit}.`}
+      description={`Pictograma: cada ${problem.symbol} representa ${problem.symbolValue} ${legendUnit}.`}
       alternative={
         <>
           <p className="font-medium text-gray-700">
-            1 {problem.symbol} = {problem.symbolValue} {problem.unit}
+            1 {problem.symbol} = {problem.symbolValue} {legendUnit}
           </p>
           <ChartDataTable problem={problem} />
         </>
