@@ -22,6 +22,9 @@ import {
   isMultipleChoiceProblem,
   isNumberLineProblem,
   isDataChartProblem,
+  isCoordinateValueProblem,
+  isPlaneTransformProblem,
+  isShapeClassificationProblem,
   isOrderValuesProblem,
   isPowerGeneralProblem,
   isPowerOfTenProblem,
@@ -37,6 +40,8 @@ import { formatMathNumber } from '../utils/mathUtils';
 import { NumberLine } from './visuals/NumberLine';
 import { BarChart } from './visuals/BarChart';
 import { Pictogram } from './visuals/Pictogram';
+import { CoordinateGrid } from './visuals/CoordinateGrid';
+import { CoordinatePoint, GeometryDiagram } from './visuals/GeometryDiagram';
 import {
   FractionInputs,
   MixedNumberInputs,
@@ -336,6 +341,45 @@ export function ProblemBody({
             decimal={allowsDecimalAnswer(problem)}
             allowNegative={allowsNegativeAnswer(problem)}
           />
+        </div>
+      ) : isCoordinateValueProblem(problem) ? (
+        <div className="space-y-4">
+          <div className="text-2xl font-semibold text-gray-800 text-center">{problem.prompt}</div>
+          <CoordinateGrid
+            description={`Cuadrícula de coordenadas del primer cuadrante, de 0 a 10, con el punto ${problem.pointLabel} marcado.`}
+            alternative={
+              <p>
+                Cuadrícula de 0 a 10. El punto {problem.pointLabel} está marcado; cuenta las casillas desde el eje
+                {problem.axis === 'x' ? ' vertical (horizontalmente) hasta el punto' : ' horizontal (verticalmente) hasta el punto'}.
+              </p>
+            }
+          >
+            <CoordinatePoint problem={problem} />
+          </CoordinateGrid>
+          <PromptInput
+            userAnswer={userAnswer}
+            setAnswer={setAnswer}
+            disabled={disabled}
+            setValidationError={setValidationError}
+            decimal={allowsDecimalAnswer(problem)}
+            allowNegative={allowsNegativeAnswer(problem)}
+          />
+        </div>
+      ) : isPlaneTransformProblem(problem) || isShapeClassificationProblem(problem) ? (
+        <div className="space-y-4">
+          <div className="text-2xl font-semibold text-gray-800 text-center">{problem.prompt}</div>
+          <GeometryDiagram problem={problem} />
+          {isPlaneTransformProblem(problem)
+            ? renderMultipleChoice('Elige la opción correcta:', problem.options.map((label) => ({
+                key: label,
+                label,
+                value: label,
+              })))
+            : renderMultipleChoice(problem.prompt, problem.options.map((option) => ({
+                key: option,
+                label: option,
+                value: option,
+              })))}
         </div>
       ) : isPromptProblem(problem) ? (
         <div className="space-y-4">
