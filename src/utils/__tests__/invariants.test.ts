@@ -275,6 +275,21 @@ describe('Invariantes de generadores por curso y nivel', () => {
     }
   });
 
+  it('algebra-substitution evalúa ax + b con enteros pequeños y respuesta exacta', () => {
+    for (const levelConfig of LEVELS) {
+      for (let i = 0; i < 40; i += 1) {
+        const problem = generateOperationForTest('algebra-substitution', levelConfig.id, levelConfig);
+        if (problem.operation !== 'algebra-substitution') {
+          continue;
+        }
+        expect(problem.coefficient).not.toBe(0);
+        expect(problem.constant).not.toBe(0);
+        expect(problem.answer).toBe(problem.coefficient * problem.variableValue + problem.constant);
+        expect(Number.isSafeInteger(problem.answer)).toBe(true);
+      }
+    }
+  });
+
   it('la probabilidad da resultados exactos y acepta fracción equivalente', () => {
     const config = LEVELS[5];
     for (let i = 0; i < 40; i += 1) {

@@ -85,8 +85,8 @@ export const MASTERY_AREA_SETS: MasteryAreaSet[] = [
   { areaId: 'datos', version: 1, skillIds: ['estadistica', 'probabilidad'] },
   {
     areaId: 'ampliacion',
-    version: 3,
-    skillIds: ['ecuaciones', 'ecuaciones-dos-pasos', 'proporcionalidad-inversa', 'potencias-eso', 'potencias-de-diez'],
+    version: 4,
+    skillIds: ['ecuaciones', 'ecuaciones-dos-pasos', 'proporcionalidad-inversa', 'potencias-eso', 'potencias-de-diez', 'expresiones-algebraicas'],
   },
 ];
 

@@ -48,6 +48,7 @@ import {
   generatePowerProblem,
   generateSquareRootProblem,
 } from './powers';
+import { generateAlgebraSubstitutionProblem } from './algebra';
 import { generateRoundDecimal } from './rounding';
 import { pickRandom, type LevelConfig } from './shared';
 import { generateSimpleEquation } from './equations';
@@ -143,6 +144,7 @@ export const ALL_MODE_WEIGHTS: Partial<Record<Operation, number>> = {
   'number-line-integer': 0.6,
   'power-general': 0.5,
   'power-of-ten': 0.5,
+  'algebra-substitution': 0.5,
 };
 
 export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
@@ -199,7 +201,7 @@ export const OPERATION_MAP: Record<PracticeMode, Operation[]> = {
   'number-sense': ['place-value', 'sequence', 'proportionality-check', 'number-line-decimal', 'number-line-integer'],
   finance: ['finance'],
   // Ampliación T3 en modo libre (sin prerrequisitos; en «Mi camino» sí los exige).
-  'eso-extension': ['two-step-equation', 'inverse-proportion', 'power-general', 'power-of-ten'],
+  'eso-extension': ['two-step-equation', 'inverse-proportion', 'power-general', 'power-of-ten', 'algebra-substitution'],
 };
 
 function pickWeightedOperation(operations: Operation[]): Operation {
@@ -370,6 +372,8 @@ function generateByOperation(operation: Operation, level: number, levelConfig: L
       return generatePowerGeneralProblem(levelConfig);
     case 'power-of-ten':
       return generatePowerOfTenProblem();
+    case 'algebra-substitution':
+      return generateAlgebraSubstitutionProblem(levelConfig);
     default: {
       const exhaustive: never = operation;
       throw new Error(`Operación no soportada: ${exhaustive}`);
@@ -457,7 +461,8 @@ export function getDifficulty(level: number, operation: Operation): 'easy' | 'me
     operation === 'number-line-decimal' ||
     operation === 'number-line-integer' ||
     operation === 'power-general' ||
-    operation === 'power-of-ten'
+    operation === 'power-of-ten' ||
+    operation === 'algebra-substitution'
   ) {
     return level >= 4 ? 'hard' : 'medium';
   }

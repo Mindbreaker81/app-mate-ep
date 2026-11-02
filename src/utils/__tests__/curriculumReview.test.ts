@@ -27,6 +27,7 @@ const SIXTH_ONLY_EXACT = [
   'number-line-integer',
   'power-general',
   'power-of-ten',
+  'algebra-substitution',
 ];
 
 const SIXTH_ONLY_PREFIXES = ['integer-'];

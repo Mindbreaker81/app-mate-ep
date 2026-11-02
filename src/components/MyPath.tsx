@@ -69,7 +69,7 @@ const MODE_OPERATIONS: Record<string, string[]> = {
   scales: ['scale-conversion'],
   'number-sense': ['place-value', 'sequence', 'proportionality-check'],
   finance: ['finance'],
-  'eso-extension': ['two-step-equation', 'inverse-proportion', 'power-general', 'power-of-ten'],
+  'eso-extension': ['two-step-equation', 'inverse-proportion', 'power-general', 'power-of-ten', 'algebra-substitution'],
 };
 
 interface MyPathProps {

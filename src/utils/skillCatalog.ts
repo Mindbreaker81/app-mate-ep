@@ -341,6 +341,15 @@ export const SKILLS: Skill[] = [
     prerequisites: ['potencias-raices'],
     icon: '🔟',
   },
+  {
+    id: 'expresiones-algebraicas',
+    name: 'Expresiones algebraicas',
+    areaId: 'ampliacion',
+    tier: 3,
+    operations: ['algebra-substitution'],
+    prerequisites: ['enteros', 'operaciones-mixtas'],
+    icon: '𝑥',
+  },
 ];
 
 export const SKILL_IDS = SKILLS.map((skill) => skill.id);

@@ -18,6 +18,15 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   calculados con enteros escalados, sin errores de coma flotante. Nuevas
   habilidades «La recta numérica» en «Mi camino» y modo «Sentido numérico»
   (45 operaciones en 5.º, 67 en 6.º).
+- **Expresiones algebraicas** (PIT-23): operación nueva
+  `algebra-substitution` (evaluar ax + b con enteros pequeños; negativos a
+  partir del nivel 5, con botón ±) con la habilidad T3 «Expresiones
+  algebraicas» (`expresiones-algebraicas`, prerrequisitos `enteros` y
+  `operaciones-mixtas`). Disponible en el modo libre «Ampliación ESO» de
+  6.º sin prerrequisitos y en «Mi camino» con ellos; `contentStage` la
+  clasifica como `eso-extension`. Pistas graduales, verbalización de la
+  expresión («equis») y glosario (incógnita, número entero). El conjunto
+  versionado de la insignia de área `ampliacion` pasa a v4.
 - **Potencias de base 10** (PIT-23): operación nueva `power-of-ten` (10^n
   con exponentes 0–6, siempre entero exacto y seguro) con la habilidad T3
   «Potencias de base 10» (`potencias-de-diez`, prerrequisito

@@ -276,6 +276,7 @@ const SIXTH_GRADE_ONLY_OPERATIONS: Operation[] = [
   'number-line-integer',
   'power-general',
   'power-of-ten',
+  'algebra-substitution',
 ];
 
 const SIXTH_GRADE_OPERATIONS: Operation[] = [...FIFTH_GRADE_OPERATIONS, ...SIXTH_GRADE_ONLY_OPERATIONS];

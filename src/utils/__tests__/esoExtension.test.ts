@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PowerGeneralProblem, PowerOfTenProblem } from '../../types';
+import type { AlgebraSubstitutionProblem, PowerGeneralProblem, PowerOfTenProblem } from '../../types';
 import { GRADE_CONFIGS, LEVELS } from '../gameConfig';
 import { generateOperationForTest, generateProblem } from '../generators';
 import { contentStageFor } from '../contentStage';
@@ -8,8 +8,10 @@ import { practiceModeForOperation } from '../practiceConfig';
 import { problemSpeechText } from '../problemText';
 import { getSkillById, skillIdForOperation } from '../skillCatalog';
 import {
+  allowsNegativeAnswer,
   answersMatch,
   formatProblemAnswer,
+  isAlgebraSubstitutionProblem,
   isPowerGeneralProblem,
   isPowerOfTenProblem,
 } from '../problemUtils';
@@ -197,6 +199,113 @@ describe('power-of-ten (T3 ampliación ESO)', () => {
 
   it('tiene pista gradual', () => {
     const problem = generateOperationForTest('power-of-ten', 5, LEVELS[4]);
+    expect(buildHint(problem, 1)).not.toBeNull();
+    expect(buildHint(problem, 2)).not.toBeNull();
+  });
+});
+
+describe('algebra-substitution (T3 ampliación ESO)', () => {
+  it('evalúa ax + b con enteros pequeños: coeficiente ≠ 0 y respuesta entera segura', () => {
+    for (const levelConfig of LEVELS) {
+      for (let i = 0; i < 40; i += 1) {
+        const problem = generateOperationForTest('algebra-substitution', levelConfig.id, levelConfig);
+        expect(isAlgebraSubstitutionProblem(problem)).toBe(true);
+        const sub = problem as AlgebraSubstitutionProblem;
+        expect(sub.coefficient).not.toBe(0);
+        expect(Math.abs(sub.coefficient)).toBeLessThanOrEqual(9);
+        expect(Math.abs(sub.variableValue)).toBeLessThanOrEqual(9);
+        expect(sub.constant).not.toBe(0);
+        expect(Math.abs(sub.constant)).toBeLessThanOrEqual(9);
+        expect(sub.answer).toBe(sub.coefficient * sub.variableValue + sub.constant);
+        expect(Number.isSafeInteger(sub.answer)).toBe(true);
+      }
+    }
+  });
+
+  it('en niveles bajos todo es no negativo; en altos aparecen enteros negativos', () => {
+    for (let i = 0; i < 80; i += 1) {
+      const problem = generateOperationForTest('algebra-substitution', 2, LEVELS[1]) as AlgebraSubstitutionProblem;
+      expect(problem.coefficient).toBeGreaterThanOrEqual(2);
+      expect(problem.variableValue).toBeGreaterThanOrEqual(0);
+      expect(problem.constant).toBeGreaterThanOrEqual(1);
+      expect(problem.answer).toBeGreaterThanOrEqual(0);
+    }
+
+    let negativeCoefficient = false;
+    let negativeValue = false;
+    let negativeConstant = false;
+    let negativeAnswer = false;
+    for (let i = 0; i < 300; i += 1) {
+      const problem = generateOperationForTest('algebra-substitution', 8, LEVELS[7]) as AlgebraSubstitutionProblem;
+      negativeCoefficient ||= problem.coefficient < 0;
+      negativeValue ||= problem.variableValue < 0;
+      negativeConstant ||= problem.constant < 0;
+      negativeAnswer ||= problem.answer < 0;
+    }
+    expect(negativeCoefficient).toBe(true);
+    expect(negativeValue).toBe(true);
+    expect(negativeConstant).toBe(true);
+    expect(negativeAnswer).toBe(true);
+  });
+
+  it('el enunciado muestra la expresión y el valor de x; acepta respuestas negativas', () => {
+    let sawNegative = false;
+    for (let i = 0; i < 200; i += 1) {
+      const problem = generateOperationForTest('algebra-substitution', 8, LEVELS[7]) as AlgebraSubstitutionProblem;
+      expect(problem.prompt).toContain(`x = `);
+      expect(problem.prompt).toContain('cuánto vale');
+      expect(answersMatch(problem, formatProblemAnswer(problem))).toBe(true);
+      expect(answersMatch(problem, String(problem.answer))).toBe(true);
+      expect(answersMatch(problem, String(problem.answer + 1))).toBe(false);
+      sawNegative ||= problem.answer < 0;
+    }
+    expect(sawNegative).toBe(true);
+    const problem = generateOperationForTest('algebra-substitution', 8, LEVELS[7]);
+    expect(allowsNegativeAnswer(problem)).toBe(true);
+  });
+
+  it('pertenece a una habilidad T3 propia con prerrequisitos', () => {
+    expect(skillIdForOperation('algebra-substitution')).toBe('expresiones-algebraicas');
+    const skill = getSkillById('expresiones-algebraicas');
+    expect(skill).not.toBeNull();
+    expect(skill?.tier).toBe(3);
+    expect(skill?.operations).toEqual(['algebra-substitution']);
+    expect(skill?.prerequisites).toEqual(expect.arrayContaining(['enteros', 'operaciones-mixtas']));
+  });
+
+  it('se clasifica como eso-extension con cualquier curso y source', () => {
+    expect(contentStageFor('6e', 'algebra-substitution')).toBe('eso-extension');
+    expect(contentStageFor('5e', 'algebra-substitution', 'free')).toBe('eso-extension');
+    expect(contentStageFor('4t', 'algebra-substitution', 'path')).toBe('eso-extension');
+  });
+
+  it('se genera en el modo libre «Ampliación ESO» de 6.º pero no en 4.º/5.º', () => {
+    expect(GRADE_CONFIGS['6e'].availableOperations).toContain('algebra-substitution');
+    expect(GRADE_CONFIGS['5e'].availableOperations).not.toContain('algebra-substitution');
+    expect(GRADE_CONFIGS['4t'].availableOperations).not.toContain('algebra-substitution');
+    expect(practiceModeForOperation('algebra-substitution')).toBe('eso-extension');
+
+    const seen = new Set<string>();
+    for (let i = 0; i < 160; i += 1) {
+      seen.add(generateProblem(5, 'eso-extension', '6e').operation);
+    }
+    expect(seen.has('algebra-substitution')).toBe(true);
+    for (const bad of seen) {
+      expect(contentStageFor('6e', bad, 'free')).toBe('eso-extension');
+    }
+  });
+
+  it('verbaliza la expresión con «equis» sin revelar la solución', () => {
+    for (let i = 0; i < 40; i += 1) {
+      const problem = generateOperationForTest('algebra-substitution', 6, LEVELS[5]) as AlgebraSubstitutionProblem;
+      const speech = problemSpeechText(problem);
+      expect(speech).toContain('equis');
+      expect(speech).not.toContain('Paso');
+    }
+  });
+
+  it('tiene pista gradual', () => {
+    const problem = generateOperationForTest('algebra-substitution', 5, LEVELS[4]);
     expect(buildHint(problem, 1)).not.toBeNull();
     expect(buildHint(problem, 2)).not.toBeNull();
   });

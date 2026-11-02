@@ -1,4 +1,5 @@
 import type {
+  AlgebraSubstitutionProblem,
   AngleProblem,
   AngleType,
   CircleProblem,
@@ -243,6 +244,10 @@ export function isNumberLineProblem(problem: Problem | null): problem is NumberL
   return !!problem && (problem.operation === 'number-line-decimal' || problem.operation === 'number-line-integer');
 }
 
+export function isAlgebraSubstitutionProblem(problem: Problem | null): problem is AlgebraSubstitutionProblem {
+  return !!problem && problem.operation === 'algebra-substitution';
+}
+
 export function isMultipleChoiceProblem(
   problem: Problem | null,
 ): problem is
@@ -295,7 +300,8 @@ export function isPromptProblem(
   | FinanceProblem
   | TwoStepEquationProblem
   | InverseProportionProblem
-  | FractionPercentProblem {
+  | FractionPercentProblem
+  | AlgebraSubstitutionProblem {
   return (
     isPercentageProblem(problem) ||
     isFactorizationProblem(problem) ||
@@ -321,7 +327,8 @@ export function isPromptProblem(
     isFinanceProblem(problem) ||
     isTwoStepEquationProblem(problem) ||
     isInverseProportionProblem(problem) ||
-    isFractionPercentProblem(problem)
+    isFractionPercentProblem(problem) ||
+    isAlgebraSubstitutionProblem(problem)
   );
 }
 
@@ -354,6 +361,7 @@ const NEGATIVE_ANSWER_OPERATIONS = new Set([
   'integer-division',
   'simple-equation',
   'number-line-integer',
+  'algebra-substitution',
 ]);
 
 /** Operaciones cuya respuesta puede ser negativa (necesitan botón ± en móvil). */

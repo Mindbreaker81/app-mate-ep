@@ -68,6 +68,7 @@ export const OPERATION_KEYS = [
   'number-line-integer',
   'power-general',
   'power-of-ten',
+  'algebra-substitution',
 ] as const;
 
 export type Operation = (typeof OPERATION_KEYS)[number];
@@ -456,6 +457,17 @@ export interface PowerOfTenProblem {
   explanation: string;
 }
 
+/** Puente T3 (Ampliació ESO): evalúa ax + b para un valor dado de x. */
+export interface AlgebraSubstitutionProblem {
+  coefficient: number;
+  constant: number;
+  variableValue: number;
+  prompt: string;
+  operation: 'algebra-substitution';
+  answer: number;
+  explanation: string;
+}
+
 /** Equivalencias fracción–decimal–porcentaje con valores exactos. */
 export interface FractionPercentProblem {
   prompt: string;
@@ -529,7 +541,8 @@ export type Problem =
   | FractionPercentProblem
   | NumberLineProblem
   | PowerGeneralProblem
-  | PowerOfTenProblem;
+  | PowerOfTenProblem
+  | AlgebraSubstitutionProblem;
 
 export interface Achievement {
   id: string;
