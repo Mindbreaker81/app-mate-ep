@@ -7,6 +7,8 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+## [4.3.0] - 2026-11-03
+
 ### Añadido
 - **«¿Olvidaste tu contraseña?» en el acceso admin**: envía el email de
   recuperación de Supabase al email escrito (mensaje neutro, sin revelar si la

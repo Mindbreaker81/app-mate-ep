@@ -542,5 +542,5 @@ Ver `docs/PLAN_6E_PRIMARIA.md` para el diseño detallado de 6.º.
 
 ---
 
-**Última actualización:** 2026-11-02
-**Versión:** 4.2.0
+**Última actualización:** 2026-11-03
+**Versión:** 4.3.0
