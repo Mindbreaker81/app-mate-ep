@@ -28,6 +28,7 @@ interface AdminSignInPayload {
 }
 
 export type ChangePasswordResult = { ok: true } | { ok: false; error: string };
+export type PasswordResetRequestResult = { ok: true } | { ok: false; error: string };
 
 export interface AuthContextValue {
   session: Session | null;
@@ -39,6 +40,11 @@ export interface AuthContextValue {
   signUp: (payload: SignUpPayload) => Promise<void>;
   signInAdmin: (payload: AdminSignInPayload) => Promise<void>;
   changePassword: (newPassword: string) => Promise<ChangePasswordResult>;
+  /** Envía el email de recuperación de contraseña del admin (vuelve a esta web). */
+  requestPasswordReset: (email: string) => Promise<PasswordResetRequestResult>;
+  /** true tras abrir el enlace de recuperación: hay que pedir la contraseña nueva. */
+  passwordRecovery: boolean;
+  finishPasswordRecovery: () => void;
   signOut: () => Promise<void>;
   clearError: () => void;
 }
@@ -80,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -210,8 +217,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void initialize();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
       clearError();
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecovery(true);
+      }
       // supabase-js retiene su lock de token mientras ejecuta este callback y
       // espera la promesa que devolvemos. Si hacemos await de consultas de
       // supabase aquí dentro (perfil, admin), éstas piden el token con
@@ -432,6 +442,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, []);
 
+  const requestPasswordReset = useCallback(async (email: string): Promise<PasswordResetRequestResult> => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      return { ok: false, error: 'Escribe tu email primero.' };
+    }
+
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo: window.location.origin,
+    });
+    if (resetError) {
+      logger.error('[AuthContext] Error al pedir el email de recuperación:', resetError);
+      if (resetError.status === 429 || resetError.message.toLowerCase().includes('rate limit')) {
+        return { ok: false, error: 'Has pedido demasiados enlaces. Espera unos minutos y vuelve a intentarlo.' };
+      }
+      return { ok: false, error: 'No pudimos enviar el enlace. Intenta de nuevo.' };
+    }
+    return { ok: true };
+  }, []);
+
+  const finishPasswordRecovery = useCallback(() => {
+    setPasswordRecovery(false);
+  }, []);
+
   const signOut = useCallback(async () => {
     clearError();
 
@@ -443,11 +476,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setIsAdmin(false);
+    setPasswordRecovery(false);
   }, [clearError]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ session, profile, isAdmin, loading, error, signIn, signUp, signInAdmin, changePassword, signOut, clearError }),
-    [session, profile, isAdmin, loading, error, signIn, signUp, signInAdmin, changePassword, signOut, clearError]
+    () => ({
+      session,
+      profile,
+      isAdmin,
+      loading,
+      error,
+      signIn,
+      signUp,
+      signInAdmin,
+      changePassword,
+      requestPasswordReset,
+      passwordRecovery,
+      finishPasswordRecovery,
+      signOut,
+      clearError,
+    }),
+    [
+      session,
+      profile,
+      isAdmin,
+      loading,
+      error,
+      signIn,
+      signUp,
+      signInAdmin,
+      changePassword,
+      requestPasswordReset,
+      passwordRecovery,
+      finishPasswordRecovery,
+      signOut,
+      clearError,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

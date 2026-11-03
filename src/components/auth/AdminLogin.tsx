@@ -6,10 +6,31 @@ interface AdminLoginProps {
 }
 
 export function AdminLogin({ onBack }: AdminLoginProps) {
-  const { signInAdmin, error, clearError } = useAuth();
+  const { signInAdmin, requestPasswordReset, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [resetStatus, setResetStatus] = useState<{ ok: boolean; message: string } | null>(null);
+  const [sendingReset, setSendingReset] = useState(false);
+
+  const handleForgotPassword = async () => {
+    if (error) clearError();
+    if (!email.trim()) {
+      setResetStatus({ ok: false, message: 'Escribe tu email arriba y vuelve a pulsar.' });
+      return;
+    }
+    setSendingReset(true);
+    const result = await requestPasswordReset(email);
+    setSendingReset(false);
+    setResetStatus(
+      result.ok
+        ? {
+            ok: true,
+            message: 'Si es el email de la cuenta admin, te hemos enviado un enlace para elegir una contraseña nueva.',
+          }
+        : { ok: false, message: result.error },
+    );
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -29,6 +50,7 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
             value={email}
             onChange={(event) => {
               if (error) clearError();
+              setResetStatus(null);
               setEmail(event.target.value);
             }}
             autoComplete="email"
@@ -60,6 +82,22 @@ export function AdminLogin({ onBack }: AdminLoginProps) {
       >
         {submitting ? 'Ingresando...' : 'Iniciar sesión'}
       </button>
+
+      <div className="text-center text-sm space-y-2">
+        <button
+          type="button"
+          className="text-blue-600 hover:underline disabled:opacity-50"
+          onClick={() => void handleForgotPassword()}
+          disabled={sendingReset}
+        >
+          {sendingReset ? 'Enviando enlace...' : '¿Olvidaste tu contraseña?'}
+        </button>
+        {resetStatus && (
+          <p role="status" className={resetStatus.ok ? 'text-green-700' : 'text-red-600'}>
+            {resetStatus.message}
+          </p>
+        )}
+      </div>
 
       <div className="text-center text-sm text-gray-600">
         <button type="button" className="text-blue-600 font-semibold" onClick={onBack}>

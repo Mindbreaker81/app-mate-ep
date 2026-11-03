@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-export function ChangePasswordForm() {
+interface ChangePasswordFormProps {
+  /** Se llama tras guardar la contraseña nueva (p. ej. para cerrar la recuperación). */
+  onSuccess?: () => void;
+}
+
+export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps = {}) {
   const { changePassword } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -27,6 +32,7 @@ export function ChangePasswordForm() {
       setSuccess(true);
       setPassword('');
       setConfirmation('');
+      onSuccess?.();
     } else {
       setError(result.error);
     }

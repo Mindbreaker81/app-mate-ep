@@ -48,6 +48,7 @@ const supabaseState = vi.hoisted(() => {
       return { data: { subscription: { unsubscribe: vi.fn() } } };
     }),
     signInWithPassword: vi.fn(),
+    resetPasswordForEmail: vi.fn().mockResolvedValue({ data: {}, error: null }),
     signOut: vi.fn().mockResolvedValue({ error: null }),
   };
 
@@ -150,5 +151,55 @@ describe('AuthContext — resolución de isAdmin', () => {
       () => expect(screen.getByTestId('auth-state')).toHaveTextContent('kid'),
       { timeout: 2000 },
     );
+  });
+});
+
+function RecoveryProbe() {
+  const { passwordRecovery, requestPasswordReset, finishPasswordRecovery } = useAuth();
+  return (
+    <div>
+      <div data-testid="recovery">{passwordRecovery ? 'si' : 'no'}</div>
+      <button onClick={() => void requestPasswordReset('  Admin@Ejemplo.com ')}>pedir</button>
+      <button onClick={finishPasswordRecovery}>terminar</button>
+    </div>
+  );
+}
+
+describe('AuthContext — recuperación de contraseña', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    supabaseState.state.adminRow = { user_id: 'admin-1' };
+    supabaseState.state.adminRowDelayMs = 0;
+  });
+
+  it('pide el enlace con el email normalizado y vuelve a esta misma web', async () => {
+    render(
+      <AuthProvider>
+        <RecoveryProbe />
+      </AuthProvider>,
+    );
+
+    screen.getByText('pedir').click();
+
+    await waitFor(() =>
+      expect(supabaseState.auth.resetPasswordForEmail).toHaveBeenCalledWith('admin@ejemplo.com', {
+        redirectTo: window.location.origin,
+      }),
+    );
+  });
+
+  it('el evento PASSWORD_RECOVERY activa la recuperación hasta terminarla', async () => {
+    render(
+      <AuthProvider>
+        <RecoveryProbe />
+      </AuthProvider>,
+    );
+    expect(screen.getByTestId('recovery')).toHaveTextContent('no');
+
+    void supabaseState.state.authCallback?.('PASSWORD_RECOVERY', adminSession);
+    await waitFor(() => expect(screen.getByTestId('recovery')).toHaveTextContent('si'));
+
+    screen.getByText('terminar').click();
+    await waitFor(() => expect(screen.getByTestId('recovery')).toHaveTextContent('no'));
   });
 });

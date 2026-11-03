@@ -5,6 +5,7 @@ import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { AdminLogin } from './AdminLogin';
 import { AdminDashboard } from '../admin/AdminDashboard';
+import { ChangePasswordForm } from '../admin/ChangePasswordForm';
 
 type Mode = 'login' | 'register' | 'admin';
 
@@ -13,7 +14,7 @@ interface AuthGateProps {
 }
 
 export function AuthGate({ children }: AuthGateProps) {
-  const { session, isAdmin, loading, clearError } = useAuth();
+  const { session, isAdmin, loading, clearError, passwordRecovery, finishPasswordRecovery } = useAuth();
   const [mode, setMode] = useState<Mode>('login');
 
   const switchMode = (next: Mode) => {
@@ -86,6 +87,22 @@ export function AuthGate({ children }: AuthGateProps) {
               Admin
             </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Enlace del email de recuperación: Supabase ya abrió la sesión; antes de
+  // entrar se pide la contraseña nueva (si no, el admin la seguiría sin saber).
+  if (passwordRecovery) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 px-4">
+        <div className="bg-white shadow-xl rounded-3xl p-8 max-w-md w-full space-y-6">
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-bold text-gray-800">🔑 Nueva contraseña</h1>
+            <p className="text-gray-600">Elige la contraseña con la que entrarás a partir de ahora.</p>
+          </div>
+          <ChangePasswordForm onSuccess={finishPasswordRecovery} />
         </div>
       </div>
     );

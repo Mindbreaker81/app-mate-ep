@@ -7,6 +7,15 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Añadido
+- **«¿Olvidaste tu contraseña?» en el acceso admin**: envía el email de
+  recuperación de Supabase al email escrito (mensaje neutro, sin revelar si la
+  cuenta existe; aviso propio si Supabase limita los envíos). Al abrir el
+  enlace, la app detecta `PASSWORD_RECOVERY` y pide la contraseña nueva antes
+  de mostrar el panel. Requiere en Supabase → Authentication → URL
+  Configuration la Site URL `https://pitagoritas.vercel.app` y esa URL en
+  Redirect URLs (con la Site URL de desarrollo el enlace llevaba a localhost).
+
 ## [4.2.0] - 2026-11-02
 
 ### Corregido

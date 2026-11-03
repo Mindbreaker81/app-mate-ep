@@ -65,6 +65,9 @@ function renderWithProviders(ui: React.ReactElement) {
     signUp: vi.fn(),
     signInAdmin: vi.fn(),
     changePassword: vi.fn(),
+    requestPasswordReset: vi.fn(),
+    passwordRecovery: false,
+    finishPasswordRecovery: vi.fn(),
     signOut: vi.fn(),
     clearError: vi.fn(),
   };

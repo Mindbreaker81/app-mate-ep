@@ -169,6 +169,15 @@ select u.email from public.admin_users a join auth.users u on u.id = a.user_id;
 Debe devolver exactamente una fila con el email del admin. Después, en la app:
 botón "Admin" → login con email y contraseña → panel con la lista de niños.
 
+### Recuperar la contraseña del admin
+
+En la pantalla de acceso admin, «¿Olvidaste tu contraseña?» envía el email de
+recuperación. Para que el enlace vuelva a la app y no a `localhost`, en
+Authentication → URL Configuration: **Site URL** `https://pitagoritas.vercel.app`
+y en **Redirect URLs** `https://pitagoritas.vercel.app/**` (y, si se quiere,
+`http://localhost:5173/**` para desarrollo). El correo por defecto de Supabase
+tiene un límite bajo de envíos por hora.
+
 ## v3.0 — Validación de curso 6.º (`6e`)
 
 ### Resumen
